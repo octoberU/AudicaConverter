@@ -6,14 +6,14 @@ using System.Text;
 
 namespace OsuTypes
 {
-    class osufile
+    public class osufile
     {
         public General general = new General();
         public Metadata metadata = new Metadata();
         public List<TimingPoint> timingPoints = new List<TimingPoint>();
         public List<HitObject> hitObjects = new List<HitObject>();
 
-        public void Parse(Stream stream)
+        public osufile(Stream stream)
         {
             var ms = new MemoryStream();
             stream.CopyTo(ms);
@@ -47,7 +47,11 @@ namespace OsuTypes
                 if (line.Contains("[General]")) mode = ParseMode.General;
                 else if (line.Contains("[Metadata]")) mode = ParseMode.Metadata;
                 else if (line.Contains("[TimingPoints]")) mode = ParseMode.TimingPoints;
-                else if (line.Contains("[[HitObjects]]")) mode = ParseMode.HitObjects;
+                else if (line.Contains("[HitObjects]")) mode = ParseMode.HitObjects;
+                else if (line.Contains("[Colours]")) mode = ParseMode.None;
+                else if (line.Contains("[Events]")) mode = ParseMode.None;
+                else if (line.Contains("[Difficulty]")) mode = ParseMode.None;
+                else if (line.Contains("[Editor]")) mode = ParseMode.None;
                 else if (line.Length < 0) mode = ParseMode.None;
             }
         }
@@ -56,7 +60,15 @@ namespace OsuTypes
         {
             var split = line.Split(",");
             if (split.Length < 2) return;
-            int type = int.Parse(split[2]);
+            int type = int.Parse(split[3]);
+            if(type == 1 || type == 5)
+            {
+                this.hitObjects.Add(new HitObject(float.Parse(split[0]), float.Parse(split[1]), float.Parse(split[2]), int.Parse(split[3]), int.Parse(split[4]), 0, 0));
+            }
+            else if(type == 2 || type == 6)
+            {
+                
+            }
             
         }
 
@@ -71,10 +83,11 @@ namespace OsuTypes
         private void ParseTimingPoint(string line)
         {
             var split = line.Split(",");
-            if (split.Length > 1)
+            if (split.Length > 2)
             {
                 if (!split[1].Contains("-")) timingPoints.Add(new TimingPoint(int.Parse(split[0]), int.Parse(split[1])));
             }
+            
         }
 
         private void ParseGeneral(string line)
