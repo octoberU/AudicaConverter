@@ -15,6 +15,7 @@ namespace OsuTypes
 
         public osufile(Stream stream)
         {
+            timingPoints.Add(new TimingPoint(0f, 480d));
             var ms = new MemoryStream();
             stream.CopyTo(ms);
             string[] osuString = Encoding.UTF8.GetString(ms.ToArray()).Split(new char[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);

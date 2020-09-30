@@ -14,7 +14,7 @@ namespace OsuTypes
         public double beatTime;
         public float ms;
 
-        public TimingPoint(double beatTime, float ms)
+        public TimingPoint(float ms, double beatTime)
         {
             this.beatTime = beatTime;
             this.ms = ms;
