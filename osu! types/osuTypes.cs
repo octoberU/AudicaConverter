@@ -9,7 +9,7 @@ namespace OsuTypes
 
     }
 
-    public struct TimingPoint
+    public class TimingPoint
     {
         public double beatTime;
         public float ms;

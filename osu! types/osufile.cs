@@ -55,6 +55,13 @@ namespace OsuTypes
                 else if (line.Contains("[Editor]")) mode = ParseMode.None;
                 else if (line.Length < 0) mode = ParseMode.None;
             }
+
+            FixFirstTimingPoint(timingPoints);
+        }
+
+        private void FixFirstTimingPoint(List<TimingPoint> timingPoints)
+        {
+            timingPoints[1].ms = timingPoints[1].ms % (float)(timingPoints[1].beatTime * 4);
         }
 
         private void ParseHitObject(string line)
@@ -68,7 +75,7 @@ namespace OsuTypes
             }
             else if(type == 2 || type == 6)
             {
-                
+                this.hitObjects.Add(new HitObject(float.Parse(split[0]), float.Parse(split[1]), float.Parse(split[2]), int.Parse(split[3]), int.Parse(split[4]), 0, 0));
             }
             
         }
@@ -86,7 +93,7 @@ namespace OsuTypes
             var split = line.Split(",");
             if (split.Length > 2)
             {
-                if (!split[1].Contains("-")) timingPoints.Add(new TimingPoint(int.Parse(split[0]), int.Parse(split[1])));
+                if (!split[1].Contains("-")) timingPoints.Add(new TimingPoint(int.Parse(split[0]), float.Parse(split[1])));
             }
             
         }
