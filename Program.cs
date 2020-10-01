@@ -13,8 +13,9 @@ namespace AudicaConverter
 {
     class Program
     {
-        public static string FFMPEGPATH = @"C:\PATH\ffmpeg.exe";
-        public static string OGG2MOGGPATH = @"C:\PATH\ogg2mogg.exe";
+        public static string FFMPEGNAME = @"\ffmpeg.exe";
+        public static string OGG2MOGGNAME = @"\ogg2mogg.exe";
+        public static string workingDirectory = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
 
         static void Main(string[] args)
         {
@@ -28,12 +29,11 @@ namespace AudicaConverter
 
     public class ConversionProcess
     {
-        public static string workingDirectory;
         public static void ConvertToAudica(string filePath)
         {
-            workingDirectory = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+            
             var osz = new OSZ(filePath);
-            var audica = new Audica(@"C:\Users\adamk\source\repos\AudicaConverter\template.audica");
+            var audica = new Audica(@$"{Program.workingDirectory}\template.audica");
             Console.WriteLine($"{osz.osufiles[0].metadata.artist} - {osz.osufiles[0].metadata.title}" +
                 $"\nMapped by {osz.osufiles[0].metadata.creator}" +
                 $"\nFound {osz.osufiles.Count} difficulties");
@@ -122,13 +122,14 @@ namespace AudicaConverter
             audica.tempoData = tempList;
 
             //at the end
-            audica.Export(@$"C:\Users\adamk\Documents\converterTests\{audica.desc.songID}.audica");
+            if (!Directory.Exists(@$"{Program.workingDirectory}\audicaFiles")) Directory.CreateDirectory(@$"{Program.workingDirectory}\audicaFiles");
+            audica.Export(@$"{Program.workingDirectory}\audicaFiles\{audica.desc.songID}.audica");
         }
 
         private static void ConvertSongToOGG(OSZ osz, Audica audica, int lastDiffIndex)
         {
             string audioFileName = osz.osufiles[lastDiffIndex].general.audioFileName;
-            string tempDirectory = workingDirectory + @"\AudicaConverterTemp\";
+            string tempDirectory = Program.workingDirectory + @"\AudicaConverterTemp\";
             string tempAudioPath = tempDirectory + @"audio.mp3";
             string tempOggPath = tempDirectory + @"tempogg.ogg";
             string tempMoggPath = tempDirectory + @"tempMogg.mogg";
@@ -141,13 +142,13 @@ namespace AudicaConverter
             zip.GetEntry(audioFileName).ExtractToFile(tempAudioPath);
 
             Process ffmpeg = new Process();
-            ffmpeg.StartInfo.FileName = Program.FFMPEGPATH;
+            ffmpeg.StartInfo.FileName = Program.workingDirectory + Program.FFMPEGNAME;
             ffmpeg.StartInfo.WindowStyle = ProcessWindowStyle.Normal;
             ffmpeg.StartInfo.UseShellExecute = false;
             ffmpeg.StartInfo.RedirectStandardOutput = true;
 
             Process ogg2mogg = new Process();
-            ogg2mogg.StartInfo.FileName = Program.OGG2MOGGPATH;
+            ogg2mogg.StartInfo.FileName = Program.workingDirectory + Program.OGG2MOGGNAME;
             ogg2mogg.StartInfo.WindowStyle = ProcessWindowStyle.Normal;
             ogg2mogg.StartInfo.UseShellExecute = false;
             ogg2mogg.StartInfo.RedirectStandardOutput = true;
@@ -170,6 +171,7 @@ namespace AudicaConverter
         {
             var diff = new Difficulty();
             diff.cues = new List<Cue>();
+            var handColorHandler = new HandColorHandler();
             // do conversion stuff here
             for (int i = 0; i < osufile.hitObjects.Count; i++)
             {
