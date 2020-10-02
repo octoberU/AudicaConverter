@@ -15,7 +15,7 @@ namespace AudicaConverter
     {
         public static string FFMPEGNAME = @"\ffmpeg.exe";
         public static string OGG2MOGGNAME = @"\ogg2mogg.exe";
-        public static string workingDirectory = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+        public static string workingDirectory = Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
 
         static void Main(string[] args)
         {
@@ -23,7 +23,7 @@ namespace AudicaConverter
             {
                 if(item.Contains(".osz")) ConversionProcess.ConvertToAudica(item);
             }
-           // ConversionProcess.ConvertToAudica(@"C:\Users\adamk\source\repos\AudicaConverter\testfile.osz");
+           //ConversionProcess.ConvertToAudica(@"C:\Users\adamk\source\repos\AudicaConverter\testfile.osz");
         }
     }
 
@@ -31,7 +31,7 @@ namespace AudicaConverter
     {
         public static void ConvertToAudica(string filePath)
         {
-            
+            Console.Clear();
             var osz = new OSZ(filePath);
             var audica = new Audica(@$"{Program.workingDirectory}\template.audica");
             Console.WriteLine($"{osz.osufiles[0].metadata.artist} - {osz.osufiles[0].metadata.title}" +
@@ -39,7 +39,7 @@ namespace AudicaConverter
                 $"\nFound {osz.osufiles.Count} difficulties");
 
             Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.WriteLine("\n\nSelect Conversion Mode: \n[1] Convert audio/timing only.\n [2] Convert everything");
+            Console.WriteLine("\n\nSelect Conversion Mode: \n[1] Convert audio/timing only.\n[2] Convert everything");
             Console.ForegroundColor = ConsoleColor.Gray;
             int convertMode = int.Parse(Console.ReadLine());
 
@@ -175,7 +175,9 @@ namespace AudicaConverter
             // do conversion stuff here
             for (int i = 0; i < osufile.hitObjects.Count; i++)
             {
+                var lastHitObject = i > 0 ? osufile.hitObjects[i - 1] : null;
                 var hitObject = osufile.hitObjects[i];
+                float timeSinceLastObject = lastHitObject == null ? 0f : hitObject.time - lastHitObject.time;
                 var audicaDataPos = OsuUtility.GetAudicaPosFromHitObject(hitObject);
                 var cue = new Cue
                     (
@@ -185,7 +187,7 @@ namespace AudicaConverter
                         OsuUtility.GetVelocityForObject(hitObject),
                         audicaDataPos.offset,
                         0f,
-                        1,
+                        handColorHandler.GetHandType(timeSinceLastObject),
                         0
                     );
                 diff.cues.Add(cue);
