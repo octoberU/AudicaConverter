@@ -172,13 +172,15 @@ namespace AudicaConverter
             var diff = new Difficulty();
             diff.cues = new List<Cue>();
             var handColorHandler = new HandColorHandler();
+            HitObject prevRightHitObject = null;
+            HitObject prevLeftHitObject = null;
             // do conversion stuff here
             for (int i = 0; i < osufile.hitObjects.Count; i++)
             {
-                var lastHitObject = i > 0 ? osufile.hitObjects[i - 1] : null;
                 var hitObject = osufile.hitObjects[i];
-                float timeSinceLastObject = lastHitObject == null ? 0f : hitObject.time - lastHitObject.time;
+                var nextHitObject = i + 1 < osufile.hitObjects.Count ? osufile.hitObjects[i + 1] : null;
                 var audicaDataPos = OsuUtility.GetAudicaPosFromHitObject(hitObject);
+                var handColor = handColorHandler.GetHandType(hitObject, prevRightHitObject, prevLeftHitObject, nextHitObject);
                 var cue = new Cue
                     (
                         OsuUtility.MsToTick(hitObject.time, osufile.timingPoints),
@@ -187,11 +189,14 @@ namespace AudicaConverter
                         OsuUtility.GetVelocityForObject(hitObject),
                         audicaDataPos.offset,
                         0f,
-                        handColorHandler.GetHandType(timeSinceLastObject),
+                        handColor,
                         0
                     );
                 diff.cues.Add(cue);
                 Console.WriteLine(cue.tick);
+
+                if (handColor == 1) prevRightHitObject = hitObject;
+                else prevLeftHitObject = hitObject;
             }
 
             return diff;

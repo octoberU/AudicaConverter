@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Xml;
 
 namespace OsuTypes
 {
@@ -59,6 +60,11 @@ namespace OsuTypes
             float offsetY = (tempPosy - y);
 
             return new AudicaDataPos(offsetX, offsetY, pitch);
+        }
+
+        public static float EuclideanDistance(float xFrom, float yFrom, float xTo, float yTo)
+        {
+            return (float)Math.Sqrt(Math.Pow(xTo - xFrom, 2) + Math.Pow(yTo - yFrom, 2));
         }
 
         private static float GetZOffsetForX(float x)
