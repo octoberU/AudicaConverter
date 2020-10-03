@@ -50,7 +50,7 @@ namespace OsuTypes
         public static AudicaDataPos GetAudicaPosFromHitObject(HitObject hitObject)
         {
             float tempPosx = ((hitObject.x) / 512f) * 12f;
-            float tempPosy = ((hitObject.y) / 512) * 7f;
+            float tempPosy = ((hitObject.y) / 512f) * 8f;
 
             var x = Math.Clamp((int)(tempPosx), 0, 11);
             var y = Math.Clamp((int)(tempPosy), 0, 6);

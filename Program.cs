@@ -29,6 +29,7 @@ namespace AudicaConverter
 
     public class ConversionProcess
     {
+        public static bool snapNotes = false;
         public static void ConvertToAudica(string filePath)
         {
             Console.Clear();
@@ -174,6 +175,7 @@ namespace AudicaConverter
             var handColorHandler = new HandColorHandler();
             HitObject prevRightHitObject = null;
             HitObject prevLeftHitObject = null;
+
             // do conversion stuff here
             for (int i = 0; i < osufile.hitObjects.Count; i++)
             {
@@ -181,13 +183,14 @@ namespace AudicaConverter
                 var nextHitObject = i + 1 < osufile.hitObjects.Count ? osufile.hitObjects[i + 1] : null;
                 var audicaDataPos = OsuUtility.GetAudicaPosFromHitObject(hitObject);
                 var handColor = handColorHandler.GetHandType(hitObject, prevRightHitObject, prevLeftHitObject, nextHitObject);
+                var gridOffset = ConversionProcess.snapNotes ? new Cue.GridOffset() : audicaDataPos.offset;
                 var cue = new Cue
                     (
                         OsuUtility.MsToTick(hitObject.time, osufile.timingPoints),
                         OsuUtility.GetTickLengthForObject(hitObject, osufile.timingPoints),
                         audicaDataPos.pitch,
                         OsuUtility.GetVelocityForObject(hitObject),
-                        audicaDataPos.offset,
+                        gridOffset,
                         0f,
                         handColor,
                         0
@@ -199,7 +202,51 @@ namespace AudicaConverter
                 else prevLeftHitObject = hitObject;
             }
 
+            RunChainPass(ref diff.cues);
+
+            SnapNormalTargets(ref diff.cues);
+
             return diff;
+        }
+
+        private static void SnapNormalTargets(ref List<Cue> cues)
+        {
+            foreach (Cue cue in cues)
+            {
+                if(cue.behavior == 0)
+                {
+                    cue.gridOffset = new Cue.GridOffset();
+                }
+            }
+        }
+
+        private static void RunChainPass(ref List<Cue> cues)
+        {
+            bool startedChain = false;
+            for (int i = 0; i < cues.Count; i++)
+            {
+                Cue lastCue = i > 0 ? cues[i-1] : null;
+                Cue nextCue = i + 1 < cues.Count ? cues[i + 1] : null;
+                Cue currentCue = cues[i];
+                if(nextCue != null)
+                {
+                    if(nextCue.tick - currentCue.tick < 145f)
+                    {
+                        if(lastCue != null) startedChain = lastCue.behavior == 5 || lastCue.behavior == 4  && nextCue.tick - currentCue.tick < 121f ? false : true;
+                        nextCue.behavior = 5;
+                        nextCue.handType = currentCue.handType;
+                    }
+                    else
+                    {
+                        startedChain = false;
+                    }
+                }
+                if (startedChain)
+                {
+                    currentCue.behavior = 4;
+                    startedChain = false;
+                }
+            }
         }
 
         public static string RemoveSpecialCharacters(string str)
