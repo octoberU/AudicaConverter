@@ -1,5 +1,6 @@
 ﻿using AudicaTools;
 using Newtonsoft.Json.Schema;
+using osutoaudica;
 using OsuTypes;
 using System;
 using System.Collections.Generic;
@@ -19,6 +20,7 @@ namespace AudicaConverter
 
         static void Main(string[] args)
         {
+            Config.Init();
             foreach (var item in args)
             {
                 if(item.Contains(".osz")) ConversionProcess.ConvertToAudica(item);
@@ -204,7 +206,7 @@ namespace AudicaConverter
 
             RunChainPass(ref diff.cues);
 
-            SnapNormalTargets(ref diff.cues);
+            if(Config.parameters.snapNotes) SnapNormalTargets(ref diff.cues);
 
             return diff;
         }

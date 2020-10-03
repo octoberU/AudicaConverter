@@ -1,4 +1,5 @@
-﻿using OsuTypes;
+﻿using osutoaudica;
+using OsuTypes;
 using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices.WindowsRuntime;
@@ -8,38 +9,38 @@ namespace AudicaConverter
     internal class HandColorHandler
     {
         //The base for exponential decay of accumulated strain on each hand. e.g. strainDecayRate of 0.5 means accumulated strain on each hand is halved every second.
-        private float strainDecayRate = 0.5f;
+        private float strainDecayRate => Config.parameters.strainDecayRate;
 
         // Weights the impact of accumulated historical strain compared to the immediate strain of the new target when choosing hand.
-        private float historicalStrainWeight = 0.5f;
+        private float historicalStrainWeight => Config.parameters.historicalStrainWeight;
 
         //The exponent for which inversed time since last target will be power transformed by. Adjusting this allows adjusting relative strain of different time spacings.
-        private float timeStrainExponent = 2f;
+        private float timeStrainExponent => Config.parameters.timeStrainExponent;
 
         //The amount of time (ms) between notes to be counted as a stream in terms of biasing in favour of right-hand start.
-        private float streamTimeThres = 120f;
+        private float streamTimeThres => Config.parameters.streamTimeThres;
 
 
         //The weight for timing strains impact on total strain
-        private float timeStrainWeight = 0.5f;
+        private float timeStrainWeight => Config.parameters.timeStrainWeight;
 
         //The weight for movement speed strain
-        private float movementStrainWeight = 5f;
+        private float movementStrainWeight => Config.parameters.movementStrainWeight;
 
         //The weight for movement direction strain
-        private float directionStrainWeight = 5f;
+        private float directionStrainWeight => Config.parameters.directionStrainWeight;
 
         //The weight for crossover strain
-        private float crossoverStrainWeight = 25f;
+        private float crossoverStrainWeight => Config.parameters.crossoverStrainWeight;
 
         //The weight of playspace position strain, favouring left hand for left side of playspace and vice versa.
-        private float playspacePositionStrainWeight = 1f;
-            
+        private float playspacePositionStrainWeight => Config.parameters.playspacePositionStrainWeight;
+
         //The weight for starting streams on left hand
-        private float streamStartStrainWeight = 50.0f;
+        private float streamStartStrainWeight => Config.parameters.streamStartStrainWeight;
 
         //The weight for starting (also slow) stacks on left hand
-        private float stackStartStrainWeight = 25.0f;
+        private float stackStartStrainWeight => Config.parameters.stackStartStrainWeight;
 
         private float rightStrain = 0f;
         private float leftStrain = 0f;
