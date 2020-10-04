@@ -1,4 +1,5 @@
-﻿using OsuTypes;
+﻿using osutoaudica.osu__types;
+using OsuTypes;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -10,12 +11,14 @@ namespace OsuTypes
     {
         public General general = new General();
         public Metadata metadata = new Metadata();
+        public OsuDifficulty difficulty = new OsuDifficulty();
         public List<TimingPoint> timingPoints = new List<TimingPoint>();
+        public List<TimingPoint> inheritedTimingPoints = new List<TimingPoint>();
         public List<HitObject> hitObjects = new List<HitObject>();
 
         public osufile(Stream stream)
         {
-            timingPoints.Add(new TimingPoint(0f, 480d));
+            timingPoints.Add(new TimingPoint(0f, 480d, true));
             var ms = new MemoryStream();
             stream.CopyTo(ms);
             string[] osuString = Encoding.UTF8.GetString(ms.ToArray()).Split(new char[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
@@ -33,6 +36,9 @@ namespace OsuTypes
                         case ParseMode.Metadata:
                             ParseMetadata(line);
                             break;
+                        case ParseMode.Difficulty:
+                            ParseDifficulty(line);
+                            break;
                         case ParseMode.TimingPoints:
                             ParseTimingPoint(line);
                             break;
@@ -47,16 +53,21 @@ namespace OsuTypes
 
                 if (line.Contains("[General]")) mode = ParseMode.General;
                 else if (line.Contains("[Metadata]")) mode = ParseMode.Metadata;
+                else if (line.Contains("[Difficulty]")) mode = ParseMode.Difficulty;
                 else if (line.Contains("[TimingPoints]")) mode = ParseMode.TimingPoints;
                 else if (line.Contains("[HitObjects]")) mode = ParseMode.HitObjects;
                 else if (line.Contains("[Colours]")) mode = ParseMode.None;
                 else if (line.Contains("[Events]")) mode = ParseMode.None;
-                else if (line.Contains("[Difficulty]")) mode = ParseMode.None;
                 else if (line.Contains("[Editor]")) mode = ParseMode.None;
                 else if (line.Length < 0) mode = ParseMode.None;
             }
 
             FixFirstTimingPoint(timingPoints);
+        }
+
+        private void ParseDifficulty(string line)
+        {
+            if (line.Contains("SliderMultiplier:")) difficulty.sliderMultiplier = float.Parse(line.Split(":")[1]);
         }
 
         private void FixFirstTimingPoint(List<TimingPoint> timingPoints)
@@ -96,7 +107,9 @@ namespace OsuTypes
             var split = line.Split(",");
             if (split.Length > 2)
             {
-                if (!split[1].Contains("-")) timingPoints.Add(new TimingPoint(int.Parse(split[0]), float.Parse(split[1])));
+                var timingPoint = new TimingPoint(int.Parse(split[0]), float.Parse(split[1]), Convert.ToBoolean(int.Parse(split[6])));
+                if (!timingPoint.inherited) timingPoints.Add(timingPoint);
+                else inheritedTimingPoints.Add(timingPoint);
             }
             
         }

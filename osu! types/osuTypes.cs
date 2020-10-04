@@ -13,11 +13,13 @@ namespace OsuTypes
     {
         public double beatTime;
         public float ms;
+        public bool inherited;
 
-        public TimingPoint(float ms, double beatTime)
+        public TimingPoint(float ms, double beatTime, bool inherited)
         {
             this.beatTime = beatTime;
             this.ms = ms;
+            this.inherited = inherited;
         }
     }
 }
