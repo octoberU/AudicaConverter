@@ -226,6 +226,7 @@ namespace AudicaConverter
         {
             float chainTimeThreshold = 120f;
             float chainSwitchFrequency = 480f;
+            float chainEndRest = 480f;
 
             Cue prevChainHeadCue = null;
 
@@ -252,6 +253,12 @@ namespace AudicaConverter
                     {
                         currentCue.behavior = 5;
                         currentCue.handType = prevCue.handType;
+
+                        //If chain ends and next target is of same color, but within the chain end rest window, invert the color of next target.
+                        if(nextCue != null && nextCue.tick - currentCue.tick > chainTimeThreshold && nextCue.tick - currentCue.tick < chainEndRest && nextCue.handType == currentCue.handType)
+                        {
+                            nextCue.handType = nextCue.handType == 1 ? 2 : 1;
+                        }
                     }
                 }
             }
