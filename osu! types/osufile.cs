@@ -108,6 +108,7 @@ namespace OsuTypes
             if (split.Length > 2)
             {
                 var timingPoint = new TimingPoint(int.Parse(split[0]), float.Parse(split[1]), Convert.ToBoolean(int.Parse(split[6])));
+                timingPoint.inherited = !timingPoint.inherited;
                 if (!timingPoint.inherited) timingPoints.Add(timingPoint);
                 else inheritedTimingPoints.Add(timingPoint);
             }
