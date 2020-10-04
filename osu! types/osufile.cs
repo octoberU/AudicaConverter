@@ -61,7 +61,10 @@ namespace OsuTypes
 
         private void FixFirstTimingPoint(List<TimingPoint> timingPoints)
         {
+            while (timingPoints[1].ms < 0) timingPoints[1].ms += (float)timingPoints[1].beatTime;
+            
             timingPoints[1].ms = timingPoints[1].ms % (float)(timingPoints[1].beatTime * 4);
+            
         }
 
         private void ParseHitObject(string line)
