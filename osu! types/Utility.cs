@@ -14,7 +14,7 @@ namespace OsuTypes
             float tickTime = 0f;
             int i = 0;
 
-            while (i + 1 < timingPoints.Count && ms > timingPoints[i + 1].ms)
+            while (i + 1 < timingPoints.Count && ms >= timingPoints[i + 1].ms)
             {
                 tickTime += (timingPoints[i + 1].ms - timingPoints[i].ms) * 480f / (float)timingPoints[i].beatTime;
                 i++;
