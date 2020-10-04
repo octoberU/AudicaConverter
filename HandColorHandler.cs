@@ -20,7 +20,6 @@ namespace AudicaConverter
         //The amount of time (ms) between notes to be counted as a stream in terms of biasing in favour of right-hand start.
         private float streamTimeThres => Config.parameters.streamTimeThres;
 
-
         //The weight for timing strains impact on total strain
         private float timeStrainWeight => Config.parameters.timeStrainWeight;
 
@@ -39,8 +38,7 @@ namespace AudicaConverter
         //The weight for starting streams on left hand
         private float streamStartStrainWeight => Config.parameters.streamStartStrainWeight;
 
-        //The weight for starting (also slow) stacks on left hand
-        private float stackStartStrainWeight => Config.parameters.stackStartStrainWeight;
+        private bool convertChains => Config.parameters.convertChains;
 
         private float rightStrain = 0f;
         private float leftStrain = 0f;
@@ -94,20 +92,15 @@ namespace AudicaConverter
 
             //Stream start strain
             float leftStreamStartStrain = 0f;
-            if (nextHitObject != null && nextHitObject.time - hitObject.time <= streamTimeThres && (prevHitObject == null || hitObject.time - prevHitObject.time > streamTimeThres))
+            if (!convertChains && nextHitObject != null && nextHitObject.time - hitObject.time <= streamTimeThres && (prevHitObject == null || hitObject.time - prevHitObject.time > streamTimeThres))
                 leftStreamStartStrain = 1f;
-
-            //Stack start bias
-            float leftStackStartStrain = 0f;
-            if (nextHitObject != null && nextHitObject.x == hitObject.x && nextHitObject.y == hitObject.y && (prevHitObject == null || prevHitObject.x != hitObject.x || prevHitObject.y != hitObject.y))
-                leftStackStartStrain = 1f;
 
             
             //Strain combination through weighted sum
             float rightStrainIncrease = timeStrainWeight * rightTimeStrain + movementStrainWeight * rightMovementStrain + directionStrainWeight * rightDirectionStrain +
                 crossoverStrainWeight * rightCrossoverStrain + playspacePositionStrainWeight * rightPlayspacePositionStrain;
             float leftStrainIncrease = timeStrainWeight * leftTimeStrain + movementStrainWeight * leftMovementStrain + directionStrainWeight * leftDirectionStrain +
-                crossoverStrainWeight * leftCrossoverStrain + playspacePositionStrainWeight * leftPlayspacePositionStrain + streamStartStrainWeight * leftStreamStartStrain + stackStartStrainWeight * leftStackStartStrain;
+                crossoverStrainWeight * leftCrossoverStrain + playspacePositionStrainWeight * leftPlayspacePositionStrain + streamStartStrainWeight * leftStreamStartStrain;
 
             //Strain based hand selection and accumulated strain increase
             if (historicalStrainWeight * rightStrain + rightStrainIncrease <= historicalStrainWeight * leftStrain + leftStrainIncrease)

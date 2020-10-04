@@ -8,7 +8,7 @@ namespace OsuTypes
 {
     internal static class OsuUtility
     {
-        public static float MsToTick(float ms, List<TimingPoint> timingPoints)
+        public static float MsToTick(float ms, List<TimingPoint> timingPoints, int roundingPrecision = 1)
         {
             //Timing points is assumed to be a list of timing points sorted in chronological order.
             float tickTime = 0f;
@@ -19,8 +19,7 @@ namespace OsuTypes
                 tickTime += (timingPoints[i + 1].ms - timingPoints[i].ms) * 480f / (float)timingPoints[i].beatTime;
                 i++;
             }
-            tickTime += (ms - timingPoints[i].ms) * 480f / (float)timingPoints[i].beatTime;
-            return tickTime;
+            return (float)Math.Round(tickTime) + (float)Math.Round((ms - timingPoints[i].ms) * 480f / (float)timingPoints[i].beatTime / roundingPrecision) * roundingPrecision;
         }
 
         public static int GetTickLengthForObject(HitObject hitObject, List<TimingPoint> timingPoints)

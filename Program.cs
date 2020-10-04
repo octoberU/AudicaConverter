@@ -120,7 +120,7 @@ namespace AudicaConverter
             var tempList = new List<TempoData>();
             foreach (var timingPoint in osz.osufiles[0].timingPoints)
             {
-                tempList.Add(new TempoData((int)OsuUtility.MsToTick(timingPoint.ms, osz.osufiles[0].timingPoints), TempoData.MicrosecondsPerQuarterNoteFromBPM(60000 / timingPoint.beatTime)));
+                tempList.Add(new TempoData((int)OsuUtility.MsToTick(timingPoint.ms, osz.osufiles[0].timingPoints, roundingPrecision: 1), TempoData.MicrosecondsPerQuarterNoteFromBPM(60000 / timingPoint.beatTime)));
             }
             audica.tempoData = tempList;
 
@@ -188,7 +188,7 @@ namespace AudicaConverter
                 var gridOffset = ConversionProcess.snapNotes ? new Cue.GridOffset() : audicaDataPos.offset;
                 var cue = new Cue
                     (
-                        OsuUtility.MsToTick(hitObject.time, osufile.timingPoints),
+                        (float)Math.Round(OsuUtility.MsToTick(hitObject.time, osufile.timingPoints, roundingPrecision: 10)),
                         OsuUtility.GetTickLengthForObject(hitObject, osufile.timingPoints),
                         audicaDataPos.pitch,
                         OsuUtility.GetVelocityForObject(hitObject),
@@ -204,7 +204,7 @@ namespace AudicaConverter
                 else prevLeftHitObject = hitObject;
             }
 
-            RunChainPass(ref diff.cues);
+            if(Config.parameters.convertChains) RunChainPass(ref diff.cues);
 
             if(Config.parameters.snapNotes) SnapNormalTargets(ref diff.cues);
 
@@ -224,29 +224,35 @@ namespace AudicaConverter
 
         private static void RunChainPass(ref List<Cue> cues)
         {
-            bool startedChain = false;
+            float chainTimeThreshold = 120f;
+            float chainSwitchFrequency = 480f;
+
+            Cue prevChainHeadCue = null;
+
             for (int i = 0; i < cues.Count; i++)
             {
-                Cue lastCue = i > 0 ? cues[i-1] : null;
+                Cue prevCue = i > 0 ? cues[i - 1] : null;
                 Cue nextCue = i + 1 < cues.Count ? cues[i + 1] : null;
                 Cue currentCue = cues[i];
-                if(nextCue != null)
+
+                if ((prevCue == null || currentCue.tick - prevCue.tick > chainTimeThreshold) && nextCue != null && nextCue.tick - currentCue.tick <= chainTimeThreshold)
                 {
-                    if(nextCue.tick - currentCue.tick < 145f)
+                    currentCue.behavior = 4;
+                    prevChainHeadCue = currentCue;
+                }
+                else if (prevCue != null && currentCue.tick - prevCue.tick <= chainTimeThreshold)
+                {
+                    if (currentCue.tick - prevChainHeadCue.tick >= chainSwitchFrequency && nextCue != null && nextCue.tick - currentCue.tick <= chainTimeThreshold)
                     {
-                        if(lastCue != null) startedChain = lastCue.behavior == 5 || lastCue.behavior == 4  && nextCue.tick - currentCue.tick < 121f ? false : true;
-                        nextCue.behavior = 5;
-                        nextCue.handType = currentCue.handType;
+                        currentCue.behavior = 4;
+                        currentCue.handType = prevCue.handType == 1 ? 2 : 1;
+                        prevChainHeadCue = currentCue;
                     }
                     else
                     {
-                        startedChain = false;
+                        currentCue.behavior = 5;
+                        currentCue.handType = prevCue.handType;
                     }
-                }
-                if (startedChain)
-                {
-                    currentCue.behavior = 4;
-                    startedChain = false;
                 }
             }
         }
