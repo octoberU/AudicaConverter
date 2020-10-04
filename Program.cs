@@ -206,6 +206,8 @@ namespace AudicaConverter
 
             if(Config.parameters.convertChains) RunChainPass(ref diff.cues);
 
+            RunStackDistributionPass(ref diff.cues);
+
             if(Config.parameters.snapNotes) SnapNormalTargets(ref diff.cues);
 
             return diff;
@@ -260,6 +262,34 @@ namespace AudicaConverter
                             nextCue.handType = nextCue.handType == 1 ? 2 : 1;
                         }
                     }
+                }
+            }
+        }
+
+        private static void RunStackDistributionPass(ref List<Cue> cues)
+        {
+            float stackItemDistance = 0.2f; //Offset for stack items. Time proportionate distancing is used through the stack based on getting this distance between first and second item in stack
+            float stackResetTime = 960f;
+
+            Cue stackStartCue = cues[0];
+            float stackMovementSpeed = 0f;
+            for (int i = 1; i < cues.Count; i++)
+            {
+                Cue currentCue = cues[i];
+                Cue prevCue = cues[i - 1];
+
+                if (OsuUtility.CuesPosEquals(currentCue, stackStartCue) && currentCue.tick - prevCue.tick < stackResetTime)
+                {
+                    if (stackMovementSpeed == 0f)
+                    {
+                        stackMovementSpeed = stackItemDistance / (currentCue.tick - stackStartCue.tick);
+                    }
+                    currentCue.gridOffset.y -= stackMovementSpeed * (currentCue.tick - stackStartCue.tick);
+                }
+                else
+                {
+                    stackStartCue = currentCue;
+                    stackMovementSpeed = 0f;
                 }
             }
         }

@@ -61,6 +61,11 @@ namespace OsuTypes
             return new AudicaDataPos(offsetX, offsetY, pitch);
         }
 
+        public static bool CuesPosEquals(Cue cue1, Cue cue2)
+        {
+            return cue1.pitch == cue2.pitch && cue1.gridOffset.Equals(cue2.gridOffset);
+        }
+
         public static float EuclideanDistance(float xFrom, float yFrom, float xTo, float yTo)
         {
             return (float)Math.Sqrt(Math.Pow(xTo - xFrom, 2) + Math.Pow(yTo - yFrom, 2));
