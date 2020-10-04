@@ -29,6 +29,9 @@ namespace AudicaConverter
         //The weight for movement direction strain
         private float directionStrainWeight => Config.parameters.directionStrainWeight;
 
+        //The weight for look-ahead movement direction strain
+        private float lookAheadDirectionStrainWeight => Config.parameters.lookAheadDirectionStrainWeight;
+
         //The weight for crossover strain
         private float crossoverStrainWeight => Config.parameters.crossoverStrainWeight;
 
@@ -77,6 +80,15 @@ namespace AudicaConverter
                 leftDirectionStrain = Math.Max((hitObject.x - prevHitObject.x) / 512f, 0f) / ((hitObject.time - prevHitObject.time) / 1000f);
             }
 
+            //Look-ahead direction strains, sets up better future handing with less crossover, and centers the players view better on upcoming notes
+            float rightLookAheadDirectionStrain = 0f;
+            float leftLookAheadDirectionStrain = 0f;
+            if (nextHitObject != null)
+            {
+                rightLookAheadDirectionStrain = Math.Max((nextHitObject.x - hitObject.x) / 512f, 0f) / ((nextHitObject.time - hitObject.time) / 1000f);
+                leftLookAheadDirectionStrain = Math.Max(-(nextHitObject.x - hitObject.x) / 512f, 0f) / ((nextHitObject.time - hitObject.time) / 1000f);
+            }
+
             //Crossover strain. attempts to identify sustained crossover positions based of both previous and next target
             float rightCrossoverStrain = 0f;
             float leftCrossoverStrain = 0f;
@@ -97,9 +109,9 @@ namespace AudicaConverter
 
             
             //Strain combination through weighted sum
-            float rightStrainIncrease = timeStrainWeight * rightTimeStrain + movementStrainWeight * rightMovementStrain + directionStrainWeight * rightDirectionStrain +
+            float rightStrainIncrease = timeStrainWeight * rightTimeStrain + movementStrainWeight * rightMovementStrain + directionStrainWeight * rightDirectionStrain + lookAheadDirectionStrainWeight * rightLookAheadDirectionStrain +
                 crossoverStrainWeight * rightCrossoverStrain + playspacePositionStrainWeight * rightPlayspacePositionStrain;
-            float leftStrainIncrease = timeStrainWeight * leftTimeStrain + movementStrainWeight * leftMovementStrain + directionStrainWeight * leftDirectionStrain +
+            float leftStrainIncrease = timeStrainWeight * leftTimeStrain + movementStrainWeight * leftMovementStrain + directionStrainWeight * leftDirectionStrain + lookAheadDirectionStrainWeight * leftLookAheadDirectionStrain +
                 crossoverStrainWeight * leftCrossoverStrain + playspacePositionStrainWeight * leftPlayspacePositionStrain + streamStartStrainWeight * leftStreamStartStrain;
 
             //Strain based hand selection and accumulated strain increase

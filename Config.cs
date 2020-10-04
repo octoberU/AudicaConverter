@@ -51,13 +51,14 @@ namespace osutoaudica
         
         //HandColorHandler params
         public float strainDecayRate = 0.5f;
-        public float historicalStrainWeight = 0.4f;
+        public float historicalStrainWeight = 0.2f;
         public float timeStrainExponent = 2f;
         public float streamTimeThres = 120f;
         public float timeStrainWeight = 0.5f;
         public float movementStrainWeight = 5f;
         public float directionStrainWeight = 5f;
-        public float crossoverStrainWeight = 25f;
+        public float lookAheadDirectionStrainWeight = 15f;
+        public float crossoverStrainWeight = 15f;
         public float playspacePositionStrainWeight = 1f;
         public float streamStartStrainWeight = 50.0f;
     }
