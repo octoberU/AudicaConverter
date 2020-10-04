@@ -9,18 +9,20 @@ namespace OsuTypes
         public float time;
         public int type;
         public int hitsound;
-        public int pixelLength;
+        public float pixelLength;
         public int repeats;
+        public float endTime;
 
-        public HitObject(float x, float y, float time, int type, int hitsound, int pixelLength, int repeats)
+        public HitObject(float x, float y, float time, int type, int hitsound, float pixelLength, int repeats)
         {
             this.x = x;
             this.y = y;
             this.time = time;
-            this.type = type;
+            this.type = type % 16;
             this.hitsound = hitsound;
             this.pixelLength = pixelLength;
             this.repeats = repeats;
+            endTime = time;
         }
     }
 }

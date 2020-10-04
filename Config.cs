@@ -48,6 +48,7 @@ namespace osutoaudica
     {
         public bool snapNotes = false;
         public bool convertChains = true;
+        public float minSustainLength = 480f;
         
         //HandColorHandler params
         public float strainDecayRate = 0.4f;

@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using System.Linq;
 
 namespace OsuTypes
 {
@@ -14,11 +15,12 @@ namespace OsuTypes
         public OsuDifficulty difficulty = new OsuDifficulty();
         public List<TimingPoint> timingPoints = new List<TimingPoint>();
         public List<TimingPoint> inheritedTimingPoints = new List<TimingPoint>();
+        public List<TimingPoint> mergedTimingPoints = null;
         public List<HitObject> hitObjects = new List<HitObject>();
 
         public osufile(Stream stream)
         {
-            timingPoints.Add(new TimingPoint(0f, 480d, true));
+            timingPoints.Add(new TimingPoint(0f, 480d, false));
             var ms = new MemoryStream();
             stream.CopyTo(ms);
             string[] osuString = Encoding.UTF8.GetString(ms.ToArray()).Split(new char[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
@@ -63,6 +65,43 @@ namespace OsuTypes
             }
 
             FixFirstTimingPoint(timingPoints);
+            MergeTimingPoints();
+            CalculateSliderEndTimes();
+        }
+
+        private void MergeTimingPoints()
+        {
+            mergedTimingPoints = timingPoints.Concat(inheritedTimingPoints).OrderBy(tp => tp.ms).ThenBy(tp => tp.inherited).ToList();
+            TimingPoint prevUninheritedTimingPoint = null;
+            for (int i = 0; i < mergedTimingPoints.Count; i++)
+            {
+                TimingPoint timingPoint = mergedTimingPoints[i];
+
+                if (!timingPoint.inherited)
+                {
+                    prevUninheritedTimingPoint = timingPoint;
+                }
+                else if (timingPoint.ms == prevUninheritedTimingPoint.ms)
+                {
+                    prevUninheritedTimingPoint.sliderVelocity = timingPoint.sliderVelocity;
+                    mergedTimingPoints.RemoveAt(i--);
+                }
+                else
+                {
+                    timingPoint.beatTime = prevUninheritedTimingPoint.beatTime;
+                }
+            }
+        }
+
+        private void CalculateSliderEndTimes()
+        {
+            foreach(HitObject hitObject in hitObjects)
+            {
+                if (hitObject.type == 2 || hitObject.type == 6)
+                {
+                    hitObject.endTime = hitObject.time + OsuUtility.CalculateSliderDuration(hitObject, difficulty.sliderMultiplier, mergedTimingPoints);
+                }
+            }
         }
 
         private void ParseDifficulty(string line)
@@ -85,11 +124,11 @@ namespace OsuTypes
             int type = int.Parse(split[3]);
             if(type == 1 || type == 5)
             {
-                this.hitObjects.Add(new HitObject(float.Parse(split[0]), float.Parse(split[1]), float.Parse(split[2]), int.Parse(split[3]), int.Parse(split[4]), 0, 0));
+                this.hitObjects.Add(new HitObject(float.Parse(split[0]), float.Parse(split[1]), float.Parse(split[2]), int.Parse(split[3]), int.Parse(split[4]), 0f, 0));
             }
             else if(type == 2 || type == 6)
             {
-                this.hitObjects.Add(new HitObject(float.Parse(split[0]), float.Parse(split[1]), float.Parse(split[2]), int.Parse(split[3]), int.Parse(split[4]), 0, 0));
+                this.hitObjects.Add(new HitObject(float.Parse(split[0]), float.Parse(split[1]), float.Parse(split[2]), int.Parse(split[3]), int.Parse(split[4]), float.Parse(split[7]), int.Parse(split[6])));
             }
             
         }
@@ -107,8 +146,7 @@ namespace OsuTypes
             var split = line.Split(",");
             if (split.Length > 2)
             {
-                var timingPoint = new TimingPoint(int.Parse(split[0]), float.Parse(split[1]), Convert.ToBoolean(int.Parse(split[6])));
-                timingPoint.inherited = !timingPoint.inherited;
+                var timingPoint = new TimingPoint(int.Parse(split[0]), float.Parse(split[1]), !Convert.ToBoolean(int.Parse(split[6])));
                 if (!timingPoint.inherited) timingPoints.Add(timingPoint);
                 else inheritedTimingPoints.Add(timingPoint);
             }

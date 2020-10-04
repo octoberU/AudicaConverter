@@ -25,7 +25,7 @@ namespace AudicaConverter
             {
                 if(item.Contains(".osz")) ConversionProcess.ConvertToAudica(item);
             }
-           //ConversionProcess.ConvertToAudica(@"C:\Users\adamk\source\repos\AudicaConverter\testfile.osz");
+           //ConversionProcess.ConvertToAudica(@"C:\audica\netcoreapp3.1\532522 SakiZ - osu!memories.osz");
         }
     }
 
@@ -186,16 +186,28 @@ namespace AudicaConverter
                 var audicaDataPos = OsuUtility.GetAudicaPosFromHitObject(hitObject);
                 var handColor = handColorHandler.GetHandType(hitObject, prevRightHitObject, prevLeftHitObject, nextHitObject);
                 var gridOffset = ConversionProcess.snapNotes ? new Cue.GridOffset() : audicaDataPos.offset;
+                float tick = OsuUtility.MsToTick(hitObject.time, osufile.timingPoints, roundingPrecision: 10);
+                int behavior = 0;
+                int tickLength = 120;
+                if (hitObject.type == 2 || hitObject.type == 6)
+                {
+                    int sliderTickDuration = (int)OsuUtility.MsToTick(hitObject.endTime, osufile.timingPoints, roundingPrecision: 10) - (int)tick;
+                    if (sliderTickDuration >= Config.parameters.minSustainLength)
+                    {
+                        behavior = 3;
+                        tickLength = sliderTickDuration;
+                    }
+                }
                 var cue = new Cue
                     (
-                        (float)Math.Round(OsuUtility.MsToTick(hitObject.time, osufile.timingPoints, roundingPrecision: 10)),
-                        OsuUtility.GetTickLengthForObject(hitObject, osufile.timingPoints),
+                        tick,
+                        tickLength,
                         audicaDataPos.pitch,
                         OsuUtility.GetVelocityForObject(hitObject),
                         gridOffset,
                         0f,
                         handColor,
-                        0
+                        behavior
                     );
                 diff.cues.Add(cue);
                 Console.WriteLine(cue.tick);

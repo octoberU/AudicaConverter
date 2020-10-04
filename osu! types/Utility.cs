@@ -1,8 +1,10 @@
 ﻿using AudicaTools;
+using Newtonsoft.Json.Serialization;
 using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Xml;
+using System.Linq;
 
 namespace OsuTypes
 {
@@ -13,7 +15,6 @@ namespace OsuTypes
             //Timing points is assumed to be a list of timing points sorted in chronological order.
             float tickTime = 0f;
             int i = 0;
-
             while (i + 1 < timingPoints.Count && ms >= timingPoints[i + 1].ms)
             {
                 tickTime += (timingPoints[i + 1].ms - timingPoints[i].ms) * 480f / (float)timingPoints[i].beatTime;
@@ -22,10 +23,34 @@ namespace OsuTypes
             return (float)Math.Round(tickTime) + (float)Math.Round((ms - timingPoints[i].ms) * 480f / (float)timingPoints[i].beatTime / roundingPrecision) * roundingPrecision;
         }
 
-        public static int GetTickLengthForObject(HitObject hitObject, List<TimingPoint> timingPoints)
+        public static float CalculateSliderDuration(HitObject hitObject, float globalSliderVelocity, List<TimingPoint> mergedTimingPoints)
         {
-            if (hitObject.type == 1 || hitObject.type == 5) return 20;
-            else return 480; // This is a placeholder for later, calculate slider pixel length here
+            float time = hitObject.time;
+            float remainingPixelLength = hitObject.pixelLength * hitObject.repeats;
+            int prevTimingPointIdx = mergedTimingPoints.FindIndex(tp => tp.ms >= hitObject.time) - 1;
+            if (prevTimingPointIdx < 0) prevTimingPointIdx = mergedTimingPoints.Count() - 1;
+
+            while (remainingPixelLength > 0)
+            {
+                TimingPoint prevTimingPoint = mergedTimingPoints[prevTimingPointIdx];
+                TimingPoint nextTimingPoint = prevTimingPointIdx + 1 < mergedTimingPoints.Count ? mergedTimingPoints[prevTimingPointIdx + 1] : null;
+                //Try finishing the slider with the current sv/beatTime
+                float timeToFinish = remainingPixelLength / (100 * globalSliderVelocity * prevTimingPoint.sliderVelocity) * (float)prevTimingPoint.beatTime;
+                if (nextTimingPoint == null || time + timeToFinish <= nextTimingPoint.ms)
+                {
+                    //Slider complete
+                    time += timeToFinish;
+                    remainingPixelLength = 0;
+                }
+                else
+                {
+                    //Slider not finished before next tick. Calculate how far it got
+                    remainingPixelLength -= (nextTimingPoint.ms - time) / (float)prevTimingPoint.beatTime * 100f * globalSliderVelocity * prevTimingPoint.sliderVelocity;
+                    time = nextTimingPoint.ms;
+                    prevTimingPointIdx++;
+                }
+            }
+            return time - hitObject.time;
         }
 
         public static int GetVelocityForObject(HitObject hitObject)
