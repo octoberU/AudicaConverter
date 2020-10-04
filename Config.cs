@@ -18,6 +18,7 @@ namespace osutoaudica
             if (File.Exists(configDirectory))
             {
                 LoadConfig();
+                SaveConfig();
             }
             else
             {
