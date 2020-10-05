@@ -71,6 +71,18 @@ namespace OsuTypes
             }
         }
 
+        public struct Coordinate2D
+        {
+            public float x;
+            public float y;
+
+            public Coordinate2D(float x, float y)
+            {
+                this.x = x;
+                this.y = y;
+            }
+        }
+
         public static AudicaDataPos GetAudicaPosFromHitObject(HitObject hitObject)
         {
             float tempPosx = ((hitObject.x) / 512f) * 8f + 1.5f;
@@ -84,6 +96,37 @@ namespace OsuTypes
             float offsetY = (tempPosy - y);
 
             return new AudicaDataPos(offsetX, offsetY, pitch);
+        }
+
+        public static AudicaDataPos CoordinateToAudicaPos(Coordinate2D coordinate)
+        {
+            float tempPosX = coordinate.x;
+            float tempPosY = coordinate.y;
+
+            int x = Math.Clamp((int)(tempPosX), 0, 11);
+            int y = Math.Clamp((int)(tempPosY), 0, 6);
+            int pitch = x + 12 * y;
+
+            float offsetX = (tempPosX - x);
+            float offsetY = (tempPosY - y);
+
+            return new AudicaDataPos(offsetX, offsetY, pitch);
+        }
+
+        public static Coordinate2D AudicaPosToCoordinate(AudicaDataPos audicaPos)
+        {
+            float x = audicaPos.pitch % 12;
+            float y = audicaPos.pitch / 12;
+            x += audicaPos.offset.x;
+            y += audicaPos.offset.y;
+
+            return new Coordinate2D(x, y);
+        }
+
+        public static Coordinate2D GetPosFromCue(Cue cue)
+        {
+            AudicaDataPos audicaPos = new AudicaDataPos(cue.gridOffset.x, cue.gridOffset.y, cue.pitch);
+            return AudicaPosToCoordinate(audicaPos);
         }
 
         public static bool CuesPosEquals(Cue cue1, Cue cue2)

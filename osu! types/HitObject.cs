@@ -1,4 +1,5 @@
-﻿using System.Security.Cryptography.X509Certificates;
+﻿using AudicaTools;
+using System.Security.Cryptography.X509Certificates;
 
 namespace OsuTypes
 {
@@ -19,6 +20,7 @@ namespace OsuTypes
         public float audicaEndTick;
         public int audicaBehavior;
         public int audicaHandType;
+        public Cue audicaCue;
 
         public HitObject(float x, float y, float time, int type, int hitsound, float pixelLength, int repeats)
         {

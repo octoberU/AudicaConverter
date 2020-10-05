@@ -52,7 +52,8 @@ namespace osutoaudica
         public bool convertSustains = true;
         public float minSustainLength = 960f;
 
-        public float stackItemDistance = 0.2f;
+        public bool adaptiveStackDirection = true;
+        public float stackItemDistance = 0.333f;
 
         //HandColorHandler params
         public float strainDecayRate = 0.4f;

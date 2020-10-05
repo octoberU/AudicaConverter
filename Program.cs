@@ -222,6 +222,7 @@ namespace AudicaConverter
                         hitObject.audicaHandType,
                         hitObject.audicaBehavior
                     );
+                hitObject.audicaCue = cue;
                 diff.cues.Add(cue);
             }
 
@@ -327,7 +328,59 @@ namespace AudicaConverter
                     {
                         stackMovementSpeed = stackItemDistance / (currentCue.tick - stackStartCue.tick);
                     }
-                    currentCue.gridOffset.y -= stackMovementSpeed * (currentCue.tick - stackStartCue.tick);
+
+                    OsuUtility.Coordinate2D direction = new OsuUtility.Coordinate2D(0f, 0f);
+                    OsuUtility.Coordinate2D currentCuePos = OsuUtility.GetPosFromCue(currentCue);
+
+                    if (Config.parameters.adaptiveStackDirection)
+                    {
+                        //Find direction to next target of same color outside the stack
+                        for (int j = 1; i + j < cues.Count; j++)
+                        {
+                            Cue otherCue = cues[i + j];
+                            if (currentCue.handType == otherCue.handType && !OsuUtility.CuesPosEquals(currentCue, otherCue))
+                            {
+                                OsuUtility.Coordinate2D otherCuePos = OsuUtility.GetPosFromCue(otherCue);
+                                direction.x = otherCuePos.x - currentCuePos.x;
+                                direction.y = otherCuePos.y - currentCuePos.y;
+                                break;
+                            }
+                        }
+                        //If no next target exists, use direction from previous target of same hand color
+                        if (direction.x == 0f && direction.y == 0f)
+                        {
+                            for (int j = 1; j <= i; j++)
+                            {
+                                Cue otherCue = cues[i - j];
+                                if (currentCue.handType == otherCue.handType && !OsuUtility.CuesPosEquals(currentCue, otherCue))
+                                {
+                                    OsuUtility.Coordinate2D otherCuePos = OsuUtility.GetPosFromCue(otherCue);
+                                    direction.x = currentCuePos.x - otherCuePos.x;
+                                    direction.y = currentCuePos.y - otherCuePos.y;
+                                    break;
+                                }
+                            }
+                        }
+                        //If neither exists, you have one hell of a weird level, but let's default to down I guess...
+                        if (direction.x == 0f && direction.y == 0f) direction = new OsuUtility.Coordinate2D(0f, -1f);
+                    }
+                    else
+                    {
+                        direction = new OsuUtility.Coordinate2D(0f, -1f);
+                    }
+
+                    //normalize
+                    float length = (float)Math.Sqrt(direction.x * direction.x + direction.y * direction.y);
+                    direction.x /= length;
+                    direction.y /= length;
+
+                    OsuUtility.Coordinate2D newPos = new OsuUtility.Coordinate2D(currentCuePos.x + direction.x * stackMovementSpeed * (currentCue.tick - stackStartCue.tick),
+                        currentCuePos.y + direction.y * stackMovementSpeed * (currentCue.tick - stackStartCue.tick));
+
+                    OsuUtility.AudicaDataPos newAudicaPos = OsuUtility.CoordinateToAudicaPos(newPos);
+
+                    currentCue.pitch = newAudicaPos.pitch;
+                    currentCue.gridOffset = newAudicaPos.offset;
                 }
                 else
                 {
