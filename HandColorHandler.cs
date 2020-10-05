@@ -23,6 +23,12 @@ namespace AudicaConverter
         //The fixed, distance-independent strain factor of look-ahead strain
         private float lookAheadFixedStrain => Config.parameters.lookAheadFixedStrain;
 
+        //The time window after a hold where post-hold rest is encouraged
+        private float holdRestTime => Config.parameters.holdRestTime;
+
+        //The exponent of the power transform of the hold rest strain
+        private float holdRestTransformExponent => Config.parameters.holdRestTransformExponent;
+
         //The weight for timing strains impact on total strain
         private float timeStrainWeight => Config.parameters.timeStrainWeight;
 
@@ -40,6 +46,9 @@ namespace AudicaConverter
 
         //The weight of playspace position strain, favouring left hand for left side of playspace and vice versa.
         private float playspacePositionStrainWeight => Config.parameters.playspacePositionStrainWeight;
+
+        //The weight for post-hold refire strain
+        private float holdRestStrainWeight => Config.parameters.holdRestStrainWeight;
 
         //The weight for starting streams on left hand
         private float streamStartStrainWeight => Config.parameters.streamStartStrainWeight;
@@ -105,6 +114,14 @@ namespace AudicaConverter
             float rightPlayspacePositionStrain = Math.Max(1f - hitObject.x / 206f, 0f);
             float leftPlayspacePositionStrain = Math.Max(hitObject.x / 206f - 1f, 0f);
 
+            //Hold rest strain, straining quick re-fires after releasing sustains/chains on the same hand
+            float rightHoldStrain = 0f;
+            float leftHoldStrain = 0f;
+            if (prevRightHitObject != null && prevRightHitObject.audicaBehavior == 3 && hitObject.time - prevRightHitObject.endTime < holdRestTime)
+                rightHoldStrain = (float)Math.Pow(1 - (hitObject.time - prevRightHitObject.endTime) / holdRestTime, holdRestTransformExponent);
+            if (prevLeftHitObject != null && prevLeftHitObject.audicaBehavior == 3 && hitObject.time - prevLeftHitObject.endTime < holdRestTime)
+                leftHoldStrain = (float)Math.Pow(1 - (hitObject.time - prevLeftHitObject.endTime) / holdRestTime, holdRestTransformExponent);
+
             //Stream start strain
             float leftStreamStartStrain = 0f;
             if (!convertChains && nextHitObject != null && nextHitObject.time - hitObject.time <= streamTimeThres && (prevHitObject == null || hitObject.time - prevHitObject.time > streamTimeThres))
@@ -113,9 +130,9 @@ namespace AudicaConverter
             
             //Strain combination through weighted sum
             float rightStrainIncrease = timeStrainWeight * rightTimeStrain + movementStrainWeight * rightMovementStrain + directionStrainWeight * rightDirectionStrain + lookAheadDirectionStrainWeight * rightLookAheadDirectionStrain +
-                crossoverStrainWeight * rightCrossoverStrain + playspacePositionStrainWeight * rightPlayspacePositionStrain;
+                crossoverStrainWeight * rightCrossoverStrain + playspacePositionStrainWeight * rightPlayspacePositionStrain + holdRestStrainWeight * rightHoldStrain;
             float leftStrainIncrease = timeStrainWeight * leftTimeStrain + movementStrainWeight * leftMovementStrain + directionStrainWeight * leftDirectionStrain + lookAheadDirectionStrainWeight * leftLookAheadDirectionStrain +
-                crossoverStrainWeight * leftCrossoverStrain + playspacePositionStrainWeight * leftPlayspacePositionStrain + streamStartStrainWeight * leftStreamStartStrain;
+                crossoverStrainWeight * leftCrossoverStrain + playspacePositionStrainWeight * leftPlayspacePositionStrain + holdRestStrainWeight * leftHoldStrain + streamStartStrainWeight * leftStreamStartStrain;
 
             //Strain based hand selection and accumulated strain increase
             if (historicalStrainWeight * rightStrain + rightStrainIncrease <= historicalStrainWeight * leftStrain + leftStrainIncrease)

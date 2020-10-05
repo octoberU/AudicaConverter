@@ -48,7 +48,7 @@ namespace osutoaudica
     {
         public bool snapNotes = false;
         public bool convertChains = true;
-        public float minSustainLength = 480f;
+        public float minSustainLength = 960f;
         
         //HandColorHandler params
         public float strainDecayRate = 0.4f;
@@ -56,12 +56,15 @@ namespace osutoaudica
         public float timeStrainExponent = 2f;
         public float streamTimeThres = 120f;
         public float lookAheadFixedStrain = 0.1f;
+        public float holdRestTime = 400f;
+        public float holdRestTransformExponent = 2f;
         public float timeStrainWeight = 0.7f;
         public float movementStrainWeight = 5f;
         public float directionStrainWeight = 3f;
         public float lookAheadDirectionStrainWeight = 15f;
         public float crossoverStrainWeight = 5f;
-        public float playspacePositionStrainWeight = 1f;
+        public float playspacePositionStrainWeight = 3f;
+        public float holdRestStrainWeight = 200f;
         public float streamStartStrainWeight = 50.0f;
     }
 

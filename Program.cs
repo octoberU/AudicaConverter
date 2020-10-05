@@ -198,6 +198,7 @@ namespace AudicaConverter
                         tickLength = sliderTickDuration;
                     }
                 }
+                hitObject.audicaBehavior = behavior;
                 var cue = new Cue
                     (
                         tick,

@@ -12,6 +12,7 @@ namespace OsuTypes
         public float pixelLength;
         public int repeats;
         public float endTime;
+        public int audicaBehavior;
 
         public HitObject(float x, float y, float time, int type, int hitsound, float pixelLength, int repeats)
         {
