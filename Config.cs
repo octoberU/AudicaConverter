@@ -51,7 +51,9 @@ namespace osutoaudica
         public bool ignoreSlidersForChainConvert = true;
         public bool convertSustains = true;
         public float minSustainLength = 960f;
-        
+
+        public float stackItemDistance = 0.2f;
+
         //HandColorHandler params
         public float strainDecayRate = 0.4f;
         public float historicalStrainWeight = 0.2f;

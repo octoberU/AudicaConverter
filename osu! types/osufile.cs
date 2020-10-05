@@ -131,7 +131,8 @@ namespace OsuTypes
         {
             var split = line.Split(",");
             if (split.Length < 2) return;
-            int type = int.Parse(split[3]);
+            int type = int.Parse(split[3]) % 16;
+
             if(type == 1 || type == 5)
             {
                 this.hitObjects.Add(new HitObject(float.Parse(split[0]), float.Parse(split[1]), float.Parse(split[2]), int.Parse(split[3]), int.Parse(split[4]), 0f, 0));
