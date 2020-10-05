@@ -12,7 +12,13 @@ namespace OsuTypes
         public float pixelLength;
         public int repeats;
         public float endTime;
+        public float endX;
+        public float endY;
+
+        public float audicaTick;
+        public float audicaEndTick;
         public int audicaBehavior;
+        public int audicaHandType;
 
         public HitObject(float x, float y, float time, int type, int hitsound, float pixelLength, int repeats)
         {
@@ -23,7 +29,11 @@ namespace OsuTypes
             this.hitsound = hitsound;
             this.pixelLength = pixelLength;
             this.repeats = repeats;
+
             endTime = time;
+            endX = x;
+            endY = y;
+            audicaBehavior = 0;
         }
     }
 }

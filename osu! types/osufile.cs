@@ -67,6 +67,7 @@ namespace OsuTypes
             FixFirstTimingPoint(timingPoints);
             MergeTimingPoints();
             CalculateSliderEndTimes();
+            CalculateAudicaTicks();
         }
 
         private void MergeTimingPoints()
@@ -101,6 +102,15 @@ namespace OsuTypes
                 {
                     hitObject.endTime = hitObject.time + OsuUtility.CalculateSliderDuration(hitObject, difficulty.sliderMultiplier, mergedTimingPoints);
                 }
+            }
+        }
+
+        private void CalculateAudicaTicks()
+        {
+            foreach (HitObject hitObject in hitObjects)
+            {
+                hitObject.audicaTick = OsuUtility.MsToTick(hitObject.time, timingPoints, roundingPrecision: 10);
+                hitObject.audicaEndTick = OsuUtility.MsToTick(hitObject.endTime, timingPoints, roundingPrecision: 10);
             }
         }
 

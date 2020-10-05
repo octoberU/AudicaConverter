@@ -178,46 +178,52 @@ namespace AudicaConverter
             HitObject prevRightHitObject = null;
             HitObject prevLeftHitObject = null;
 
+            if (Config.parameters.convertChains) RunChainPass(ref osufile.hitObjects);
+            if (Config.parameters.convertSustains) RunSustainPass(ref osufile.hitObjects);
+            ResetEndTimes(ref osufile.hitObjects);
+
             // do conversion stuff here
             for (int i = 0; i < osufile.hitObjects.Count; i++)
             {
                 var hitObject = osufile.hitObjects[i];
-                var nextHitObject = i + 1 < osufile.hitObjects.Count ? osufile.hitObjects[i + 1] : null;
                 var audicaDataPos = OsuUtility.GetAudicaPosFromHitObject(hitObject);
-                var handColor = handColorHandler.GetHandType(hitObject, prevRightHitObject, prevLeftHitObject, nextHitObject);
                 var gridOffset = ConversionProcess.snapNotes ? new Cue.GridOffset() : audicaDataPos.offset;
-                float tick = OsuUtility.MsToTick(hitObject.time, osufile.timingPoints, roundingPrecision: 10);
-                int behavior = 0;
                 int tickLength = 120;
-                if (hitObject.type == 2 || hitObject.type == 6)
+
+                if (hitObject.audicaBehavior == 5)
                 {
-                    int sliderTickDuration = (int)OsuUtility.MsToTick(hitObject.endTime, osufile.timingPoints, roundingPrecision: 10) - (int)tick;
-                    if (sliderTickDuration >= Config.parameters.minSustainLength)
-                    {
-                        behavior = 3;
-                        tickLength = sliderTickDuration;
-                    }
+                    hitObject.audicaHandType = osufile.hitObjects[i - 1].audicaHandType;
                 }
-                hitObject.audicaBehavior = behavior;
+                else
+                {
+                    if (hitObject.audicaBehavior == 3)
+                    {
+                        tickLength = (int)hitObject.audicaEndTick - (int)hitObject.audicaTick;
+                    }
+
+                    HitObject nextHitObject = null; //Next non chain-link hitObject
+                    for (int j = 1; nextHitObject==null && i+j < osufile.hitObjects.Count; j++)
+                    {
+                        if (osufile.hitObjects[i + j].audicaBehavior != 5) nextHitObject = osufile.hitObjects[i + j];
+                    }
+                    hitObject.audicaHandType = handColorHandler.GetHandType(hitObject, prevRightHitObject, prevLeftHitObject, nextHitObject);
+                    if (hitObject.audicaHandType == 1) prevRightHitObject = hitObject;
+                    else prevLeftHitObject = hitObject;
+                }
+
                 var cue = new Cue
                     (
-                        tick,
+                        hitObject.audicaTick,
                         tickLength,
                         audicaDataPos.pitch,
                         OsuUtility.GetVelocityForObject(hitObject),
                         gridOffset,
                         0f,
-                        handColor,
-                        behavior
+                        hitObject.audicaHandType,
+                        hitObject.audicaBehavior
                     );
                 diff.cues.Add(cue);
-                Console.WriteLine(cue.tick);
-
-                if (handColor == 1) prevRightHitObject = hitObject;
-                else prevLeftHitObject = hitObject;
             }
-
-            if(Config.parameters.convertChains) RunChainPass(ref diff.cues);
 
             RunStackDistributionPass(ref diff.cues);
 
@@ -237,44 +243,68 @@ namespace AudicaConverter
             }
         }
 
-        private static void RunChainPass(ref List<Cue> cues)
+        private static void RunChainPass(ref List<HitObject> hitObjects)
         {
             float chainTimeThreshold = 120f;
             float chainSwitchFrequency = 480f;
-            float chainEndRest = 480f;
 
-            Cue prevChainHeadCue = null;
+            HitObject prevChainHeadHitObject = null;
 
-            for (int i = 0; i < cues.Count; i++)
+            for (int i = 0; i < hitObjects.Count; i++)
             {
-                Cue prevCue = i > 0 ? cues[i - 1] : null;
-                Cue nextCue = i + 1 < cues.Count ? cues[i + 1] : null;
-                Cue currentCue = cues[i];
+                HitObject prevHitObject = i > 0 ? hitObjects[i - 1] : null;
+                HitObject nextHitObject = i + 1 < hitObjects.Count ? hitObjects[i + 1] : null;
+                HitObject currentHitObject = hitObjects[i];
 
-                if ((prevCue == null || currentCue.tick - prevCue.tick > chainTimeThreshold) && nextCue != null && nextCue.tick - currentCue.tick <= chainTimeThreshold)
+                if (Config.parameters.ignoreSlidersForChainConvert && (currentHitObject.type == 2 || currentHitObject.type == 6))
+                    continue;
+
+                if ((prevHitObject == null || currentHitObject.audicaTick - prevHitObject.audicaTick > chainTimeThreshold) && nextHitObject != null &&
+                    nextHitObject.audicaTick - currentHitObject.audicaTick <= chainTimeThreshold && (!Config.parameters.ignoreSlidersForChainConvert || !(nextHitObject.type == 2 || nextHitObject.type == 6)))
                 {
-                    currentCue.behavior = 4;
-                    prevChainHeadCue = currentCue;
+                    currentHitObject.audicaBehavior = 4;
+                    prevChainHeadHitObject = currentHitObject;
                 }
-                else if (prevCue != null && currentCue.tick - prevCue.tick <= chainTimeThreshold)
+                else if (prevHitObject != null && currentHitObject.audicaTick - prevHitObject.audicaTick <= chainTimeThreshold)
                 {
-                    if (currentCue.tick - prevChainHeadCue.tick >= chainSwitchFrequency && nextCue != null && nextCue.tick - currentCue.tick <= chainTimeThreshold)
+                    if (currentHitObject.audicaTick - prevChainHeadHitObject.audicaTick >= chainSwitchFrequency && nextHitObject != null && nextHitObject.audicaTick - currentHitObject.audicaTick <= chainTimeThreshold &&
+                        (!Config.parameters.ignoreSlidersForChainConvert || !(nextHitObject.type == 2 || nextHitObject.type == 6)))
                     {
-                        currentCue.behavior = 4;
-                        currentCue.handType = prevCue.handType == 1 ? 2 : 1;
-                        prevChainHeadCue = currentCue;
+                        currentHitObject.audicaBehavior = 4;
+                        prevChainHeadHitObject = currentHitObject;
                     }
                     else
                     {
-                        currentCue.behavior = 5;
-                        currentCue.handType = prevCue.handType;
-
-                        //If chain ends and next target is of same color, but within the chain end rest window, invert the color of next target.
-                        if(nextCue != null && nextCue.tick - currentCue.tick > chainTimeThreshold && nextCue.tick - currentCue.tick < chainEndRest && nextCue.handType == currentCue.handType)
-                        {
-                            nextCue.handType = nextCue.handType == 1 ? 2 : 1;
-                        }
+                        currentHitObject.audicaBehavior = 5;
+                        prevChainHeadHitObject.endTime = currentHitObject.time;
+                        prevChainHeadHitObject.audicaEndTick = currentHitObject.audicaEndTick;
+                        prevChainHeadHitObject.endX = currentHitObject.x;
+                        prevChainHeadHitObject.endY = currentHitObject.y;
                     }
+                }
+            }
+        }
+
+        private static void RunSustainPass(ref List<HitObject> hitObjects)
+        {
+            foreach (HitObject hitObject in hitObjects)
+            {
+                int sliderTickDuration = (int)hitObject.audicaEndTick - (int)hitObject.audicaTick;
+                if (sliderTickDuration >= Config.parameters.minSustainLength)
+                {
+                    hitObject.audicaBehavior = 3;
+                }
+            }
+        }
+
+        private static void ResetEndTimes(ref List<HitObject> hitObjects)
+        {
+            foreach (HitObject hitObject in hitObjects)
+            {
+                if (hitObject.audicaBehavior != 3 && hitObject.audicaBehavior != 4)
+                {
+                    hitObject.endTime = hitObject.time;
+                    hitObject.audicaEndTick = hitObject.audicaTick;
                 }
             }
         }

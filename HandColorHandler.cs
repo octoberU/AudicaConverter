@@ -53,8 +53,6 @@ namespace AudicaConverter
         //The weight for starting streams on left hand
         private float streamStartStrainWeight => Config.parameters.streamStartStrainWeight;
 
-        private bool convertChains => Config.parameters.convertChains;
-
         private float rightStrain = 0f;
         private float leftStrain = 0f;
 
@@ -74,22 +72,22 @@ namespace AudicaConverter
             //Time strain
             float rightTimeStrain = 0f;
             float leftTimeStrain = 0f;
-            if (prevRightHitObject != null) rightTimeStrain = (float)Math.Pow((hitObject.time - prevRightHitObject.time) / 1000f, -timeStrainExponent);
-            if (prevLeftHitObject != null) leftTimeStrain = (float)Math.Pow((hitObject.time - prevLeftHitObject.time) / 1000f, -timeStrainExponent);
+            if (prevRightHitObject != null) rightTimeStrain = (float)Math.Pow((hitObject.time - prevRightHitObject.endTime) / 1000f, -timeStrainExponent);
+            if (prevLeftHitObject != null) leftTimeStrain = (float)Math.Pow((hitObject.time - prevLeftHitObject.endTime) / 1000f, -timeStrainExponent);
 
             //Movement speed strain
             float rightMovementStrain = 0f;
             float leftMovementStrain = 0f;
-            if (prevRightHitObject != null) rightMovementStrain = OsuUtility.EuclideanDistance(prevRightHitObject.x, prevRightHitObject.y, hitObject.x, hitObject.y) / 512f / ((hitObject.time - prevRightHitObject.time)/1000f);
-            if (prevLeftHitObject != null) leftMovementStrain = OsuUtility.EuclideanDistance(prevLeftHitObject.x, prevLeftHitObject.y, hitObject.x, hitObject.y) / 512f / ((hitObject.time - prevLeftHitObject.time) / 1000f);
+            if (prevRightHitObject != null) rightMovementStrain = OsuUtility.EuclideanDistance(prevRightHitObject.endX, prevRightHitObject.endY, hitObject.x, hitObject.y) / 512f / ((hitObject.time - prevRightHitObject.endTime)/1000f);
+            if (prevLeftHitObject != null) leftMovementStrain = OsuUtility.EuclideanDistance(prevLeftHitObject.endX, prevLeftHitObject.endY, hitObject.x, hitObject.y) / 512f / ((hitObject.time - prevLeftHitObject.endTime) / 1000f);
 
             //Direction strain. Adds strain based on horizontal movement from the previous target
             float rightDirectionStrain = 0f;
             float leftDirectionStrain = 0f;
             if (prevHitObject != null)
             {
-                rightDirectionStrain = Math.Max(-(hitObject.x - prevHitObject.x) / 512f, 0f) / ((hitObject.time - prevHitObject.time) / 1000f);
-                leftDirectionStrain = Math.Max((hitObject.x - prevHitObject.x) / 512f, 0f) / ((hitObject.time - prevHitObject.time) / 1000f);
+                rightDirectionStrain = Math.Max(-(hitObject.x - prevHitObject.endX) / 512f, 0f) / ((hitObject.time - prevHitObject.endTime) / 1000f);
+                leftDirectionStrain = Math.Max((hitObject.x - prevHitObject.endY) / 512f, 0f) / ((hitObject.time - prevHitObject.endTime) / 1000f);
             }
 
             //Look-ahead direction strains, sets up better future handing with less crossover, and centers the players view better on upcoming notes
@@ -97,8 +95,8 @@ namespace AudicaConverter
             float leftLookAheadDirectionStrain = 0f;
             if (nextHitObject != null)
             {
-                if (nextHitObject.x - hitObject.x > 0) rightLookAheadDirectionStrain = ((nextHitObject.x - hitObject.x) / 512f + lookAheadFixedStrain) / ((nextHitObject.time - hitObject.time) / 1000f);
-                if (nextHitObject.x - hitObject.x < 0) leftLookAheadDirectionStrain = (-(nextHitObject.x - hitObject.x) / 512f + lookAheadFixedStrain) / ((nextHitObject.time - hitObject.time) / 1000f);
+                if (nextHitObject.x - hitObject.endX > 0) rightLookAheadDirectionStrain = ((nextHitObject.x - hitObject.endX) / 512f + lookAheadFixedStrain) / ((nextHitObject.time - hitObject.endTime) / 1000f);
+                if (nextHitObject.x - hitObject.endX < 0) leftLookAheadDirectionStrain = (-(nextHitObject.x - hitObject.endX) / 512f + lookAheadFixedStrain) / ((nextHitObject.time - hitObject.endTime) / 1000f);
             }
 
             //Crossover strain. attempts to identify sustained crossover positions based of both previous and next target
@@ -106,8 +104,8 @@ namespace AudicaConverter
             float leftCrossoverStrain = 0f;
             if (prevHitObject != null && nextHitObject != null)
             {
-                rightCrossoverStrain = Math.Max(Math.Min(-(hitObject.x - prevHitObject.x), -(hitObject.x - nextHitObject.x)) / 512f, 0f) / ((nextHitObject.time - prevHitObject.time) / 2000f);
-                leftCrossoverStrain = Math.Max(Math.Min((hitObject.x - prevHitObject.x), (hitObject.x - nextHitObject.x)) / 512f, 0f) / ((nextHitObject.time - prevHitObject.time) / 2000f);
+                rightCrossoverStrain = Math.Max(Math.Min(-(hitObject.x - prevHitObject.endX), (nextHitObject.x - hitObject.endX)) / 512f, 0f) / ((nextHitObject.time - prevHitObject.endTime) / 2000f);
+                leftCrossoverStrain = Math.Max(Math.Min((hitObject.x - prevHitObject.endX), -(nextHitObject.x - hitObject.endX)) / 512f, 0f) / ((nextHitObject.time - prevHitObject.endTime) / 2000f);
             }
 
             //Playfield position strain
@@ -117,14 +115,14 @@ namespace AudicaConverter
             //Hold rest strain, straining quick re-fires after releasing sustains/chains on the same hand
             float rightHoldStrain = 0f;
             float leftHoldStrain = 0f;
-            if (prevRightHitObject != null && prevRightHitObject.audicaBehavior == 3 && hitObject.time - prevRightHitObject.endTime < holdRestTime)
+            if (prevRightHitObject != null && (prevRightHitObject.audicaBehavior == 3 || prevRightHitObject.audicaBehavior == 4) && hitObject.time - prevRightHitObject.endTime < holdRestTime)
                 rightHoldStrain = (float)Math.Pow(1 - (hitObject.time - prevRightHitObject.endTime) / holdRestTime, holdRestTransformExponent);
-            if (prevLeftHitObject != null && prevLeftHitObject.audicaBehavior == 3 && hitObject.time - prevLeftHitObject.endTime < holdRestTime)
+            if (prevLeftHitObject != null && (prevLeftHitObject.audicaBehavior == 3 || prevLeftHitObject.audicaBehavior == 4) && hitObject.time - prevLeftHitObject.endTime < holdRestTime)
                 leftHoldStrain = (float)Math.Pow(1 - (hitObject.time - prevLeftHitObject.endTime) / holdRestTime, holdRestTransformExponent);
 
             //Stream start strain
             float leftStreamStartStrain = 0f;
-            if (!convertChains && nextHitObject != null && nextHitObject.time - hitObject.time <= streamTimeThres && (prevHitObject == null || hitObject.time - prevHitObject.time > streamTimeThres))
+            if (nextHitObject != null && nextHitObject.time - hitObject.time <= streamTimeThres && (prevHitObject == null || hitObject.time - prevHitObject.time > streamTimeThres))
                 leftStreamStartStrain = 1f;
 
             
