@@ -1,4 +1,4 @@
-﻿using AudicaTools;
+using AudicaTools;
 using Newtonsoft.Json.Schema;
 using osutoaudica;
 using OsuTypes;
@@ -281,7 +281,7 @@ namespace AudicaConverter
 
         private static void RunStackDistributionPass(ref List<Cue> cues)
         {
-            float stackItemDistance = 0.2f; //Offset for stack items. Time proportionate distancing is used through the stack based on getting this distance between first and second item in stack
+            float stackItemDistance = Config.parameters.stackItemDistance; //Offset for stack items. Time proportionate distancing is used through the stack based on getting this distance between first and second item in stack
             float stackResetTime = 960f;
 
             Cue stackStartCue = cues[0];
