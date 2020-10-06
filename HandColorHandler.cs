@@ -20,6 +20,9 @@ namespace AudicaConverter
         //The amount of time (ms) between notes to be counted as a stream in terms of biasing in favour of right-hand start.
         private float streamTimeThres => Config.parameters.streamTimeThres;
 
+        //A limit on how small the time difference between notes for look ahead strain can be. Prevents overweighting in chain hand-overs.
+        private float lookAheadTimeCap => Config.parameters.lookAheadTimeCap;
+
         //The fixed, distance-independent strain factor of look-ahead strain
         private float lookAheadFixedStrain => Config.parameters.lookAheadFixedStrain;
 
@@ -95,8 +98,8 @@ namespace AudicaConverter
             float leftLookAheadDirectionStrain = 0f;
             if (nextHitObject != null)
             {
-                if (nextHitObject.x - hitObject.endX > 0) rightLookAheadDirectionStrain = ((nextHitObject.x - hitObject.endX) / 512f + lookAheadFixedStrain) / ((nextHitObject.time - hitObject.endTime) / 1000f);
-                if (nextHitObject.x - hitObject.endX < 0) leftLookAheadDirectionStrain = (-(nextHitObject.x - hitObject.endX) / 512f + lookAheadFixedStrain) / ((nextHitObject.time - hitObject.endTime) / 1000f);
+                if (nextHitObject.x - hitObject.endX > 0) rightLookAheadDirectionStrain = ((nextHitObject.x - hitObject.endX) / 512f + lookAheadFixedStrain) / (Math.Max((nextHitObject.time - hitObject.endTime), lookAheadTimeCap) / 1000f);
+                if (nextHitObject.x - hitObject.endX < 0) leftLookAheadDirectionStrain = (-(nextHitObject.x - hitObject.endX) / 512f + lookAheadFixedStrain) / (Math.Max((nextHitObject.time - hitObject.endTime), lookAheadTimeCap) / 1000f);
             }
 
             //Crossover strain. attempts to identify sustained crossover positions based of both previous and next target

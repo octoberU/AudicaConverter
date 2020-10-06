@@ -60,11 +60,12 @@ namespace osutoaudica
         public float historicalStrainWeight = 0.2f;
         public float timeStrainExponent = 2f;
         public float streamTimeThres = 120f;
+        public float lookAheadTimeCap = 150f;
         public float lookAheadFixedStrain = 0.1f;
         public float holdRestTime = 400f;
         public float holdRestTransformExponent = 2.5f;
         public float timeStrainWeight = 1f;
-        public float movementStrainWeight = 5f;
+        public float movementStrainWeight = 7f;
         public float directionStrainWeight = 3f;
         public float lookAheadDirectionStrainWeight = 15.0f;
         public float crossoverStrainWeight = 10f;

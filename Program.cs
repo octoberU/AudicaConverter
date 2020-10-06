@@ -255,13 +255,19 @@ namespace AudicaConverter
             {
                 HitObject prevHitObject = i > 0 ? hitObjects[i - 1] : null;
                 HitObject nextHitObject = i + 1 < hitObjects.Count ? hitObjects[i + 1] : null;
+                HitObject nextNextHitObject = i + 2 < hitObjects.Count ? hitObjects[i + 2] : null;
                 HitObject currentHitObject = hitObjects[i];
 
-                if (Config.parameters.ignoreSlidersForChainConvert && (currentHitObject.type == 2 || currentHitObject.type == 6))
+                bool isIgnoredChainEnd = Config.parameters.ignoreSlidersForChainConvert && (currentHitObject.type == 2 || currentHitObject.type == 6) &&
+                    (nextHitObject == null || nextHitObject.audicaTick - currentHitObject.audicaTick > chainTimeThreshold);
+                bool nextIsIgnoredChainEnd = nextHitObject == null || Config.parameters.ignoreSlidersForChainConvert && (nextHitObject.type == 2 || nextHitObject.type == 6) &&
+                    (nextNextHitObject == null || nextNextHitObject.audicaTick - nextHitObject.audicaTick > chainTimeThreshold);
+
+                if (isIgnoredChainEnd)
                     continue;
 
                 if ((prevHitObject == null || currentHitObject.audicaTick - prevHitObject.audicaTick > chainTimeThreshold) && nextHitObject != null &&
-                    nextHitObject.audicaTick - currentHitObject.audicaTick <= chainTimeThreshold && (!Config.parameters.ignoreSlidersForChainConvert || !(nextHitObject.type == 2 || nextHitObject.type == 6)))
+                    nextHitObject.audicaTick - currentHitObject.audicaTick <= chainTimeThreshold && !nextIsIgnoredChainEnd)
                 {
                     currentHitObject.audicaBehavior = 4;
                     prevChainHeadHitObject = currentHitObject;
@@ -269,7 +275,7 @@ namespace AudicaConverter
                 else if (prevHitObject != null && currentHitObject.audicaTick - prevHitObject.audicaTick <= chainTimeThreshold)
                 {
                     if (currentHitObject.audicaTick - prevChainHeadHitObject.audicaTick >= chainSwitchFrequency && nextHitObject != null && nextHitObject.audicaTick - currentHitObject.audicaTick <= chainTimeThreshold &&
-                        (!Config.parameters.ignoreSlidersForChainConvert || !(nextHitObject.type == 2 || nextHitObject.type == 6)))
+                        !nextIsIgnoredChainEnd)
                     {
                         currentHitObject.audicaBehavior = 4;
                         prevChainHeadHitObject = currentHitObject;
@@ -291,7 +297,7 @@ namespace AudicaConverter
             foreach (HitObject hitObject in hitObjects)
             {
                 int sliderTickDuration = (int)hitObject.audicaEndTick - (int)hitObject.audicaTick;
-                if (sliderTickDuration >= Config.parameters.minSustainLength)
+                if (sliderTickDuration >= Config.parameters.minSustainLength && hitObject.audicaBehavior != 4)
                 {
                     hitObject.audicaBehavior = 3;
                 }
