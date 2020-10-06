@@ -4,6 +4,7 @@ using osutoaudica;
 using OsuTypes;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
@@ -335,44 +336,47 @@ namespace AudicaConverter
                         stackMovementSpeed = stackItemDistance / (currentCue.tick - stackStartCue.tick);
                     }
 
-                    OsuUtility.Coordinate2D direction = new OsuUtility.Coordinate2D(0f, 0f);
                     OsuUtility.Coordinate2D currentCuePos = OsuUtility.GetPosFromCue(currentCue);
 
-                    if (Config.parameters.adaptiveStackDirection)
+                    OsuUtility.Coordinate2D? dirToNextCue = null;
+                    for (int j = 1; j + i < cues.Count; j++)
                     {
-                        //Find direction to next target of same color outside the stack
-                        for (int j = 1; i + j < cues.Count; j++)
+                        Cue otherCue = cues[i + j];
+                        if ((!Config.parameters.handBasedStackDirection || currentCue.handType == otherCue.handType) && !OsuUtility.CuesPosEquals(currentCue, otherCue))
                         {
-                            Cue otherCue = cues[i + j];
-                            if (currentCue.handType == otherCue.handType && !OsuUtility.CuesPosEquals(currentCue, otherCue))
-                            {
-                                OsuUtility.Coordinate2D otherCuePos = OsuUtility.GetPosFromCue(otherCue);
-                                direction.x = otherCuePos.x - currentCuePos.x;
-                                direction.y = otherCuePos.y - currentCuePos.y;
-                                break;
-                            }
+                            OsuUtility.Coordinate2D otherCuePos = OsuUtility.GetPosFromCue(otherCue);
+                            dirToNextCue = new OsuUtility.Coordinate2D(otherCuePos.x - currentCuePos.x, otherCuePos.y - currentCuePos.y);
+                            break;
                         }
-                        //If no next target exists, use direction from previous target of same hand color
-                        if (direction.x == 0f && direction.y == 0f)
-                        {
-                            for (int j = 1; j <= i; j++)
-                            {
-                                Cue otherCue = cues[i - j];
-                                if (currentCue.handType == otherCue.handType && !OsuUtility.CuesPosEquals(currentCue, otherCue))
-                                {
-                                    OsuUtility.Coordinate2D otherCuePos = OsuUtility.GetPosFromCue(otherCue);
-                                    direction.x = currentCuePos.x - otherCuePos.x;
-                                    direction.y = currentCuePos.y - otherCuePos.y;
-                                    break;
-                                }
-                            }
-                        }
-                        //If neither exists, you have one hell of a weird level, but let's default to down I guess...
-                        if (direction.x == 0f && direction.y == 0f) direction = new OsuUtility.Coordinate2D(0f, -1f);
                     }
-                    else
+
+                    OsuUtility.Coordinate2D? dirFromPrevCue = null;
+                    for (int j = 1; j <= i; j++)
                     {
-                        direction = new OsuUtility.Coordinate2D(0f, -1f);
+                        Cue otherCue = cues[i - j];
+                        if ((!Config.parameters.handBasedStackDirection || currentCue.handType == otherCue.handType) && !OsuUtility.CuesPosEquals(currentCue, otherCue) &&
+                            otherCue.tick < stackStartCue.tick)
+                        {
+                            OsuUtility.Coordinate2D otherCuePos = OsuUtility.GetPosFromCue(otherCue);
+                            dirFromPrevCue = new OsuUtility.Coordinate2D(currentCuePos.x - otherCuePos.x, currentCuePos.y - otherCuePos.y);
+                            break;
+                        }
+                    }
+
+                    OsuUtility.Coordinate2D direction = new OsuUtility.Coordinate2D(0f, -1f);
+                    switch (Config.parameters.stackDirectionMode)
+                    {
+                        case 0:
+                            direction = new OsuUtility.Coordinate2D(0f, -1f);
+                            break;
+                        case 1:
+                            if (dirToNextCue != null) direction = (OsuUtility.Coordinate2D)dirToNextCue;
+                            else if (dirFromPrevCue != null) direction = (OsuUtility.Coordinate2D)dirFromPrevCue;
+                            break;
+                        case 2:
+                            if (dirFromPrevCue != null) direction = (OsuUtility.Coordinate2D)dirFromPrevCue;
+                            else if (dirToNextCue != null) direction = (OsuUtility.Coordinate2D)dirToNextCue;
+                            break;
                     }
 
                     //normalize
