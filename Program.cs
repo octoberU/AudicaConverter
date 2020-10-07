@@ -217,7 +217,7 @@ namespace AudicaConverter
             HitObject prevLeftHitObject = null;
 
 
-            RunSliderSplitPass(ref osufile.hitObjects, osufile.timingPoints);
+            if (Config.parameters.convertSliderEnds) RunSliderSplitPass(ref osufile.hitObjects, osufile.timingPoints);
             if (Config.parameters.convertChains) RunChainPass(ref osufile.hitObjects);
             if (Config.parameters.convertSustains) RunSustainPass(ref osufile.hitObjects, osufile.timingPoints);
             ResetEndTimesAndPos(ref osufile.hitObjects);

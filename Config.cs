@@ -49,6 +49,7 @@ namespace osutoaudica
         public float scaleX = 1f;
         public float scaleY = 1f;
         public bool snapNotes = false;
+        public bool convertSliderEnds = false;
         public bool convertChains = true;
         public float chainTimeThres = 120f;
         public bool ignoreSlidersForChainConvert = false;
