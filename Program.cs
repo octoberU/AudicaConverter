@@ -56,19 +56,20 @@ namespace AudicaConverter
 
                 Console.Clear();
                 Console.WriteLine("Converting...");
-                audica.expert = expert == 404 ? new Difficulty() : ConvertToAudica(osz.osufiles[expert]);
-                audica.advanced = advanced == 404 ? new Difficulty() : ConvertToAudica(osz.osufiles[advanced]);
-                audica.moderate = standard == 404 ? new Difficulty() : ConvertToAudica(osz.osufiles[standard]);
-                audica.beginner = beginner == 404 ? new Difficulty() : ConvertToAudica(osz.osufiles[beginner]);
-                ConvertSongToOGG(osz, audica, expert);
+                ConvertSongToOGG(ref osz, audica, expert);
+                audica.expert = expert == 404 ? null : ConvertToAudica(osz.osufiles[expert]);
+                audica.advanced = advanced == 404 ? null : ConvertToAudica(osz.osufiles[advanced]);
+                audica.moderate = standard == 404 ? null : ConvertToAudica(osz.osufiles[standard]);
+                audica.beginner = beginner == 404 ? null : ConvertToAudica(osz.osufiles[beginner]);
+                
             }
             else
             {
-                audica.expert = new Difficulty();
-                audica.advanced = new Difficulty();
-                audica.moderate = new Difficulty();
-                audica.beginner = new Difficulty();
-                ConvertSongToOGG(osz, audica);
+                audica.expert = null;
+                audica.advanced = null;
+                audica.moderate = null;
+                audica.beginner = null;
+                ConvertSongToOGG(ref osz, audica);
             }
 
             ConvertMetadata(osz, audica);
@@ -114,7 +115,7 @@ namespace AudicaConverter
             
         }
 
-        private static void ConvertSongToOGG(OSZ osz, Audica audica, int diffIndex = 0)
+        private static void ConvertSongToOGG(ref OSZ osz, Audica audica, int diffIndex = 0)
         {
             osufile difficulty = osz.osufiles[diffIndex];
             string audioFileName = difficulty.general.audioFileName;
@@ -232,7 +233,7 @@ namespace AudicaConverter
 
                 var cue = new Cue
                     (
-                        hitObject.audicaTick,
+                        (int)hitObject.audicaTick,
                         tickLength,
                         audicaDataPos.pitch,
                         OsuUtility.GetVelocityForObject(hitObject),
