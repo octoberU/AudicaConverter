@@ -133,6 +133,24 @@ namespace AudicaConverter
                 }
             }
 
+            if (paddingTime > 0f)
+            {
+                foreach (var osuDifficulty in osz.osufiles)
+                {
+                    foreach (var timingPoint in osuDifficulty.timingPoints)
+                    {
+                        if (timingPoint.ms > 0f)
+                        {
+                            timingPoint.ms += paddingTime;
+                        }
+                    }
+
+                    foreach (var hitObject in osuDifficulty.hitObjects)
+                    {
+                        hitObject.time += paddingTime;
+                    }
+                } 
+            }
 
 
             if (Directory.Exists(tempDirectory)) Directory.Delete(tempDirectory, true);
