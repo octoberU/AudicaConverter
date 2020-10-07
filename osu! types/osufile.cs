@@ -144,18 +144,28 @@ namespace OsuTypes
             }
             else if(type == 2 || type == 6)
             {
-                var hitSounds = split[8].Split("|");
+                int hitsound;
+                int endHitsound;
+                if (split.Length >= 9)
+                {
+                    var hitsounds = split[8].Split("|");
+                    hitsound = int.Parse(hitsounds[0]);
+                    endHitsound = int.Parse(hitsounds[1]);
+                }
+                else
+                {
+                    hitsound = endHitsound = int.Parse(split[4]);
+                }
                 var sliderPoints = split[5].Split("|");
                 var endCoords = sliderPoints[sliderPoints.Length - 1].Split(":");
-                HitObject hitObject = new HitObject(float.Parse(split[0]), float.Parse(split[1]), float.Parse(split[2]), int.Parse(split[3]), int.Parse(hitSounds[0]), float.Parse(split[7]), int.Parse(split[6]));
-                hitObject.endHitsound = int.Parse(hitSounds[1]);
+                HitObject hitObject = new HitObject(float.Parse(split[0]), float.Parse(split[1]), float.Parse(split[2]), int.Parse(split[3]), hitsound, float.Parse(split[7]), int.Parse(split[6]));
+                hitObject.endHitsound = endHitsound;
                 hitObject.endX = int.Parse(endCoords[0]);
                 hitObject.endY = int.Parse(endCoords[1]);
 
                 hitObjects.Add(hitObject);
                 
             }
-            
         }
 
         private void ParseMetadata(string line)
