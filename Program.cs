@@ -93,10 +93,11 @@ namespace AudicaConverter
 
         private static void ConvertMetadata(OSZ osz, Audica audica)
         {
+            string mapperName = Config.parameters.customMapperName == null ? RemoveSpecialCharacters(osz.osufiles[0].metadata.creator) : RemoveSpecialCharacters(Config.parameters.customMapperName);
             audica.desc.title = osz.osufiles[0].metadata.title;
             audica.desc.artist = osz.osufiles[0].metadata.artist;
-            audica.desc.author = osz.osufiles[0].metadata.creator;
-            audica.desc.songID = RemoveSpecialCharacters(osz.osufiles[0].metadata.title) + "-" + RemoveSpecialCharacters(osz.osufiles[0].metadata.creator);
+            audica.desc.author = mapperName;
+            audica.desc.songID = RemoveSpecialCharacters(osz.osufiles[0].metadata.title) + "-" + mapperName;
             audica.desc.previewStartSeconds = (float)osz.osufiles[0].general.previewTime / 1000f;
         }
 

@@ -55,6 +55,7 @@ namespace osutoaudica
         public float sustainExtension = 160f;
         public float introPadding = 2000f;
         public bool useChainSounds = true;
+        public string customMapperName = "";
 
         public int stackDirectionMode = 2; //0 = down, 1 = towards next target. 2 = away from previous target
         public bool handBasedStackDirection = false;
