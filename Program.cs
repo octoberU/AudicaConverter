@@ -106,6 +106,7 @@ namespace AudicaConverter
             }
             Console.ForegroundColor = ConsoleColor.Gray;
             string userInput = Console.ReadLine();
+            Console.Clear();
             if (userInput == "") return 404;// User hasn't picked a difficulty
             else
             {
@@ -180,7 +181,7 @@ namespace AudicaConverter
             string paddingString = paddingTime > 0 ? $"-af \"adelay = {paddingTime} | {paddingTime}\"" : "";
 
 
-            ffmpeg.StartInfo.Arguments = $"-y -i \"{tempAudioPath}\" -ab 256k -ss 0.025 {paddingString} -map 0:a \"{tempOggPath}\"";
+            ffmpeg.StartInfo.Arguments = $"-y -i \"{tempAudioPath}\" -hide_banner -loglevel panic -ab 256k -ss 0.025 {paddingString} -map 0:a \"{tempOggPath}\"";
             ffmpeg.Start();
             ffmpeg.WaitForExit();
 
