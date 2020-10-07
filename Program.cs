@@ -97,7 +97,7 @@ namespace AudicaConverter
 
         private static int AskDifficulty(OSZ osz, string difficultyName)
         {
-            Console.WriteLine($"\n\nSelect {difficultyName} difficulty:");
+            Console.WriteLine($"\n\nSelect {difficultyName} difficulty[Leave empty for none]:");
             Console.ForegroundColor = ConsoleColor.Yellow;
             for (int i = 0; i < osz.osufiles.Count; i++)
             {
@@ -116,15 +116,24 @@ namespace AudicaConverter
 
         private static void ConvertSongToOGG(OSZ osz, Audica audica, int diffIndex = 0)
         {
-            string audioFileName = osz.osufiles[diffIndex].general.audioFileName;
+            osufile difficulty = osz.osufiles[diffIndex];
+            string audioFileName = difficulty.general.audioFileName;
             string tempDirectory = Program.workingDirectory + @"\AudicaConverterTemp\";
             string tempAudioPath = tempDirectory + @"audio.mp3";
             string tempOggPath = tempDirectory + @"tempogg.ogg";
             string tempMoggPath = tempDirectory + @"tempMogg.mogg";
 
-            
+            float paddingTime = 0f;
+            if (difficulty.hitObjects.Count > 0)
+            {
+                HitObject firstHitObject = difficulty.hitObjects[0];
+                if (firstHitObject.time < Config.parameters.introPadding)
+                {
+                    paddingTime = Config.parameters.introPadding - firstHitObject.time;
+                }
+            }
 
-            
+
 
             if (Directory.Exists(tempDirectory)) Directory.Delete(tempDirectory, true);
 
@@ -146,8 +155,11 @@ namespace AudicaConverter
             ogg2mogg.StartInfo.RedirectStandardOutput = true;
 
             ogg2mogg.StartInfo.Arguments = $"{tempOggPath} {tempMoggPath}";
-            
-            ffmpeg.StartInfo.Arguments = $"-y -i \"{tempAudioPath}\" -ab 256k -ss 0.025 -map 0:a \"{tempOggPath}\"";
+
+            string paddingString = paddingTime > 0 ? $"-af \"adelay = {paddingTime} | {paddingTime}\"" : "";
+
+
+            ffmpeg.StartInfo.Arguments = $"-y -i \"{tempAudioPath}\" -ab 256k -ss 0.025 {paddingString} -map 0:a \"{tempOggPath}\"";
             ffmpeg.Start();
             ffmpeg.WaitForExit();
 

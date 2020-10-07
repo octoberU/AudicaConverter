@@ -51,6 +51,7 @@ namespace osutoaudica
         public bool ignoreSlidersForChainConvert = true;
         public bool convertSustains = true;
         public float minSustainLength = 960f;
+        public float introPadding = 2000f;
 
         public int stackDirectionMode = 2; //0 = down, 1 = towards next target. 2 = away from previous target
         public bool handBasedStackDirection = false;
