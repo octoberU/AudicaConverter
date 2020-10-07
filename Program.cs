@@ -95,6 +95,7 @@ namespace AudicaConverter
             audica.desc.artist = osz.osufiles[0].metadata.artist;
             audica.desc.author = osz.osufiles[0].metadata.creator;
             audica.desc.songID = RemoveSpecialCharacters(osz.osufiles[0].metadata.title) + "-" + RemoveSpecialCharacters(osz.osufiles[0].metadata.creator);
+            audica.desc.previewStartSeconds = (float)osz.osufiles[0].general.previewTime / 1000f;
         }
 
         private static int AskDifficulty(OSZ osz, string difficultyName)
@@ -154,6 +155,7 @@ namespace AudicaConverter
                         hitObject.endTime += paddingTime;
                         hitObject.audicaEndTick += OsuUtility.MsToTick(paddingTime, osuDifficulty.timingPoints);
                     }
+                    osuDifficulty.general.previewTime += (int)paddingTime;
                 } 
             }
 
