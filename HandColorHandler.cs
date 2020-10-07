@@ -20,6 +20,9 @@ namespace AudicaConverter
         //The amount of time (ms) between notes to be counted as a stream
         private float streamTimeThres => Config.parameters.streamTimeThres;
 
+        //The maximum distance between targets to be counted as a stream
+        private float streamDistanceThres => Config.parameters.streamDistanceThres;
+
         //A limit on how small the time difference between notes for look ahead strain can be. Prevents overweighting in chain hand-overs.
         private float lookAheadTimeCap => Config.parameters.lookAheadTimeCap;
 
@@ -125,7 +128,8 @@ namespace AudicaConverter
 
             //Stream start strain
             float leftStreamStartStrain = 0f;
-            if (nextHitObject != null && nextHitObject.time - hitObject.time <= streamTimeThres && (prevHitObject == null || hitObject.time - prevHitObject.time > streamTimeThres))
+            if (nextHitObject != null && nextHitObject.time - hitObject.time <= streamTimeThres && (prevHitObject == null || hitObject.time - prevHitObject.time > streamTimeThres) &&
+                OsuUtility.EuclideanDistance(hitObject.x, hitObject.y, nextHitObject.x, nextHitObject.y) <= streamDistanceThres)
                 leftStreamStartStrain = 1f;
 
             

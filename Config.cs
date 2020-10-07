@@ -48,6 +48,7 @@ namespace osutoaudica
     {
         public bool snapNotes = false;
         public bool convertChains = true;
+        public float chainTimeThres = 120f;
         public bool ignoreSlidersForChainConvert = true;
         public bool convertSustains = true;
         public float minSustainLength = 960f;
@@ -64,6 +65,7 @@ namespace osutoaudica
         public float historicalStrainWeight = 0.2f;
         public float timeStrainExponent = 2f;
         public float streamTimeThres = 120f;
+        public float streamDistanceThres = 0.1f;
         public float lookAheadTimeCap = 150f;
         public float lookAheadFixedStrain = 0.1f;
         public float holdRestTime = 400f;
