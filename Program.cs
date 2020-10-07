@@ -302,7 +302,6 @@ namespace AudicaConverter
                     newHitObject.endY = newHitObject.y;
                     newHitObject.audicaTick = newHitObject.audicaEndTick = hitObject.audicaEndTick;
                     hitObjects.Add(newHitObject);
-                    Console.WriteLine(newHitObject.time);
                 }
             }
             hitObjects.Sort((ho1, ho2) => ho1.time.CompareTo(ho2.time));
@@ -349,11 +348,6 @@ namespace AudicaConverter
 
             for (int i = 0; i < hitObjects.Count; i++)
             {
-                if (hitObjects[i].audicaTick == 55280)
-                {
-                    Console.WriteLine("Debug time");
-                }
-
                 HitObject prevHitObject = i > 0 ? hitObjects[i - 1] : null;
                 HitObject nextHitObject = i + 1 < hitObjects.Count ? hitObjects[i + 1] : null;
                 HitObject nextNextHitObject = i + 2 < hitObjects.Count ? hitObjects[i + 2] : null;
