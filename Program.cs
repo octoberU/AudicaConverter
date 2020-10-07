@@ -28,7 +28,7 @@ namespace AudicaConverter
             {
                 if(item.Contains(".osz")) ConversionProcess.ConvertToAudica(item);
             }
-           //ConversionProcess.ConvertToAudica(@"C:\audica\netcoreapp3.1\1130581 Thank You Scientist - Mr. Invisible.osz");
+            //ConversionProcess.ConvertToAudica(@"C:\audica\Repos\AudicaConverter\bin\Release\netcoreapp3.1\1019827 UNDEAD CORPORATION - Sad Dream.osz");
         }
     }
 
@@ -161,6 +161,7 @@ namespace AudicaConverter
 
                     foreach (var hitObject in osuDifficulty.hitObjects)
                     {
+                        hitObject.time += paddingTime;
                         hitObject.audicaTick += OsuUtility.MsToTick(paddingTime, osuDifficulty.timingPoints);
                         hitObject.endTime += paddingTime;
                         hitObject.audicaEndTick += OsuUtility.MsToTick(paddingTime, osuDifficulty.timingPoints);
@@ -301,9 +302,10 @@ namespace AudicaConverter
                     newHitObject.endY = newHitObject.y;
                     newHitObject.audicaTick = newHitObject.audicaEndTick = hitObject.audicaEndTick;
                     hitObjects.Add(newHitObject);
+                    Console.WriteLine(newHitObject.time);
                 }
             }
-            hitObjects = hitObjects.OrderBy(ho => ho.time).ToList();
+            hitObjects.Sort((ho1, ho2) => ho1.time.CompareTo(ho2.time));
         }
 
         private static void RunHitsoundPass(ref List<Cue> cues)
@@ -347,6 +349,11 @@ namespace AudicaConverter
 
             for (int i = 0; i < hitObjects.Count; i++)
             {
+                if (hitObjects[i].audicaTick == 55280)
+                {
+                    Console.WriteLine("Debug time");
+                }
+
                 HitObject prevHitObject = i > 0 ? hitObjects[i - 1] : null;
                 HitObject nextHitObject = i + 1 < hitObjects.Count ? hitObjects[i + 1] : null;
                 HitObject nextNextHitObject = i + 2 < hitObjects.Count ? hitObjects[i + 2] : null;
