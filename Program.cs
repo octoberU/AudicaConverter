@@ -201,8 +201,8 @@ namespace AudicaConverter
             ogg2mogg.Start();
             ogg2mogg.WaitForExit();
 
-            audica.song = new Mogg(null);
-            audica.song.bytes = File.ReadAllBytes(tempMoggPath);
+            var ms = new MemoryStream(File.ReadAllBytes(tempMoggPath));
+            audica.song = new Mogg(ms);
 
             Directory.Delete(tempDirectory, true);
         }
