@@ -49,6 +49,7 @@ namespace AudicaConverter
 
             if (convertMode == 2)
             {
+                Console.Clear();
                 int expert = AskDifficulty(osz, "Expert");
                 int advanced = AskDifficulty(osz, "Advanced");
                 int standard = AskDifficulty(osz, "Standard");
