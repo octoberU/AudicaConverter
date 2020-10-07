@@ -148,7 +148,9 @@ namespace AudicaConverter
 
                     foreach (var hitObject in osuDifficulty.hitObjects)
                     {
-                        hitObject.time += paddingTime;
+                        hitObject.audicaTick += OsuUtility.MsToTick(paddingTime, osuDifficulty.timingPoints);
+                        hitObject.endTime += paddingTime;
+                        hitObject.audicaEndTick += OsuUtility.MsToTick(paddingTime, osuDifficulty.timingPoints);
                     }
                 } 
             }
