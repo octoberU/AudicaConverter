@@ -16,6 +16,8 @@ namespace OsuTypes
         public bool inherited;
         public float sliderVelocity;
 
+        public float audicaTick;
+
         public TimingPoint(float ms, double beatTime, bool inherited)
         {
             this.beatTime = beatTime;

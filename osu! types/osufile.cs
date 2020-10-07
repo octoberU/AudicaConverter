@@ -107,6 +107,11 @@ namespace OsuTypes
 
         private void CalculateAudicaTicks()
         {
+            foreach (TimingPoint timingPoint in timingPoints)
+            {
+                timingPoint.audicaTick = OsuUtility.MsToTick(timingPoint.ms, timingPoints, roundingPrecision: 1);
+            }
+
             foreach (HitObject hitObject in hitObjects)
             {
                 hitObject.audicaTick = OsuUtility.MsToTick(hitObject.time, timingPoints, roundingPrecision: 10);

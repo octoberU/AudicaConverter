@@ -51,6 +51,7 @@ namespace osutoaudica
         public bool ignoreSlidersForChainConvert = true;
         public bool convertSustains = true;
         public float minSustainLength = 960f;
+        public float sustainExtension = 160f;
         public float introPadding = 2000f;
         public bool useChainSounds = true;
 

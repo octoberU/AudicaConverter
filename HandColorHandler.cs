@@ -17,7 +17,7 @@ namespace AudicaConverter
         //The exponent for which inversed time since last target will be power transformed by. Adjusting this allows adjusting relative strain of different time spacings.
         private float timeStrainExponent => Config.parameters.timeStrainExponent;
 
-        //The amount of time (ms) between notes to be counted as a stream in terms of biasing in favour of right-hand start.
+        //The amount of time (ms) between notes to be counted as a stream
         private float streamTimeThres => Config.parameters.streamTimeThres;
 
         //A limit on how small the time difference between notes for look ahead strain can be. Prevents overweighting in chain hand-overs.
@@ -75,22 +75,22 @@ namespace AudicaConverter
             //Time strain
             float rightTimeStrain = 0f;
             float leftTimeStrain = 0f;
-            if (prevRightHitObject != null) rightTimeStrain = (float)Math.Pow((hitObject.time - prevRightHitObject.endTime) / 1000f, -timeStrainExponent);
-            if (prevLeftHitObject != null) leftTimeStrain = (float)Math.Pow((hitObject.time - prevLeftHitObject.endTime) / 1000f, -timeStrainExponent);
+            if (prevRightHitObject != null) rightTimeStrain = (float)Math.Pow(Math.Max(hitObject.time - prevRightHitObject.endTime, 50f) / 1000f, -timeStrainExponent);
+            if (prevLeftHitObject != null) leftTimeStrain = (float)Math.Pow(Math.Max((hitObject.time - prevLeftHitObject.endTime), 50f) / 1000f, -timeStrainExponent);
 
             //Movement speed strain
             float rightMovementStrain = 0f;
             float leftMovementStrain = 0f;
-            if (prevRightHitObject != null) rightMovementStrain = OsuUtility.EuclideanDistance(prevRightHitObject.endX, prevRightHitObject.endY, hitObject.x, hitObject.y) / 512f / ((hitObject.time - prevRightHitObject.endTime)/1000f);
-            if (prevLeftHitObject != null) leftMovementStrain = OsuUtility.EuclideanDistance(prevLeftHitObject.endX, prevLeftHitObject.endY, hitObject.x, hitObject.y) / 512f / ((hitObject.time - prevLeftHitObject.endTime) / 1000f);
+            if (prevRightHitObject != null) rightMovementStrain = OsuUtility.EuclideanDistance(prevRightHitObject.endX, prevRightHitObject.endY, hitObject.x, hitObject.y) / 512f / (Math.Max(hitObject.time - prevRightHitObject.endTime, 50f) / 1000f);
+            if (prevLeftHitObject != null) leftMovementStrain = OsuUtility.EuclideanDistance(prevLeftHitObject.endX, prevLeftHitObject.endY, hitObject.x, hitObject.y) / 512f / (Math.Max(hitObject.time - prevLeftHitObject.endTime, 50f) / 1000f);
 
             //Direction strain. Adds strain based on horizontal movement from the previous target
             float rightDirectionStrain = 0f;
             float leftDirectionStrain = 0f;
             if (prevHitObject != null)
             {
-                rightDirectionStrain = Math.Max(-(hitObject.x - prevHitObject.endX) / 512f, 0f) / ((hitObject.time - prevHitObject.endTime) / 1000f);
-                leftDirectionStrain = Math.Max((hitObject.x - prevHitObject.endY) / 512f, 0f) / ((hitObject.time - prevHitObject.endTime) / 1000f);
+                rightDirectionStrain = Math.Max(-(hitObject.x - prevHitObject.endX) / 512f, 0f) / (Math.Max(hitObject.time - prevHitObject.endTime, 50f) / 1000f);
+                leftDirectionStrain = Math.Max((hitObject.x - prevHitObject.endY) / 512f, 0f) / (Math.Max(hitObject.time - prevHitObject.endTime, 50f) / 1000f);
             }
 
             //Look-ahead direction strains, sets up better future handing with less crossover, and centers the players view better on upcoming notes

@@ -26,7 +26,7 @@ namespace AudicaConverter
             {
                 if(item.Contains(".osz")) ConversionProcess.ConvertToAudica(item);
             }
-           //ConversionProcess.ConvertToAudica(@"C:\audica\netcoreapp3.1\532522 SakiZ - osu!memories.osz");
+           //ConversionProcess.ConvertToAudica(@"C:\audica\netcoreapp3.1\1130581 Thank You Scientist - Mr. Invisible.osz");
         }
     }
 
@@ -80,7 +80,7 @@ namespace AudicaConverter
             var tempList = new List<TempoData>();
             foreach (var timingPoint in osz.osufiles[0].timingPoints)
             {
-                tempList.Add(new TempoData((int)OsuUtility.MsToTick(timingPoint.ms, osz.osufiles[0].timingPoints, roundingPrecision: 1), TempoData.MicrosecondsPerQuarterNoteFromBPM(60000 / timingPoint.beatTime)));
+                tempList.Add(new TempoData((int)timingPoint.audicaTick, TempoData.MicrosecondsPerQuarterNoteFromBPM(60000 / timingPoint.beatTime)));
             }
             audica.tempoData = tempList;
 
@@ -148,6 +148,13 @@ namespace AudicaConverter
                             timingPoint.ms += paddingTime;
                         }
                     }
+                    foreach (var timingPoint in osuDifficulty.timingPoints)
+                    {
+                        if (timingPoint.ms > 0f)
+                        {
+                            timingPoint.audicaTick += OsuUtility.MsToTick(paddingTime, osuDifficulty.timingPoints);
+                        }
+                    }
 
                     foreach (var hitObject in osuDifficulty.hitObjects)
                     {
@@ -205,7 +212,7 @@ namespace AudicaConverter
             HitObject prevLeftHitObject = null;
 
             if (Config.parameters.convertChains) RunChainPass(ref osufile.hitObjects);
-            if (Config.parameters.convertSustains) RunSustainPass(ref osufile.hitObjects);
+            if (Config.parameters.convertSustains) RunSustainPass(ref osufile.hitObjects, osufile.timingPoints);
             ResetEndTimes(ref osufile.hitObjects);
 
             // do conversion stuff here
@@ -341,14 +348,33 @@ namespace AudicaConverter
             }
         }
 
-        private static void RunSustainPass(ref List<HitObject> hitObjects)
+        private static void RunSustainPass(ref List<HitObject> hitObjects, List<TimingPoint> timingPoints)
         {
-            foreach (HitObject hitObject in hitObjects)
+            for (int i = 0; i < hitObjects.Count; i++)
             {
-                int sliderTickDuration = (int)hitObject.audicaEndTick - (int)hitObject.audicaTick;
-                if (sliderTickDuration >= Config.parameters.minSustainLength && hitObject.audicaBehavior != 4)
+                HitObject currentHitObject = hitObjects[i];
+                HitObject nextHitObject = i + 1 < hitObjects.Count ? hitObjects[i + 1] : null;
+
+                if (currentHitObject.audicaBehavior == 4) continue;
+
+                //Extend duration to next target
+                if (nextHitObject != null && nextHitObject.audicaTick - currentHitObject.audicaEndTick <= Config.parameters.sustainExtension)
                 {
-                    hitObject.audicaBehavior = 3;
+                    //Check that next target is on beat
+                    int timingPointIndex = timingPoints.FindIndex(tp => tp.audicaTick > nextHitObject.audicaTick) - 1;
+                    if (timingPointIndex == -2) timingPointIndex = timingPoints.Count - 1;
+                    TimingPoint timingPoint = timingPoints[timingPointIndex];
+
+                    if ((nextHitObject.audicaTick - timingPoint.audicaTick) % 480f == 0f)
+                    {
+                        currentHitObject.endTime = nextHitObject.time;
+                        currentHitObject.audicaEndTick = nextHitObject.audicaTick;
+                    }
+                }
+
+                if (currentHitObject.audicaEndTick - currentHitObject.audicaTick >= Config.parameters.minSustainLength)
+                {
+                    currentHitObject.audicaBehavior = 3;
                 }
             }
         }
