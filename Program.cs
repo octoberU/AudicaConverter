@@ -49,57 +49,18 @@ namespace AudicaConverter
 
             if (convertMode == 2)
             {
-
-                Console.WriteLine("\n\nSelect Expert difficulty:");
-                Console.ForegroundColor = ConsoleColor.Yellow;
-                for (int i = 0; i < osz.osufiles.Count; i++)
-                {
-                    Console.WriteLine($"\n[{i}]{osz.osufiles[i].metadata.version}");
-                }
-                Console.ForegroundColor = ConsoleColor.Gray;
-                int expert = int.Parse(Console.ReadLine());
-
-                Console.Clear();
-                Console.WriteLine("\n\nSelect Advanced difficulty:");
-                Console.ForegroundColor = ConsoleColor.Yellow;
-                for (int i = 0; i < osz.osufiles.Count; i++)
-                {
-                    if (i == expert) continue;
-                    Console.WriteLine($"\n[{i}]{osz.osufiles[i].metadata.version}");
-                }
-                Console.ForegroundColor = ConsoleColor.Gray;
-                int advanced = int.Parse(Console.ReadLine());
-
-                Console.Clear();
-                Console.WriteLine("\n\nSelect Standard difficulty:");
-                Console.ForegroundColor = ConsoleColor.Yellow;
-                for (int i = 0; i < osz.osufiles.Count; i++)
-                {
-                    if (i == expert || i == advanced) continue;
-
-                    Console.WriteLine($"\n[{i}]{osz.osufiles[i].metadata.version}");
-                }
-                Console.ForegroundColor = ConsoleColor.Gray;
-                int standard = int.Parse(Console.ReadLine());
-
-                Console.Clear();
-                Console.WriteLine("\n\nSelect Beginner difficulty:");
-                Console.ForegroundColor = ConsoleColor.Yellow;
-                for (int i = 0; i < osz.osufiles.Count; i++)
-                {
-                    if (i == expert || i == advanced || i == standard) continue;
-
-                    Console.WriteLine($"\n[{i}]{osz.osufiles[i].metadata.version}");
-                }
-                Console.ForegroundColor = ConsoleColor.Gray;
-                int beginner = int.Parse(Console.ReadLine());
+                int expert = AskDifficulty(osz, "Expert");
+                int advanced = AskDifficulty(osz, "Advanced");
+                int standard = AskDifficulty(osz, "Standard");
+                int beginner = AskDifficulty(osz, "Beginner");
 
                 Console.Clear();
                 Console.WriteLine("Converting...");
-                audica.expert = ConvertToAudica(osz.osufiles[expert]);
-                audica.advanced = ConvertToAudica(osz.osufiles[advanced]);
-                audica.moderate = ConvertToAudica(osz.osufiles[standard]);
-                audica.beginner = ConvertToAudica(osz.osufiles[beginner]);
+                audica.expert = expert == 404 ? new Difficulty() : ConvertToAudica(osz.osufiles[expert]);
+                audica.advanced = advanced == 404 ? new Difficulty() : ConvertToAudica(osz.osufiles[advanced]);
+                audica.moderate = standard == 404 ? new Difficulty() : ConvertToAudica(osz.osufiles[standard]);
+                audica.beginner = beginner == 404 ? new Difficulty() : ConvertToAudica(osz.osufiles[beginner]);
+                ConvertSongToOGG(osz, audica, expert);
             }
             else
             {
@@ -107,16 +68,12 @@ namespace AudicaConverter
                 audica.advanced = new Difficulty();
                 audica.moderate = new Difficulty();
                 audica.beginner = new Difficulty();
+                ConvertSongToOGG(osz, audica);
             }
 
-            audica.desc.title = osz.osufiles[0].metadata.title;
-            audica.desc.artist = osz.osufiles[0].metadata.artist;
-            audica.desc.author = osz.osufiles[0].metadata.creator;
-            audica.desc.songID = RemoveSpecialCharacters(osz.osufiles[0].metadata.title) + "-" + RemoveSpecialCharacters(osz.osufiles[0].metadata.creator);
-            Console.WriteLine(audica.desc.songID);
+            ConvertMetadata(osz, audica);
 
-            ConvertSongToOGG(osz, audica, 0);
-
+            
             //Convert tempos
             var tempList = new List<TempoData>();
             foreach (var timingPoint in osz.osufiles[0].timingPoints)
@@ -130,13 +87,44 @@ namespace AudicaConverter
             audica.Export(@$"{Program.workingDirectory}\audicaFiles\{audica.desc.songID}.audica");
         }
 
-        private static void ConvertSongToOGG(OSZ osz, Audica audica, int lastDiffIndex)
+        private static void ConvertMetadata(OSZ osz, Audica audica)
         {
-            string audioFileName = osz.osufiles[lastDiffIndex].general.audioFileName;
+            audica.desc.title = osz.osufiles[0].metadata.title;
+            audica.desc.artist = osz.osufiles[0].metadata.artist;
+            audica.desc.author = osz.osufiles[0].metadata.creator;
+            audica.desc.songID = RemoveSpecialCharacters(osz.osufiles[0].metadata.title) + "-" + RemoveSpecialCharacters(osz.osufiles[0].metadata.creator);
+        }
+
+        private static int AskDifficulty(OSZ osz, string difficultyName)
+        {
+            Console.WriteLine($"\n\nSelect {difficultyName} difficulty:");
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            for (int i = 0; i < osz.osufiles.Count; i++)
+            {
+                Console.WriteLine($"\n[{i}]{osz.osufiles[i].metadata.version}");
+            }
+            Console.ForegroundColor = ConsoleColor.Gray;
+            string userInput = Console.ReadLine();
+            if (userInput == "") return 404;// User hasn't picked a difficulty
+            else
+            {
+                int difficulty = int.Parse(userInput);
+                return difficulty;
+            }
+            
+        }
+
+        private static void ConvertSongToOGG(OSZ osz, Audica audica, int diffIndex = 0)
+        {
+            string audioFileName = osz.osufiles[diffIndex].general.audioFileName;
             string tempDirectory = Program.workingDirectory + @"\AudicaConverterTemp\";
             string tempAudioPath = tempDirectory + @"audio.mp3";
             string tempOggPath = tempDirectory + @"tempogg.ogg";
             string tempMoggPath = tempDirectory + @"tempMogg.mogg";
+
+            
+
+            
 
             if (Directory.Exists(tempDirectory)) Directory.Delete(tempDirectory, true);
 
@@ -159,7 +147,7 @@ namespace AudicaConverter
 
             ogg2mogg.StartInfo.Arguments = $"{tempOggPath} {tempMoggPath}";
             
-            ffmpeg.StartInfo.Arguments = String.Format("-y -i \"{0}\" -ab 256k -ss 0.025 -map 0:a \"{1}\"", tempAudioPath, tempOggPath);
+            ffmpeg.StartInfo.Arguments = $"-y -i \"{tempAudioPath}\" -ab 256k -ss 0.025 -map 0:a \"{tempOggPath}\"";
             ffmpeg.Start();
             ffmpeg.WaitForExit();
 
