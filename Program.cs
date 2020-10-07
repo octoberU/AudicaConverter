@@ -5,9 +5,11 @@ using OsuTypes;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.ComponentModel.Design.Serialization;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 
@@ -211,9 +213,11 @@ namespace AudicaConverter
             HitObject prevRightHitObject = null;
             HitObject prevLeftHitObject = null;
 
+
+            RunSliderSplitPass(ref osufile.hitObjects, osufile.timingPoints);
             if (Config.parameters.convertChains) RunChainPass(ref osufile.hitObjects);
             if (Config.parameters.convertSustains) RunSustainPass(ref osufile.hitObjects, osufile.timingPoints);
-            ResetEndTimes(ref osufile.hitObjects);
+            ResetEndTimesAndPos(ref osufile.hitObjects);
 
             // do conversion stuff here
             for (int i = 0; i < osufile.hitObjects.Count; i++)
@@ -265,6 +269,39 @@ namespace AudicaConverter
             if(Config.parameters.useChainSounds) RunHitsoundPass(ref diff.cues);
 
             return diff;
+        }
+
+        private static void RunSliderSplitPass(ref List<HitObject> hitObjects, List<TimingPoint> timingPoints)
+        {
+            int hitObjectsOrgCount = hitObjects.Count;
+            for (int i = 0; i < hitObjectsOrgCount - 1; i++)
+            {
+                HitObject hitObject = hitObjects[i];
+                HitObject nextHitObject = hitObjects[i + 1];
+
+                //Add a hitObject for sliders if the end is on beat and the next target is within 1/12th of the slider end.
+                if ((hitObject.type == 2 || hitObject.type == 6) && OsuUtility.ticksSinceLastTimingPoint(hitObject.audicaEndTick, timingPoints) % 240f == 0f &&
+                    nextHitObject.audicaTick - hitObject.audicaEndTick <= 160f)
+                {
+                    HitObject newHitObject = new HitObject
+                    (
+                        hitObject.repeats % 2 == 1 ? hitObject.endX : hitObject.x,
+                        hitObject.repeats % 2 == 1 ? hitObject.endY : hitObject.y,
+                        hitObject.endTime,
+                        1,
+                        hitObject.endHitsound,
+                        0f,
+                        0
+                    );
+
+                    newHitObject.endTime = newHitObject.time;
+                    newHitObject.endX = newHitObject.x;
+                    newHitObject.endY = newHitObject.y;
+                    newHitObject.audicaTick = newHitObject.audicaEndTick = hitObject.audicaEndTick;
+                    hitObjects.Add(newHitObject);
+                }
+            }
+            hitObjects = hitObjects.OrderBy(ho => ho.time).ToList();
         }
 
         private static void RunHitsoundPass(ref List<Cue> cues)
@@ -356,15 +393,10 @@ namespace AudicaConverter
 
                 if (currentHitObject.audicaBehavior == 4) continue;
 
-                //Extend duration to next target
+                //Extend duration to next target if next target is on beat and within extension time
                 if (nextHitObject != null && nextHitObject.audicaTick - currentHitObject.audicaEndTick <= Config.parameters.sustainExtension)
                 {
-                    //Check that next target is on beat
-                    int timingPointIndex = timingPoints.FindIndex(tp => tp.audicaTick > nextHitObject.audicaTick) - 1;
-                    if (timingPointIndex == -2) timingPointIndex = timingPoints.Count - 1;
-                    TimingPoint timingPoint = timingPoints[timingPointIndex];
-
-                    if ((nextHitObject.audicaTick - timingPoint.audicaTick) % 480f == 0f)
+                    if (OsuUtility.ticksSinceLastTimingPoint(nextHitObject.audicaTick, timingPoints) % 480f == 0f)
                     {
                         currentHitObject.endTime = nextHitObject.time;
                         currentHitObject.audicaEndTick = nextHitObject.audicaTick;
@@ -378,7 +410,7 @@ namespace AudicaConverter
             }
         }
 
-        private static void ResetEndTimes(ref List<HitObject> hitObjects)
+        private static void ResetEndTimesAndPos(ref List<HitObject> hitObjects)
         {
             foreach (HitObject hitObject in hitObjects)
             {
@@ -386,6 +418,12 @@ namespace AudicaConverter
                 {
                     hitObject.endTime = hitObject.time;
                     hitObject.audicaEndTick = hitObject.audicaTick;
+                }
+
+                if (hitObject.audicaBehavior != 4)
+                {
+                    hitObject.endX = hitObject.x;
+                    hitObject.endY = hitObject.y;
                 }
             }
         }

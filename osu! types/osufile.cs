@@ -140,11 +140,20 @@ namespace OsuTypes
 
             if(type == 1 || type == 5)
             {
-                this.hitObjects.Add(new HitObject(float.Parse(split[0]), float.Parse(split[1]), float.Parse(split[2]), int.Parse(split[3]), int.Parse(split[4]), 0f, 0));
+                hitObjects.Add(new HitObject(float.Parse(split[0]), float.Parse(split[1]), float.Parse(split[2]), int.Parse(split[3]), int.Parse(split[4]), 0f, 0));
             }
             else if(type == 2 || type == 6)
             {
-                this.hitObjects.Add(new HitObject(float.Parse(split[0]), float.Parse(split[1]), float.Parse(split[2]), int.Parse(split[3]), int.Parse(split[4]), float.Parse(split[7]), int.Parse(split[6])));
+                var hitSounds = split[8].Split("|");
+                var sliderPoints = split[5].Split("|");
+                var endCoords = sliderPoints[sliderPoints.Length - 1].Split(":");
+                HitObject hitObject = new HitObject(float.Parse(split[0]), float.Parse(split[1]), float.Parse(split[2]), int.Parse(split[3]), int.Parse(hitSounds[0]), float.Parse(split[7]), int.Parse(split[6]));
+                hitObject.endHitsound = int.Parse(hitSounds[1]);
+                hitObject.endX = int.Parse(endCoords[0]);
+                hitObject.endY = int.Parse(endCoords[1]);
+
+                hitObjects.Add(hitObject);
+                
             }
             
         }

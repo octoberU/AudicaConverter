@@ -23,6 +23,13 @@ namespace OsuTypes
             return (float)Math.Round(tickTime) + (float)Math.Round((ms - timingPoints[i].ms) * 480f / (float)timingPoints[i].beatTime / roundingPrecision) * roundingPrecision;
         }
 
+        public static float ticksSinceLastTimingPoint(float tick, List<TimingPoint> timingPoints)
+        {
+            int timingPointIndex = timingPoints.FindIndex(tp => tp.audicaTick > tick) - 1;
+            if (timingPointIndex == -2) timingPointIndex = timingPoints.Count - 1;
+            return tick - timingPoints[timingPointIndex].audicaTick;
+        }
+
         public static float CalculateSliderDuration(HitObject hitObject, float globalSliderVelocity, List<TimingPoint> mergedTimingPoints)
         {
             float time = hitObject.time;
