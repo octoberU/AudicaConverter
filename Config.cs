@@ -46,10 +46,12 @@ namespace osutoaudica
     [Serializable]
     internal class ConfigParameters
     {
+        public float scaleX = 1f;
+        public float scaleY = 1f;
         public bool snapNotes = false;
         public bool convertChains = true;
         public float chainTimeThres = 120f;
-        public bool ignoreSlidersForChainConvert = true;
+        public bool ignoreSlidersForChainConvert = false;
         public bool convertSustains = true;
         public float minSustainLength = 960f;
         public float sustainExtension = 160f;

@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Xml;
 using System.Linq;
+using osutoaudica;
 
 namespace OsuTypes
 {
@@ -103,8 +104,8 @@ namespace OsuTypes
 
         public static AudicaDataPos GetAudicaPosFromHitObject(HitObject hitObject)
         {
-            float tempPosx = ((hitObject.x) / 512f) * 8f + 1.5f;
-            float tempPosy = (1 - ((hitObject.y) / 384f)) * 6f;
+            float tempPosx = (hitObject.x / 512f * 8f - 4f) * Config.parameters.scaleX + 5.5f;
+            float tempPosy = ((1 - hitObject.y / 384f) * 6f - 3f) * Config.parameters.scaleY + 3f;
 
             var x = Math.Clamp((int)(tempPosx), 0, 11);
             var y = Math.Clamp((int)(tempPosy), 0, 6);
