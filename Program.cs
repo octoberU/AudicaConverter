@@ -230,8 +230,31 @@ namespace AudicaConverter
             RunStackDistributionPass(ref diff.cues);
 
             if(Config.parameters.snapNotes) SnapNormalTargets(ref diff.cues);
+            if(Config.parameters.useChainSounds) RunHitsoundPass(ref diff.cues);
 
             return diff;
+        }
+
+        private static void RunHitsoundPass(ref List<Cue> cues)
+        {
+            foreach (var cue in cues)
+            {
+                switch (cue.behavior)
+                {
+                    case 4:
+                        cue.velocity = 1;
+                        break;
+                    case 5:
+                        cue.velocity = 2;
+                        break;
+                    case 6:
+                        cue.velocity = 3; //melee for future purposes
+                        break;
+
+                    default:
+                        break;
+                }
+            }
         }
 
         private static void SnapNormalTargets(ref List<Cue> cues)

@@ -55,7 +55,18 @@ namespace OsuTypes
 
         public static int GetVelocityForObject(HitObject hitObject)
         {
-            return 20;
+            switch (hitObject.hitsound)
+            {
+                case 0:
+                    return 20;
+                case 2:
+                    return 60;
+                case 3:
+                    return 127;
+
+                default:
+                    return 20;
+            }
         }
 
         public struct AudicaDataPos
