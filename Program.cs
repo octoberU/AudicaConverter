@@ -218,7 +218,7 @@ namespace AudicaConverter
 
 
             if (Config.parameters.convertSliderEnds) RunSliderSplitPass(ref osufile.hitObjects, osufile.timingPoints);
-            if (Config.parameters.convertChains) RunChainPass(ref osufile.hitObjects);
+            if (Config.parameters.convertChains) RunChainPass(ref osufile.hitObjects, osufile.timingPoints);
             if (Config.parameters.convertSustains) RunSustainPass(ref osufile.hitObjects, osufile.timingPoints);
             ResetEndTimesAndPos(ref osufile.hitObjects);
 
@@ -340,9 +340,8 @@ namespace AudicaConverter
             }
         }
 
-        private static void RunChainPass(ref List<HitObject> hitObjects)
+        private static void RunChainPass(ref List<HitObject> hitObjects, List<TimingPoint> timingPoints)
         {
-            float chainSwitchFrequency = 480f;
 
             HitObject prevChainHeadHitObject = null;
 
@@ -369,8 +368,8 @@ namespace AudicaConverter
                 }
                 else if (prevHitObject != null && currentHitObject.time - prevHitObject.time <= Config.parameters.chainTimeThres)
                 {
-                    if (currentHitObject.audicaTick - prevChainHeadHitObject.audicaTick >= chainSwitchFrequency && nextHitObject != null && nextHitObject.time - currentHitObject.time <= Config.parameters.chainTimeThres &&
-                        !nextIsIgnoredChainEnd)
+                    if (currentHitObject.audicaTick - prevChainHeadHitObject.audicaTick >= Config.parameters.chainSwitchFrequency && nextHitObject != null && nextHitObject.time - currentHitObject.time <= Config.parameters.chainTimeThres &&
+                        OsuUtility.ticksSinceLastTimingPoint(currentHitObject.audicaTick, timingPoints) % Config.parameters.chainSwitchFrequency == 0 && !nextIsIgnoredChainEnd)
                     {
                         currentHitObject.audicaBehavior = 4;
                         prevChainHeadHitObject = currentHitObject;

@@ -52,6 +52,7 @@ namespace osutoaudica
         public bool convertSliderEnds = false;
         public bool convertChains = true;
         public float chainTimeThres = 120f;
+        public float chainSwitchFrequency = 480f;
         public bool ignoreSlidersForChainConvert = false;
         public bool convertSustains = true;
         public float minSustainLength = 960f;
