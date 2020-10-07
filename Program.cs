@@ -302,7 +302,6 @@ namespace AudicaConverter
 
         private static void RunChainPass(ref List<HitObject> hitObjects)
         {
-            float chainTimeThreshold = 120f;
             float chainSwitchFrequency = 480f;
 
             HitObject prevChainHeadHitObject = null;
@@ -315,22 +314,22 @@ namespace AudicaConverter
                 HitObject currentHitObject = hitObjects[i];
 
                 bool isIgnoredChainEnd = Config.parameters.ignoreSlidersForChainConvert && (currentHitObject.type == 2 || currentHitObject.type == 6) &&
-                    (nextHitObject == null || nextHitObject.audicaTick - currentHitObject.audicaTick > chainTimeThreshold);
+                    (nextHitObject == null || nextHitObject.time - currentHitObject.time > Config.parameters.chainTimeThres);
                 bool nextIsIgnoredChainEnd = nextHitObject == null || Config.parameters.ignoreSlidersForChainConvert && (nextHitObject.type == 2 || nextHitObject.type == 6) &&
-                    (nextNextHitObject == null || nextNextHitObject.audicaTick - nextHitObject.audicaTick > chainTimeThreshold);
+                    (nextNextHitObject == null || nextNextHitObject.time - nextHitObject.time > Config.parameters.chainTimeThres);
 
                 if (isIgnoredChainEnd)
                     continue;
 
-                if ((prevHitObject == null || currentHitObject.audicaTick - prevHitObject.audicaTick > chainTimeThreshold) && nextHitObject != null &&
-                    nextHitObject.audicaTick - currentHitObject.audicaTick <= chainTimeThreshold && !nextIsIgnoredChainEnd)
+                if ((prevHitObject == null || currentHitObject.time - prevHitObject.time > Config.parameters.chainTimeThres) && nextHitObject != null &&
+                    nextHitObject.time - currentHitObject.time <= Config.parameters.chainTimeThres && !nextIsIgnoredChainEnd)
                 {
                     currentHitObject.audicaBehavior = 4;
                     prevChainHeadHitObject = currentHitObject;
                 }
-                else if (prevHitObject != null && currentHitObject.audicaTick - prevHitObject.audicaTick <= chainTimeThreshold)
+                else if (prevHitObject != null && currentHitObject.time - prevHitObject.time <= Config.parameters.chainTimeThres)
                 {
-                    if (currentHitObject.audicaTick - prevChainHeadHitObject.audicaTick >= chainSwitchFrequency && nextHitObject != null && nextHitObject.audicaTick - currentHitObject.audicaTick <= chainTimeThreshold &&
+                    if (currentHitObject.audicaTick - prevChainHeadHitObject.audicaTick >= chainSwitchFrequency && nextHitObject != null && nextHitObject.time - currentHitObject.time <= Config.parameters.chainTimeThres &&
                         !nextIsIgnoredChainEnd)
                     {
                         currentHitObject.audicaBehavior = 4;

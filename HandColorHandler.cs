@@ -129,7 +129,7 @@ namespace AudicaConverter
             //Stream start strain
             float leftStreamStartStrain = 0f;
             if (nextHitObject != null && nextHitObject.time - hitObject.time <= streamTimeThres && (prevHitObject == null || hitObject.time - prevHitObject.time > streamTimeThres) &&
-                OsuUtility.EuclideanDistance(hitObject.x, hitObject.y, nextHitObject.x, nextHitObject.y) <= streamDistanceThres)
+                OsuUtility.EuclideanDistance(hitObject.x, hitObject.y, nextHitObject.x, nextHitObject.y) / 512f <= streamDistanceThres)
                 leftStreamStartStrain = 1f;
 
             

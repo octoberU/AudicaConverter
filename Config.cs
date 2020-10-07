@@ -64,7 +64,7 @@ namespace osutoaudica
         public float strainDecayRate = 0.4f;
         public float historicalStrainWeight = 0.2f;
         public float timeStrainExponent = 2f;
-        public float streamTimeThres = 120f;
+        public float streamTimeThres = 200f;
         public float streamDistanceThres = 0.1f;
         public float lookAheadTimeCap = 150f;
         public float lookAheadFixedStrain = 0.1f;
