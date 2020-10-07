@@ -93,7 +93,7 @@ namespace AudicaConverter
 
         private static void ConvertMetadata(OSZ osz, Audica audica)
         {
-            string mapperName = Config.parameters.customMapperName == null ? RemoveSpecialCharacters(osz.osufiles[0].metadata.creator) : RemoveSpecialCharacters(Config.parameters.customMapperName);
+            string mapperName = Config.parameters.customMapperName == "" ? RemoveSpecialCharacters(osz.osufiles[0].metadata.creator) : RemoveSpecialCharacters(Config.parameters.customMapperName);
             audica.desc.title = osz.osufiles[0].metadata.title;
             audica.desc.artist = osz.osufiles[0].metadata.artist;
             audica.desc.author = mapperName;
