@@ -181,7 +181,7 @@ namespace OsuTypes
             var split = line.Split(",");
             if (split.Length > 2)
             {
-                var timingPoint = new TimingPoint(int.Parse(split[0]), float.Parse(split[1]), !Convert.ToBoolean(int.Parse(split[6])));
+                var timingPoint = new TimingPoint((int)float.Parse(split[0]), float.Parse(split[1]), !Convert.ToBoolean(int.Parse(split[6])));
                 if (!timingPoint.inherited) timingPoints.Add(timingPoint);
                 else inheritedTimingPoints.Add(timingPoint);
             }
