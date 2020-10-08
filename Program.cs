@@ -266,9 +266,10 @@ namespace AudicaConverter
                 diff.cues.Add(cue);
             }
 
-            RunStackDistributionPass(ref diff.cues);
 
-            if(Config.parameters.snapNotes) SnapNormalTargets(ref diff.cues);
+            if (Config.parameters.snapNotes) SnapNormalTargets(ref diff.cues);
+            RunStackDistributionPass(ref diff.cues);
+            
             if(Config.parameters.useChainSounds) RunHitsoundPass(ref diff.cues);
 
             return diff;
