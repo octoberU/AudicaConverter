@@ -62,7 +62,7 @@ namespace osutoaudica
         public string customMapperName = "";
 
         public float stackItemDistance = 0.333f;
-        public float stackResetTime = 1920f;
+        public float stackResetTime = 960f;
 
         //HandColorHandler params
         public float strainDecayRate = 0.4f;

@@ -447,6 +447,8 @@ namespace AudicaConverter
             for (int i = 0; i < cues.Count; i++)
             {
                 Cue currentCue = cues[i];
+                Cue prevCue = i - 1 >= 0 ? cues[i - 1] : null;
+                Cue nextCue = i + 1 < cues.Count ? cues[i + 1] : null;
 
                 //Remove unactive stacks
                 for (int j = activeStacks.Count - 1; j >= 0; j--)
@@ -466,7 +468,10 @@ namespace AudicaConverter
                     continue;
                 }
 
-                Cue prevCue = cues[i - 1];
+                //Don't distribute of target is a part of a stream
+                if (prevCue != null && !OsuUtility.CuesPosEquals(prevCue, currentCue) && currentCue.tick - prevCue.tick <= 140 ||
+                    nextCue != null && !OsuUtility.CuesPosEquals(nextCue, currentCue) && nextCue.tick - currentCue.tick <= 140)
+                    continue;
 
                 if (stack.stackMovementSpeed == 0f)
                 {
