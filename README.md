@@ -14,3 +14,8 @@ The biggest innovation from the previous osu! converter is an advanced hand assi
 
 ## Supported games
 * osu! (all game modes, but mainly intended to be used with standard)
+
+### Dependencies
+[NAudio](https://www.nuget.org/packages/NAudio/)
+[NewtonsoftJson](https://www.nuget.org/packages/Newtonsoft.Json/)
+[Audica .NET Tools](https://github.com/octoberU/Audica-.NET-Tools)
