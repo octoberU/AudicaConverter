@@ -28,7 +28,7 @@ namespace AudicaConverter
             {
                 if(item.Contains(".osz")) ConversionProcess.ConvertToAudica(item);
             }
-            //ConversionProcess.ConvertToAudica(@"C:\audica\Repos\AudicaConverter\bin\Release\netcoreapp3.1\1019827 UNDEAD CORPORATION - Sad Dream.osz");
+            //ConversionProcess.ConvertToAudica(@"C:\audica\Repos\AudicaConverter\bin\Release\netcoreapp3.1\40218 Momoiro Clover - Pinky Jones (TV Size).osz");
         }
     }
 
@@ -430,32 +430,58 @@ namespace AudicaConverter
             }
         }
 
+        private class TargetStack
+        {
+            public Cue stackStartCue;
+            public float stackMovementSpeed;
+            public float lastStackTick;
+            public OsuUtility.Coordinate2D direction;
+        }
+
         private static void RunStackDistributionPass(ref List<Cue> cues)
         {
             float stackItemDistance = Config.parameters.stackItemDistance; //Offset for stack items. Time proportionate distancing is used through the stack based on getting this distance between first and second item in stack
-            float stackResetTime = 960f;
+            float stackResetTime = Config.parameters.stackResetTime;
+            List<TargetStack> activeStacks = new List<TargetStack>();
 
-            Cue stackStartCue = cues[0];
-            float stackMovementSpeed = 0f;
-            for (int i = 1; i < cues.Count; i++)
+            for (int i = 0; i < cues.Count; i++)
             {
                 Cue currentCue = cues[i];
+
+                //Remove unactive stacks
+                for (int j = activeStacks.Count - 1; j >= 0; j--)
+                {
+                    if (currentCue.tick - activeStacks[j].lastStackTick >= stackResetTime)
+                        activeStacks.RemoveAt(j);
+                }
+
+                //Check if target fits in a currently active stack, if not create a stack for this target
+                TargetStack stack = activeStacks.Find(s => OsuUtility.CuesPosEquals(currentCue, s.stackStartCue));
+                if (stack == null)
+                {
+                    TargetStack newStack = new TargetStack();
+                    newStack.stackStartCue = currentCue;
+                    newStack.lastStackTick = currentCue.tick;
+                    activeStacks.Add(newStack);
+                    continue;
+                }
+
                 Cue prevCue = cues[i - 1];
 
-                if (OsuUtility.CuesPosEquals(currentCue, stackStartCue) && currentCue.tick - prevCue.tick < stackResetTime)
+                if (stack.stackMovementSpeed == 0f)
                 {
-                    if (stackMovementSpeed == 0f)
-                    {
-                        stackMovementSpeed = stackItemDistance / (currentCue.tick - stackStartCue.tick);
-                    }
+                    stack.stackMovementSpeed = stackItemDistance / (currentCue.tick - stack.stackStartCue.tick);
+                }
 
-                    OsuUtility.Coordinate2D currentCuePos = OsuUtility.GetPosFromCue(currentCue);
+                OsuUtility.Coordinate2D currentCuePos = OsuUtility.GetPosFromCue(currentCue);
+                if (stack.direction.x == 0f && stack.direction.y == 0f)
+                {
 
                     OsuUtility.Coordinate2D? dirToNextCue = null;
                     for (int j = 1; j + i < cues.Count; j++)
                     {
                         Cue otherCue = cues[i + j];
-                        if ((!Config.parameters.handBasedStackDirection || currentCue.handType == otherCue.handType) && !OsuUtility.CuesPosEquals(currentCue, otherCue))
+                        if (!OsuUtility.CuesPosEquals(currentCue, otherCue))
                         {
                             OsuUtility.Coordinate2D otherCuePos = OsuUtility.GetPosFromCue(otherCue);
                             dirToNextCue = new OsuUtility.Coordinate2D(otherCuePos.x - currentCuePos.x, otherCuePos.y - currentCuePos.y);
@@ -467,8 +493,8 @@ namespace AudicaConverter
                     for (int j = 1; j <= i; j++)
                     {
                         Cue otherCue = cues[i - j];
-                        if ((!Config.parameters.handBasedStackDirection || currentCue.handType == otherCue.handType) && !OsuUtility.CuesPosEquals(currentCue, otherCue) &&
-                            otherCue.tick < stackStartCue.tick)
+                        if (!OsuUtility.CuesPosEquals(currentCue, otherCue) &&
+                            otherCue.tick < stack.stackStartCue.tick)
                         {
                             OsuUtility.Coordinate2D otherCuePos = OsuUtility.GetPosFromCue(otherCue);
                             dirFromPrevCue = new OsuUtility.Coordinate2D(currentCuePos.x - otherCuePos.x, currentCuePos.y - otherCuePos.y);
@@ -477,39 +503,26 @@ namespace AudicaConverter
                     }
 
                     OsuUtility.Coordinate2D direction = new OsuUtility.Coordinate2D(0f, -1f);
-                    switch (Config.parameters.stackDirectionMode)
-                    {
-                        case 0:
-                            direction = new OsuUtility.Coordinate2D(0f, -1f);
-                            break;
-                        case 1:
-                            if (dirToNextCue != null) direction = (OsuUtility.Coordinate2D)dirToNextCue;
-                            else if (dirFromPrevCue != null) direction = (OsuUtility.Coordinate2D)dirFromPrevCue;
-                            break;
-                        case 2:
-                            if (dirFromPrevCue != null) direction = (OsuUtility.Coordinate2D)dirFromPrevCue;
-                            else if (dirToNextCue != null) direction = (OsuUtility.Coordinate2D)dirToNextCue;
-                            break;
-                    }
+                    if (dirFromPrevCue != null) direction = (OsuUtility.Coordinate2D)dirFromPrevCue;
+                    else if (dirToNextCue != null) direction = (OsuUtility.Coordinate2D)dirToNextCue;
 
                     //normalize
                     float length = (float)Math.Sqrt(direction.x * direction.x + direction.y * direction.y);
                     direction.x /= length;
                     direction.y /= length;
 
-                    OsuUtility.Coordinate2D newPos = new OsuUtility.Coordinate2D(currentCuePos.x + direction.x * stackMovementSpeed * (currentCue.tick - stackStartCue.tick),
-                        currentCuePos.y + direction.y * stackMovementSpeed * (currentCue.tick - stackStartCue.tick));
-
-                    OsuUtility.AudicaDataPos newAudicaPos = OsuUtility.CoordinateToAudicaPos(newPos);
-
-                    currentCue.pitch = newAudicaPos.pitch;
-                    currentCue.gridOffset = newAudicaPos.offset;
+                    stack.direction = direction;
                 }
-                else
-                {
-                    stackStartCue = currentCue;
-                    stackMovementSpeed = 0f;
-                }
+
+                OsuUtility.Coordinate2D newPos = new OsuUtility.Coordinate2D(currentCuePos.x + stack.direction.x * stack.stackMovementSpeed * (currentCue.tick - stack.stackStartCue.tick),
+                    currentCuePos.y + stack.direction.y * stack.stackMovementSpeed * (currentCue.tick - stack.stackStartCue.tick));
+
+                OsuUtility.AudicaDataPos newAudicaPos = OsuUtility.CoordinateToAudicaPos(newPos);
+
+                currentCue.pitch = newAudicaPos.pitch;
+                currentCue.gridOffset = newAudicaPos.offset;
+
+                stack.lastStackTick = currentCue.tick;
             }
         }
 

@@ -61,9 +61,8 @@ namespace osutoaudica
         public bool useChainSounds = true;
         public string customMapperName = "";
 
-        public int stackDirectionMode = 2; //0 = down, 1 = towards next target. 2 = away from previous target
-        public bool handBasedStackDirection = false;
         public float stackItemDistance = 0.333f;
+        public float stackResetTime = 1920f;
 
         //HandColorHandler params
         public float strainDecayRate = 0.4f;
@@ -75,7 +74,7 @@ namespace osutoaudica
         public float lookAheadFixedStrain = 0.1f;
         public float holdRestTime = 400f;
         public float holdRestTransformExponent = 2.5f;
-        public float timeStrainWeight = 1f;
+        public float timeStrainWeight = 1.2f;
         public float movementStrainWeight = 7f;
         public float directionStrainWeight = 3f;
         public float lookAheadDirectionStrainWeight = 15.0f;
