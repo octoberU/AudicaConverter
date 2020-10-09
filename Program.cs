@@ -99,6 +99,7 @@ namespace AudicaConverter
             audica.desc.author = mapperName;
             audica.desc.songID = RemoveSpecialCharacters(osz.osufiles[0].metadata.title) + "-" + mapperName;
             audica.desc.previewStartSeconds = (float)osz.osufiles[0].general.previewTime / 1000f;
+            audica.desc.fxSong = "";
         }
 
         private static int AskDifficulty(OSZ osz, string difficultyName)
