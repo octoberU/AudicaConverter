@@ -434,15 +434,24 @@ namespace AudicaConverter
         private class TargetStack
         {
             public Cue stackStartCue;
+            public List<Cue> tailCues;
             public float stackMovementSpeed;
             public float lastStackTick;
             public OsuUtility.Coordinate2D direction;
+
+            public TargetStack()
+            {
+                tailCues = new List<Cue>();
+            }
         }
 
         private static void RunStackDistributionPass(ref List<Cue> cues)
         {
             float stackItemDistance = Config.parameters.stackItemDistance; //Offset for stack items. Time proportionate distancing is used through the stack based on getting this distance between first and second item in stack
+            float stackMaxDistance = Config.parameters.stackMaxDistance;
             float stackResetTime = Config.parameters.stackResetTime;
+
+            List<TargetStack> allStacks = new List<TargetStack>();
             List<TargetStack> activeStacks = new List<TargetStack>();
 
             for (int i = 0; i < cues.Count; i++)
@@ -465,6 +474,7 @@ namespace AudicaConverter
                     TargetStack newStack = new TargetStack();
                     newStack.stackStartCue = currentCue;
                     newStack.lastStackTick = currentCue.tick;
+                    allStacks.Add(newStack);
                     activeStacks.Add(newStack);
                     continue;
                 }
@@ -473,11 +483,6 @@ namespace AudicaConverter
                 if (prevCue != null && !OsuUtility.CuesPosEquals(prevCue, currentCue) && currentCue.tick - prevCue.tick <= 140 ||
                     nextCue != null && !OsuUtility.CuesPosEquals(nextCue, currentCue) && nextCue.tick - currentCue.tick <= 140)
                     continue;
-
-                if (stack.stackMovementSpeed == 0f)
-                {
-                    stack.stackMovementSpeed = stackItemDistance / (currentCue.tick - stack.stackStartCue.tick);
-                }
 
                 OsuUtility.Coordinate2D currentCuePos = OsuUtility.GetPosFromCue(currentCue);
                 if (stack.direction.x == 0f && stack.direction.y == 0f)
@@ -519,16 +524,28 @@ namespace AudicaConverter
 
                     stack.direction = direction;
                 }
-
-                OsuUtility.Coordinate2D newPos = new OsuUtility.Coordinate2D(currentCuePos.x + stack.direction.x * stack.stackMovementSpeed * (currentCue.tick - stack.stackStartCue.tick),
-                    currentCuePos.y + stack.direction.y * stack.stackMovementSpeed * (currentCue.tick - stack.stackStartCue.tick));
-
-                OsuUtility.AudicaDataPos newAudicaPos = OsuUtility.CoordinateToAudicaPos(newPos);
-
-                currentCue.pitch = newAudicaPos.pitch;
-                currentCue.gridOffset = newAudicaPos.offset;
-
+                stack.tailCues.Add(currentCue);
                 stack.lastStackTick = currentCue.tick;
+            }
+
+            foreach (TargetStack stack in allStacks)
+            {
+                if (stack.tailCues.Count == 0)
+                    continue;
+                stack.stackMovementSpeed = Math.Min(stackItemDistance / (stack.tailCues[0].tick - stack.stackStartCue.tick), stackMaxDistance / (stack.tailCues[stack.tailCues.Count - 1].tick - stack.stackStartCue.tick));
+
+                foreach (Cue cue in stack.tailCues)
+                {
+                    OsuUtility.Coordinate2D cuePos = OsuUtility.GetPosFromCue(cue);
+                    OsuUtility.Coordinate2D newPos = new OsuUtility.Coordinate2D(cuePos.x + stack.direction.x * stack.stackMovementSpeed * (cue.tick - stack.stackStartCue.tick),
+                        cuePos.y + stack.direction.y * stack.stackMovementSpeed * (cue.tick - stack.stackStartCue.tick));
+
+                    OsuUtility.AudicaDataPos newAudicaPos = OsuUtility.CoordinateToAudicaPos(newPos);
+
+                    cue.pitch = newAudicaPos.pitch;
+                    cue.gridOffset = newAudicaPos.offset;
+
+                }
             }
         }
 
