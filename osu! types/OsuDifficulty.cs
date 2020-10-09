@@ -7,5 +7,6 @@ namespace osutoaudica.osu__types
     public class OsuDifficulty
     {
         public float sliderMultiplier;
+        public float approachRate;
     }
 }

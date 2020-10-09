@@ -52,6 +52,7 @@ namespace AudicaConverter
             if (convertMode == 2)
             {
                 Console.Clear();
+                SortOSZ(osz);
                 int expert = AskDifficulty(osz, "Expert");
                 int advanced = AskDifficulty(osz, "Advanced");
                 int standard = AskDifficulty(osz, "Standard");
@@ -64,7 +65,7 @@ namespace AudicaConverter
                 audica.advanced = advanced == 404 ? null : ConvertToAudica(osz.osufiles[advanced]);
                 audica.moderate = standard == 404 ? null : ConvertToAudica(osz.osufiles[standard]);
                 audica.beginner = beginner == 404 ? null : ConvertToAudica(osz.osufiles[beginner]);
-                
+
             }
             else
             {
@@ -91,6 +92,12 @@ namespace AudicaConverter
             audica.Export(@$"{Program.workingDirectory}\audicaFiles\{audica.desc.songID}.audica");
         }
 
+        private static void SortOSZ(OSZ osz)
+        {
+            var templist = osz.osufiles.OrderBy(o => o.hitObjects.Count).ToList();
+            osz.osufiles = templist;
+        }
+
         private static void ConvertMetadata(OSZ osz, Audica audica)
         {
             string mapperName = Config.parameters.customMapperName == "" ? RemoveSpecialCharacters(osz.osufiles[0].metadata.creator) : RemoveSpecialCharacters(Config.parameters.customMapperName);
@@ -108,7 +115,7 @@ namespace AudicaConverter
             Console.ForegroundColor = ConsoleColor.Yellow;
             for (int i = 0; i < osz.osufiles.Count; i++)
             {
-                Console.WriteLine($"\n[{i}]{osz.osufiles[i].metadata.version}");
+                Console.WriteLine($"\n[{i}]{osz.osufiles[i].metadata.version} [{osz.osufiles[i].hitObjects.Count} objects]");
             }
             Console.ForegroundColor = ConsoleColor.Gray;
             string userInput = Console.ReadLine();

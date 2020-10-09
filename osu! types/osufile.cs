@@ -122,6 +122,7 @@ namespace OsuTypes
         private void ParseDifficulty(string line)
         {
             if (line.Contains("SliderMultiplier:")) difficulty.sliderMultiplier = float.Parse(line.Split(":")[1]);
+            if (line.Contains("ApproachRate:")) difficulty.approachRate = float.Parse(line.Split(":")[1]);
         }
 
         private void FixFirstTimingPoint(List<TimingPoint> timingPoints)
