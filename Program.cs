@@ -368,9 +368,9 @@ namespace AudicaConverter
                     prevChainHeadHitObject = currentHitObject;
                 }
                 else if (prevHitObject != null && currentHitObject.time - prevHitObject.time <= Config.parameters.chainTimeThres)
-                {
-                    if (currentHitObject.audicaTick - prevChainHeadHitObject.audicaTick >= Config.parameters.chainSwitchFrequency && nextHitObject != null && nextHitObject.time - currentHitObject.time <= Config.parameters.chainTimeThres &&
-                        OsuUtility.ticksSinceLastTimingPoint(currentHitObject.audicaTick, timingPoints) % Config.parameters.chainSwitchFrequency == 0 && !nextIsIgnoredChainEnd)
+                {   
+                    if (currentHitObject.time - prevChainHeadHitObject.time > Config.parameters.chainTimeThres && currentHitObject.audicaTick - prevChainHeadHitObject.audicaTick >= Config.parameters.chainSwitchFrequency && nextHitObject != null &&
+                        nextHitObject.time - currentHitObject.time <= Config.parameters.chainTimeThres && OsuUtility.ticksSinceLastTimingPoint(currentHitObject.audicaTick, timingPoints) % Config.parameters.chainSwitchFrequency == 0 && !nextIsIgnoredChainEnd)
                     {
                         currentHitObject.audicaBehavior = 4;
                         prevChainHeadHitObject = currentHitObject;
