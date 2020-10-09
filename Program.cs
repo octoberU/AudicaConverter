@@ -191,7 +191,7 @@ namespace AudicaConverter
             ogg2mogg.StartInfo.UseShellExecute = false;
             ogg2mogg.StartInfo.RedirectStandardOutput = true;
 
-            ogg2mogg.StartInfo.Arguments = $"{tempOggPath} {tempMoggPath}";
+            ogg2mogg.StartInfo.Arguments = $"\"{tempOggPath}\" \"{tempMoggPath}\"";
 
             string paddingString = paddingTime > 0 ? $"-af \"adelay = {paddingTime} | {paddingTime}\"" : "";
 
