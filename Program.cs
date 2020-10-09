@@ -218,8 +218,8 @@ namespace AudicaConverter
 
 
             if (Config.parameters.convertSliderEnds) RunSliderSplitPass(ref osufile.hitObjects, osufile.timingPoints);
-            if (Config.parameters.convertChains) RunChainPass(ref osufile.hitObjects, osufile.timingPoints);
             if (Config.parameters.convertSustains) RunSustainPass(ref osufile.hitObjects, osufile.timingPoints);
+            if (Config.parameters.convertChains) RunChainPass(ref osufile.hitObjects, osufile.timingPoints);
             ResetEndTimesAndPos(ref osufile.hitObjects);
 
             // do conversion stuff here
@@ -354,9 +354,9 @@ namespace AudicaConverter
                 HitObject currentHitObject = hitObjects[i];
 
                 bool isIgnoredChainEnd = Config.parameters.ignoreSlidersForChainConvert && (currentHitObject.type == 2 || currentHitObject.type == 6) &&
-                    (nextHitObject == null || nextHitObject.time - currentHitObject.time > Config.parameters.chainTimeThres);
+                    (nextHitObject == null || nextHitObject.time - currentHitObject.time > Config.parameters.chainTimeThres) || Config.parameters.ignoreSustainsForChainConvert && currentHitObject.audicaBehavior == 3;
                 bool nextIsIgnoredChainEnd = nextHitObject == null || Config.parameters.ignoreSlidersForChainConvert && (nextHitObject.type == 2 || nextHitObject.type == 6) &&
-                    (nextNextHitObject == null || nextNextHitObject.time - nextHitObject.time > Config.parameters.chainTimeThres);
+                    (nextNextHitObject == null || nextNextHitObject.time - nextHitObject.time > Config.parameters.chainTimeThres) || Config.parameters.ignoreSustainsForChainConvert && nextHitObject.audicaBehavior == 3;
 
                 if (isIgnoredChainEnd)
                     continue;
