@@ -12,6 +12,9 @@ The biggest innovation from the previous osu! converter is an advanced hand assi
 * Drag `.osz` files onto the `osutoaudica.exe`
 * Follow directions in the console
 
+## Customization
+The converter is highly customizable with a lot of options that can be configured to adjust the converted maps to your preference. While the default configurations are optimized to provoide good conversions across a wide range of map styles, difficulties and player skill levels, a one-size-fits-all configuration isn't feasible. It is highly recommended to adjust settings such as the map size scaling and at what speed targets should be converted to chains based on your own needs and experiences with the converter. See the [Converter Customization and Config Options](https://github.com/octoberU/AudicaConverter/wiki/Converter-Customization-and-Config-Options) wiki page for details on each option in the config.json.
+
 ## Supported games
 * osu! (all game modes, but mainly intended to be used with standard)
 
