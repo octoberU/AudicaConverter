@@ -36,6 +36,8 @@ namespace AudicaConverter
             Console.Clear();
             var osz = new OSZ(filePath);
             var audica = new Audica(@$"{Program.workingDirectory}\template.audica");
+            ConvertTempos(osz, ref audica);
+
             Console.WriteLine($"{osz.osufiles[0].metadata.artist} - {osz.osufiles[0].metadata.title}" +
                 $"\nMapped by {osz.osufiles[0].metadata.creator}" +
                 $"\nFound {osz.osufiles.Count} difficulties");
@@ -74,18 +76,20 @@ namespace AudicaConverter
 
             ConvertMetadata(osz, audica);
 
-            
-            //Convert tempos
+
+            //at the end
+            if (!Directory.Exists(@$"{Program.workingDirectory}\audicaFiles")) Directory.CreateDirectory(@$"{Program.workingDirectory}\audicaFiles");
+            audica.Export(@$"{Program.workingDirectory}\audicaFiles\{audica.desc.songID}.audica");
+        }
+
+        private static void ConvertTempos(OSZ osz, ref Audica audica)
+        {
             var tempList = new List<TempoData>();
             foreach (var timingPoint in osz.osufiles[0].timingPoints)
             {
                 tempList.Add(new TempoData((int)timingPoint.audicaTick, TempoData.MicrosecondsPerQuarterNoteFromBPM(60000 / timingPoint.beatTime)));
             }
             audica.tempoData = tempList;
-
-            //at the end
-            if (!Directory.Exists(@$"{Program.workingDirectory}\audicaFiles")) Directory.CreateDirectory(@$"{Program.workingDirectory}\audicaFiles");
-            audica.Export(@$"{Program.workingDirectory}\audicaFiles\{audica.desc.songID}.audica");
         }
 
         private static void SortOSZ(OSZ osz)
