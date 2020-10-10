@@ -68,9 +68,13 @@ namespace osutoaudica
         public bool useChainSounds = true;
         public string customMapperName = "";
 
+        public bool distributeStacks = true;
         public float stackItemDistance = 0.333f;
         public float stackMaxDistance = 1.5f;
         public float stackResetTime = 960f;
+
+        public bool resizeSmallChains = true;
+        public float minChainSize = 0.5f;
 
         //HandColorHandler params
         public float strainDecayRate = 0.4f;

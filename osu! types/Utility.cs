@@ -150,9 +150,32 @@ namespace OsuTypes
             return AudicaPosToCoordinate(audicaPos);
         }
 
+        public static Coordinate2D ScalePos(Coordinate2D pos, Coordinate2D scaleCenter, float scaleFactor)
+        {
+            return new Coordinate2D
+            (
+                (pos.x - scaleCenter.x) * scaleFactor + scaleCenter.x,
+                (pos.y - scaleCenter.y) * scaleFactor + scaleCenter.y
+            );
+        }
+
         public static bool CuesPosEquals(Cue cue1, Cue cue2)
         {
             return cue1.pitch == cue2.pitch && cue1.gridOffset.Equals(cue2.gridOffset);
+        }
+
+        public static float DistanceBetweenCues(Cue cue1, Cue cue2)
+        {
+            Coordinate2D cue1Pos = GetPosFromCue(cue1);
+            Coordinate2D cue2Pos = GetPosFromCue(cue2);
+            return EuclideanDistance(cue1Pos.x, cue1Pos.y, cue2Pos.x, cue2Pos.y);
+        }
+
+        public static void SetCuePos(Cue cue, Coordinate2D pos)
+        {
+            AudicaDataPos newAudicaPos = OsuUtility.CoordinateToAudicaPos(pos);
+            cue.pitch = newAudicaPos.pitch;
+            cue.gridOffset = newAudicaPos.offset;
         }
 
         public static float EuclideanDistance(float xFrom, float yFrom, float xTo, float yTo)

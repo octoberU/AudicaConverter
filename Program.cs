@@ -308,7 +308,8 @@ namespace AudicaConverter
 
 
             if (Config.parameters.snapNotes) SnapNormalTargets(ref diff.cues);
-            RunStackDistributionPass(ref diff.cues);
+            if (Config.parameters.distributeStacks) RunStackDistributionPass(ref diff.cues);
+            if (Config.parameters.resizeSmallChains) RunChainResizePass(ref diff.cues);
             
             if(Config.parameters.useChainSounds) RunHitsoundPass(ref diff.cues);
 
@@ -579,12 +580,49 @@ namespace AudicaConverter
                     OsuUtility.Coordinate2D cuePos = OsuUtility.GetPosFromCue(cue);
                     OsuUtility.Coordinate2D newPos = new OsuUtility.Coordinate2D(cuePos.x + stack.direction.x * stack.stackMovementSpeed * (cue.tick - stack.stackStartCue.tick),
                         cuePos.y + stack.direction.y * stack.stackMovementSpeed * (cue.tick - stack.stackStartCue.tick));
+                    OsuUtility.SetCuePos(cue, newPos);
+                }
+            }
+        }
 
-                    OsuUtility.AudicaDataPos newAudicaPos = OsuUtility.CoordinateToAudicaPos(newPos);
+        private static void RunChainResizePass(ref List<Cue> cues)
+        {
+            Cue chainHead = null;
+            List<Cue> chainLinks = new List<Cue>();
+            foreach (Cue cue in cues)
+            {
+                if (cue.behavior == Cue.Behavior.ChainStart)
+                {
+                    if (chainHead != null) ResizeChain(chainHead, chainLinks);
+                    chainHead = cue;
+                    chainLinks = new List<Cue>();
+                }
+                else if (cue.behavior == Cue.Behavior.Chain)
+                {
+                    chainLinks.Add(cue);
+                }
+            }
+            if (chainHead != null) ResizeChain(chainHead, chainLinks);
+        }
 
-                    cue.pitch = newAudicaPos.pitch;
-                    cue.gridOffset = newAudicaPos.offset;
+        private static void ResizeChain(Cue chainHead, List<Cue> chainLinks)
+        {
+            float minChainSize = Config.parameters.minChainSize;
+            float chainSize = 0f;
+            foreach (Cue chainLink in chainLinks)
+            {
+                chainSize = Math.Max(chainSize, OsuUtility.DistanceBetweenCues(chainLink, chainHead));
+            }
 
+            if (chainSize > 0f && chainSize < minChainSize)
+            {
+                float scaleFactor = minChainSize / chainSize;
+                OsuUtility.Coordinate2D chainHeadPos = OsuUtility.GetPosFromCue(chainHead);
+                foreach (Cue chainLink in chainLinks)
+                {
+                    OsuUtility.Coordinate2D chainLinkPos = OsuUtility.GetPosFromCue(chainLink);
+                    chainLinkPos = OsuUtility.ScalePos(chainLinkPos, chainHeadPos, scaleFactor);
+                    OsuUtility.SetCuePos(chainLink, chainLinkPos);
                 }
             }
         }
@@ -609,15 +647,12 @@ namespace AudicaConverter
         public static Difficulty ScaleDifficulty(Difficulty unscaledDifficulty, float scaleX, float scaleY)
         {
             Difficulty scaledDifficulty = OsuUtility.DeepClone(unscaledDifficulty);
-
             foreach (Cue cue in scaledDifficulty.cues)
             {
                 OsuUtility.Coordinate2D cuePos = OsuUtility.GetPosFromCue(cue);
                 cuePos.x = (cuePos.x - 5.5f) * scaleX + 5.5f;
                 cuePos.y = (cuePos.y - 3f) * scaleY + 3f;
-                OsuUtility.AudicaDataPos newAudicaPos = OsuUtility.CoordinateToAudicaPos(cuePos);
-                cue.pitch = newAudicaPos.pitch;
-                cue.gridOffset = newAudicaPos.offset;
+                OsuUtility.SetCuePos(cue, cuePos);
             }
 
             return scaledDifficulty;
