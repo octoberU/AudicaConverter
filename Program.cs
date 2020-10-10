@@ -144,13 +144,16 @@ namespace AudicaConverter
             string tempMoggPath = tempDirectory + @"tempMogg.mogg";
 
             float paddingTime = 0f;
-            if (difficulty.hitObjects.Count > 0)
+            foreach (var osufile in osz.osufiles)
             {
-                HitObject firstHitObject = difficulty.hitObjects[0];
-                if (firstHitObject.time < Config.parameters.introPadding)
+                if (osufile.hitObjects.Count > 0)
                 {
-                    paddingTime = Config.parameters.introPadding - firstHitObject.time;
-                }
+                    HitObject firstHitObject = difficulty.hitObjects[0];
+                    if (firstHitObject.time < Config.parameters.introPadding)
+                    {
+                        paddingTime = Config.parameters.introPadding - firstHitObject.time;
+                    }
+                } 
             }
 
             if (paddingTime > 0f)
