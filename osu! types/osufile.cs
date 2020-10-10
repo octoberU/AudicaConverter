@@ -194,10 +194,10 @@ namespace OsuTypes
 
         private void ParseGeneral(string line)
         {
-            if (line.Contains("AudioFilename:")) general.audioFileName = line.Split(": ")[1];
-            else if (line.Contains("PreviewTime:")) int.TryParse(line.Split(": ")[1], out general.previewTime);
-            else if (line.Contains("StackLeniency:")) float.TryParse(line.Split(": ")[1], out general.stackLeniency);
-            else if (line.Contains("Mode:")) int.TryParse(line.Split(": ")[1], out general.mode);
+            if (line.Contains("AudioFilename:")) general.audioFileName = line.Split(":")[1].Trim();
+            else if (line.Contains("PreviewTime:")) int.TryParse(line.Split(":")[1].Trim(), out general.previewTime);
+            else if (line.Contains("StackLeniency:")) float.TryParse(line.Split(":")[1].Trim(), out general.stackLeniency);
+            else if (line.Contains("Mode:")) int.TryParse(line.Split(":")[1].Trim(), out general.mode);
         }
 
         enum ParseMode
