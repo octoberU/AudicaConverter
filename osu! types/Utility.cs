@@ -6,6 +6,8 @@ using System.Text;
 using System.Xml;
 using System.Linq;
 using osutoaudica;
+using System.IO;
+using System.Runtime.Serialization.Formatters.Binary;
 
 namespace OsuTypes
 {
@@ -104,8 +106,8 @@ namespace OsuTypes
 
         public static AudicaDataPos GetAudicaPosFromHitObject(HitObject hitObject)
         {
-            float tempPosx = (hitObject.x / 512f * 8f - 4f) * Config.parameters.scaleX + 5.5f;
-            float tempPosy = ((1 - hitObject.y / 384f) * 6f - 3f) * Config.parameters.scaleY + 3f;
+            float tempPosx = hitObject.x / 512f * 8f + 1.5f;
+            float tempPosy = (1 - hitObject.y / 384f) * 6f;
 
             var x = Math.Clamp((int)(tempPosx), 0, 11);
             var y = Math.Clamp((int)(tempPosy), 0, 6);
@@ -167,6 +169,18 @@ namespace OsuTypes
             var zOffset = Math.Clamp(Math.Abs(x) - 5.5f, 0f, 2.5f) / 5f;
 
             return zOffset;
+        }
+
+        public static T DeepClone<T>(this T obj)
+        {
+            using (var ms = new MemoryStream())
+            {
+                var formatter = new BinaryFormatter();
+                formatter.Serialize(ms, obj);
+                ms.Position = 0;
+
+                return (T)formatter.Deserialize(ms);
+            }
         }
     }
 }

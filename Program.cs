@@ -63,16 +63,10 @@ namespace AudicaConverter
                 SortOSZ(osz);
 
                 Console.Clear();
-                int expert = AskDifficulty(osz, "Expert");
-                int advanced = AskDifficulty(osz, "Advanced");
-                int standard = AskDifficulty(osz, "Standard");
-                int beginner = AskDifficulty(osz, "Beginner");
-
-                audica.expert = expert == 404 ? null : osz.osufiles[expert].audicaDifficulty;
-                audica.advanced = advanced == 404 ? null : osz.osufiles[advanced].audicaDifficulty;
-                audica.moderate = standard == 404 ? null : osz.osufiles[standard].audicaDifficulty;
-                audica.beginner = beginner == 404 ? null : osz.osufiles[beginner].audicaDifficulty;
-
+                audica.expert = AskDifficulty(osz, audica, "Expert");
+                audica.advanced = AskDifficulty(osz, audica, "Advanced");
+                audica.moderate = AskDifficulty(osz, audica, "Standard");
+                audica.beginner = AskDifficulty(osz, audica, "Beginner");
             }
             else
             {
@@ -118,22 +112,48 @@ namespace AudicaConverter
             audica.desc.fxSong = "";
         }
 
-        private static int AskDifficulty(OSZ osz, string difficultyName)
+        private static Difficulty AskDifficulty(OSZ osz, Audica audica, string difficultyName)
         {
+            float scaleX = 1f;
+            float scaleY = 1f;
+            switch (difficultyName.ToLower())
+            {
+                case ("expert"):
+                    scaleX = Config.parameters.expertScaleX;
+                    scaleY = Config.parameters.expertScaleY;
+                    break;
+                case ("advanced"):
+                    scaleX = Config.parameters.advancedScaleX;
+                    scaleY = Config.parameters.advancedScaleY;
+                    break;
+                case ("standard"):
+                    scaleX = Config.parameters.standardScaleX;
+                    scaleY = Config.parameters.standardScaleY;
+                    break;
+                case ("beginner"):
+                    scaleX = Config.parameters.beginnerScaleX;
+                    scaleY = Config.parameters.beginnerScaleY;
+                    break;
+            }
+
+            List<Difficulty> scaledDifficulties = new List<Difficulty>();
             Console.WriteLine($"\n\nSelect {difficultyName} difficulty[Leave empty for none]:");
             Console.ForegroundColor = ConsoleColor.Yellow;
             for (int i = 0; i < osz.osufiles.Count; i++)
             {
-                Console.WriteLine($"\n[{i}]{osz.osufiles[i].metadata.version} [{osz.osufiles[i].audicaDifficultyRating.ToString("n2")} Audica difficulty]");
+                Difficulty scaledDifficulty = ScaleDifficulty(osz.osufiles[i].audicaDifficulty, scaleX, scaleY);
+                scaledDifficulties.Add(scaledDifficulty);
+                float difficultyRating = audica.GetRatingForDifficulty(scaledDifficulty);
+                Console.WriteLine($"\n[{i}]{osz.osufiles[i].metadata.version} [{difficultyRating.ToString("n2")} Audica difficulty]");
             }
             Console.ForegroundColor = ConsoleColor.Gray;
             string userInput = Console.ReadLine();
             Console.Clear();
-            if (userInput == "") return 404;// User hasn't picked a difficulty
+            if (userInput == "") return null;// User hasn't picked a difficulty
             else
             {
                 int difficulty = int.Parse(userInput);
-                return difficulty;
+                return scaledDifficulties[difficulty];
             }
         }
 
@@ -584,6 +604,23 @@ namespace AudicaConverter
                 
             }
             return sb.ToString().Replace(".", "");
+        }
+
+        public static Difficulty ScaleDifficulty(Difficulty unscaledDifficulty, float scaleX, float scaleY)
+        {
+            Difficulty scaledDifficulty = OsuUtility.DeepClone(unscaledDifficulty);
+
+            foreach (Cue cue in scaledDifficulty.cues)
+            {
+                OsuUtility.Coordinate2D cuePos = OsuUtility.GetPosFromCue(cue);
+                cuePos.x = (cuePos.x - 5.5f) * scaleX + 5.5f;
+                cuePos.y = (cuePos.y - 3f) * scaleY + 3f;
+                OsuUtility.AudicaDataPos newAudicaPos = OsuUtility.CoordinateToAudicaPos(cuePos);
+                cue.pitch = newAudicaPos.pitch;
+                cue.gridOffset = newAudicaPos.offset;
+            }
+
+            return scaledDifficulty;
         }
     }
 

@@ -46,8 +46,14 @@ namespace osutoaudica
     [Serializable]
     internal class ConfigParameters
     {
-        public float scaleX = 0.8f;
-        public float scaleY = 0.8f;
+        public float expertScaleX = 0.8f;
+        public float expertScaleY = 0.8f;
+        public float advancedScaleX = 0.7f;
+        public float advancedScaleY = 0.7f;
+        public float standardScaleX = 0.6f;
+        public float standardScaleY = 0.6f;
+        public float beginnerScaleX = 0.5f;
+        public float beginnerScaleY = 0.5f;
         public bool snapNotes = false;
         public bool convertSliderEnds = false;
         public bool convertChains = true;
