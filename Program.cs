@@ -180,7 +180,8 @@ namespace AudicaConverter
                         hitObject.audicaEndTick += OsuUtility.MsToTick(paddingTime, osuDifficulty.timingPoints);
                     }
                     osuDifficulty.general.previewTime += (int)paddingTime;
-                } 
+                }
+                ConvertTempos(osz, ref audica);
             }
 
 
