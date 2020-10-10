@@ -1,5 +1,6 @@
 ﻿using osutoaudica.osu__types;
 using OsuTypes;
+using AudicaTools;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -17,6 +18,8 @@ namespace OsuTypes
         public List<TimingPoint> inheritedTimingPoints = new List<TimingPoint>();
         public List<TimingPoint> mergedTimingPoints = null;
         public List<HitObject> hitObjects = new List<HitObject>();
+        public Difficulty audicaDifficulty;
+        public float audicaDifficultyRating;
 
         public osufile(Stream stream)
         {

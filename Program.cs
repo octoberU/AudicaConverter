@@ -24,7 +24,7 @@ namespace AudicaConverter
             {
                 if(item.Contains(".osz")) ConversionProcess.ConvertToAudica(item);
             }
-            //ConversionProcess.ConvertToAudica(@"C:\audica\Repos\AudicaConverter\bin\Release\netcoreapp3.1\40218 Momoiro Clover - Pinky Jones (TV Size).osz");
+            //ConversionProcess.ConvertToAudica(@"C:\audica\repos\AudicaConverter\bin\Release\netcoreapp3.1\1156409 Ichinose Go - Champion Shirona.osz");
         }
     }
 
@@ -50,19 +50,25 @@ namespace AudicaConverter
             if (convertMode == 2)
             {
                 Console.Clear();
+                Console.WriteLine("Converting...");
+                foreach (osufile file in osz.osufiles)
+                {
+                    file.audicaDifficulty = ConvertToAudica(file);
+                    file.audicaDifficultyRating = audica.GetRatingForDifficulty(file.audicaDifficulty);
+                }
                 SortOSZ(osz);
+
+                Console.Clear();
                 int expert = AskDifficulty(osz, "Expert");
                 int advanced = AskDifficulty(osz, "Advanced");
                 int standard = AskDifficulty(osz, "Standard");
                 int beginner = AskDifficulty(osz, "Beginner");
 
-                Console.Clear();
-                Console.WriteLine("Converting...");
                 ConvertSongToOGG(ref osz, audica, expert);
-                audica.expert = expert == 404 ? null : ConvertToAudica(osz.osufiles[expert]);
-                audica.advanced = advanced == 404 ? null : ConvertToAudica(osz.osufiles[advanced]);
-                audica.moderate = standard == 404 ? null : ConvertToAudica(osz.osufiles[standard]);
-                audica.beginner = beginner == 404 ? null : ConvertToAudica(osz.osufiles[beginner]);
+                audica.expert = expert == 404 ? null : osz.osufiles[expert].audicaDifficulty;
+                audica.advanced = advanced == 404 ? null : osz.osufiles[advanced].audicaDifficulty;
+                audica.moderate = standard == 404 ? null : osz.osufiles[standard].audicaDifficulty;
+                audica.beginner = beginner == 404 ? null : osz.osufiles[beginner].audicaDifficulty;
 
             }
             else
@@ -94,7 +100,7 @@ namespace AudicaConverter
 
         private static void SortOSZ(OSZ osz)
         {
-            var templist = osz.osufiles.OrderBy(o => o.hitObjects.Count).ToList();
+            var templist = osz.osufiles.OrderByDescending(o => o.audicaDifficultyRating).ToList();
             osz.osufiles = templist;
         }
 
@@ -115,7 +121,7 @@ namespace AudicaConverter
             Console.ForegroundColor = ConsoleColor.Yellow;
             for (int i = 0; i < osz.osufiles.Count; i++)
             {
-                Console.WriteLine($"\n[{i}]{osz.osufiles[i].metadata.version} [{osz.osufiles[i].hitObjects.Count} objects]");
+                Console.WriteLine($"\n[{i}]{osz.osufiles[i].metadata.version} [{osz.osufiles[i].audicaDifficultyRating.ToString("n2")} Audica difficulty]");
             }
             Console.ForegroundColor = ConsoleColor.Gray;
             string userInput = Console.ReadLine();
