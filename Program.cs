@@ -319,7 +319,7 @@ namespace AudicaConverter
         {
             foreach (var cue in cues)
             {
-                switch (cue.behavior)
+                switch ((int)cue.behavior)
                 {
                     case 4:
                         cue.velocity = 1;
