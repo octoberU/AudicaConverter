@@ -13,6 +13,7 @@ namespace AudicaConverter
 {
     class Program
     {
+        public static int version = 2;
         public static string FFMPEGNAME = @"\ffmpeg.exe";
         public static string OGG2MOGGNAME = @"\ogg2mogg.exe";
         public static string workingDirectory = Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
@@ -20,6 +21,7 @@ namespace AudicaConverter
         static void Main(string[] args)
         {
             Config.Init();
+            Updater.UpdateClient();
             foreach (var item in args)
             {
                 if(item.Contains(".osz")) ConversionProcess.ConvertToAudica(item);
