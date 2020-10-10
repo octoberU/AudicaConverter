@@ -23,7 +23,6 @@ namespace OsuTypes
 
         public osufile(Stream stream)
         {
-            timingPoints.Add(new TimingPoint(0f, 480d, false));
             var ms = new MemoryStream();
             stream.CopyTo(ms);
             string[] osuString = Encoding.UTF8.GetString(ms.ToArray()).Split(new char[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
@@ -186,7 +185,11 @@ namespace OsuTypes
             if (split.Length > 2)
             {
                 var timingPoint = new TimingPoint((int)float.Parse(split[0]), float.Parse(split[1]), !Convert.ToBoolean(int.Parse(split[6])));
-                if (!timingPoint.inherited) timingPoints.Add(timingPoint);
+                if (!timingPoint.inherited)
+                {
+                    if (timingPoints.Count == 0) timingPoints.Add(new TimingPoint(0f, timingPoint.beatTime, false));
+                    timingPoints.Add(timingPoint);
+                }
                 else inheritedTimingPoints.Add(timingPoint);
             }
             
