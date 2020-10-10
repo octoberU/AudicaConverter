@@ -23,6 +23,9 @@ namespace AudicaConverter
         //The maximum distance between targets to be counted as a stream
         private float streamDistanceThres => Config.parameters.streamDistanceThres;
 
+        //The hand streams are prefered to start on
+        private string streamStartHandPreference => Config.parameters.streamHandPreference;
+
         //A limit on how small the time difference between notes for look ahead strain can be. Prevents overweighting in chain hand-overs.
         private float lookAheadTimeCap => Config.parameters.lookAheadTimeCap;
 
@@ -127,15 +130,19 @@ namespace AudicaConverter
                 leftHoldStrain = (float)Math.Pow(1 - (hitObject.time - prevLeftHitObject.endTime) / holdRestTime, holdRestTransformExponent);
 
             //Stream start strain
+            float rightStreamStartStrain = 0f;
             float leftStreamStartStrain = 0f;
             if (nextHitObject != null && nextHitObject.time - hitObject.time <= streamTimeThres && (prevHitObject == null || hitObject.time - prevHitObject.time > streamTimeThres) &&
                 OsuUtility.EuclideanDistance(hitObject.x, hitObject.y, nextHitObject.x, nextHitObject.y) / 512f <= streamDistanceThres)
-                leftStreamStartStrain = 1f;
+            {
+                rightStreamStartStrain = streamStartHandPreference.ToLower() == "left" ? 1f : 0f;
+                leftStreamStartStrain = streamStartHandPreference.ToLower() == "right" ? 1f : 0f;
+            }
 
             
             //Strain combination through weighted sum
             float rightStrainIncrease = timeStrainWeight * rightTimeStrain + movementStrainWeight * rightMovementStrain + directionStrainWeight * rightDirectionStrain + lookAheadDirectionStrainWeight * rightLookAheadDirectionStrain +
-                crossoverStrainWeight * rightCrossoverStrain + playspacePositionStrainWeight * rightPlayspacePositionStrain + holdRestStrainWeight * rightHoldStrain;
+                crossoverStrainWeight * rightCrossoverStrain + playspacePositionStrainWeight * rightPlayspacePositionStrain + holdRestStrainWeight * rightHoldStrain + streamStartStrainWeight * rightStreamStartStrain;
             float leftStrainIncrease = timeStrainWeight * leftTimeStrain + movementStrainWeight * leftMovementStrain + directionStrainWeight * leftDirectionStrain + lookAheadDirectionStrainWeight * leftLookAheadDirectionStrain +
                 crossoverStrainWeight * leftCrossoverStrain + playspacePositionStrainWeight * leftPlayspacePositionStrain + holdRestStrainWeight * leftHoldStrain + streamStartStrainWeight * leftStreamStartStrain;
 

@@ -82,6 +82,7 @@ namespace osutoaudica
         public float timeStrainExponent = 2f;
         public float streamTimeThres = 120f;
         public float streamDistanceThres = 0.1f;
+        public string streamHandPreference = "right";
         public float lookAheadTimeCap = 150f;
         public float lookAheadFixedStrain = 0.1f;
         public float holdRestTime = 400f;
