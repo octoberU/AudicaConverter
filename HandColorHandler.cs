@@ -8,14 +8,14 @@ namespace AudicaConverter
 {
     internal class HandColorHandler
     {
-        //The base for exponential decay of accumulated strain on each hand. e.g. strainDecayRate of 0.5 means accumulated strain on each hand is halved every second.
-        private float strainDecayRate => Config.parameters.strainDecayRate;
+        //The base for exponential decay of accumulated strain on each hand. e.g. a value of means accumulated strain on each hand is halved every second.
+        private float strainDecayBase => Config.parameters.strainDecayBase;
 
         // Weights the impact of accumulated historical strain compared to the immediate strain of the new target when choosing hand.
         private float historicalStrainWeight => Config.parameters.historicalStrainWeight;
 
         //The exponent for which inversed time since last target will be power transformed by. Adjusting this allows adjusting relative strain of different time spacings.
-        private float timeStrainExponent => Config.parameters.timeStrainExponent;
+        private float timeStrainTransformExponent => Config.parameters.timeStrainTransformExponent;
 
         //The amount of time (ms) between notes to be counted as a stream
         private float streamTimeThres => Config.parameters.streamTimeThres;
@@ -27,7 +27,7 @@ namespace AudicaConverter
         private string streamStartHandPreference => Config.parameters.streamHandPreference;
 
         //A limit on how small the time difference between notes for look ahead strain can be. Prevents overweighting in chain hand-overs.
-        private float lookAheadTimeCap => Config.parameters.lookAheadTimeCap;
+        private float lookAheadTimeLowerLimit => Config.parameters.lookAheadTimeLowerLimit;
 
         //The fixed, distance-independent strain factor of look-ahead strain
         private float lookAheadFixedStrain => Config.parameters.lookAheadFixedStrain;
@@ -74,15 +74,15 @@ namespace AudicaConverter
             //Decay previous strain
             if (prevHitObject != null)
             {
-                rightStrain *= (float)Math.Pow(strainDecayRate, (hitObject.time - prevHitObject.time) / 1000f);
-                leftStrain *= (float)Math.Pow(strainDecayRate, (hitObject.time - prevHitObject.time) / 1000f);
+                rightStrain *= (float)Math.Pow(strainDecayBase, (hitObject.time - prevHitObject.time) / 1000f);
+                leftStrain *= (float)Math.Pow(strainDecayBase, (hitObject.time - prevHitObject.time) / 1000f);
             }
 
             //Time strain
             float rightTimeStrain = 0f;
             float leftTimeStrain = 0f;
-            if (prevRightHitObject != null) rightTimeStrain = (float)Math.Pow(Math.Max(hitObject.time - prevRightHitObject.endTime, 50f) / 1000f, -timeStrainExponent);
-            if (prevLeftHitObject != null) leftTimeStrain = (float)Math.Pow(Math.Max((hitObject.time - prevLeftHitObject.endTime), 50f) / 1000f, -timeStrainExponent);
+            if (prevRightHitObject != null) rightTimeStrain = (float)Math.Pow(Math.Max(hitObject.time - prevRightHitObject.endTime, 50f) / 1000f, -timeStrainTransformExponent);
+            if (prevLeftHitObject != null) leftTimeStrain = (float)Math.Pow(Math.Max((hitObject.time - prevLeftHitObject.endTime), 50f) / 1000f, -timeStrainTransformExponent);
 
             //Movement speed strain
             float rightMovementStrain = 0f;
@@ -104,8 +104,8 @@ namespace AudicaConverter
             float leftLookAheadDirectionStrain = 0f;
             if (nextHitObject != null)
             {
-                if (nextHitObject.x - hitObject.endX > 0) rightLookAheadDirectionStrain = ((nextHitObject.x - hitObject.endX) / 512f + lookAheadFixedStrain) / (Math.Max((nextHitObject.time - hitObject.endTime), lookAheadTimeCap) / 1000f);
-                if (nextHitObject.x - hitObject.endX < 0) leftLookAheadDirectionStrain = (-(nextHitObject.x - hitObject.endX) / 512f + lookAheadFixedStrain) / (Math.Max((nextHitObject.time - hitObject.endTime), lookAheadTimeCap) / 1000f);
+                if (nextHitObject.x - hitObject.endX > 0) rightLookAheadDirectionStrain = ((nextHitObject.x - hitObject.endX) / 512f + lookAheadFixedStrain) / (Math.Max((nextHitObject.time - hitObject.endTime), lookAheadTimeLowerLimit) / 1000f);
+                if (nextHitObject.x - hitObject.endX < 0) leftLookAheadDirectionStrain = (-(nextHitObject.x - hitObject.endX) / 512f + lookAheadFixedStrain) / (Math.Max((nextHitObject.time - hitObject.endTime), lookAheadTimeLowerLimit) / 1000f);
             }
 
             //Crossover strain. attempts to identify sustained crossover positions based of both previous and next target

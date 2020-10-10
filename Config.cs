@@ -46,6 +46,11 @@ namespace osutoaudica
     [Serializable]
     internal class ConfigParameters
     {
+        public string customMapperName = "";
+        public float introPadding = 2000f;
+        public bool snapNotes = false;
+        public bool useChainSounds = true;
+
         public float expertScaleX = 0.8f;
         public float expertScaleY = 0.8f;
         public float advancedScaleX = 0.7f;
@@ -54,19 +59,18 @@ namespace osutoaudica
         public float standardScaleY = 0.6f;
         public float beginnerScaleX = 0.5f;
         public float beginnerScaleY = 0.5f;
-        public bool snapNotes = false;
+        
         public bool convertSliderEnds = false;
+
+        public bool convertSustains = true;
+        public float minSustainLength = 960f;
+        public float sustainExtension = 160f;
+
         public bool convertChains = true;
         public float chainTimeThres = 120f;
         public float chainSwitchFrequency = 480f;
         public bool ignoreSlidersForChainConvert = false;
         public bool ignoreSustainsForChainConvert = true;
-        public bool convertSustains = true;
-        public float minSustainLength = 960f;
-        public float sustainExtension = 160f;
-        public float introPadding = 2000f;
-        public bool useChainSounds = true;
-        public string customMapperName = "";
 
         public bool distributeStacks = true;
         public float stackItemDistance = 0.333f;
@@ -76,24 +80,36 @@ namespace osutoaudica
         public bool resizeSmallChains = true;
         public float minChainSize = 0.5f;
 
+
+
+        
         //HandColorHandler params
-        public float strainDecayRate = 0.4f;
+        public float strainDecayBase = 0.4f;
         public float historicalStrainWeight = 0.2f;
-        public float timeStrainExponent = 2f;
+
+
+        public float timeStrainTransformExponent = 2f;
+        public float timeStrainWeight = 1.2f;
+
+        public float movementStrainWeight = 7f;
+
+        public float directionStrainWeight = 3f;
+
+        public float lookAheadTimeLowerLimit = 150f;
+        public float lookAheadFixedStrain = 0.1f;
+        public float lookAheadDirectionStrainWeight = 15.0f;
+
+        public float crossoverStrainWeight = 10f;
+
+        public float playspacePositionStrainWeight = 3f;
+
+        public float holdRestTime = 400f;
+        public float holdRestTransformExponent = 2.5f;
+        public float holdRestStrainWeight = 200f;
+        
         public float streamTimeThres = 120f;
         public float streamDistanceThres = 0.1f;
         public string streamHandPreference = "right";
-        public float lookAheadTimeCap = 150f;
-        public float lookAheadFixedStrain = 0.1f;
-        public float holdRestTime = 400f;
-        public float holdRestTransformExponent = 2.5f;
-        public float timeStrainWeight = 1.2f;
-        public float movementStrainWeight = 7f;
-        public float directionStrainWeight = 3f;
-        public float lookAheadDirectionStrainWeight = 15.0f;
-        public float crossoverStrainWeight = 10f;
-        public float playspacePositionStrainWeight = 3f;
-        public float holdRestStrainWeight = 200f;
         public float streamStartStrainWeight = 50.0f;
     }
 
