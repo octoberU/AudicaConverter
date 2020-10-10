@@ -50,7 +50,11 @@ namespace AudicaConverter
             if (convertMode == 2)
             {
                 Console.Clear();
-                Console.WriteLine("Converting...");
+                Console.WriteLine("Converting song to OGG");
+                ConvertSongToOGG(ref osz, audica);
+
+                Console.Clear();
+                Console.WriteLine("Converting beatmaps...");
                 foreach (osufile file in osz.osufiles)
                 {
                     file.audicaDifficulty = ConvertToAudica(file);
@@ -64,7 +68,6 @@ namespace AudicaConverter
                 int standard = AskDifficulty(osz, "Standard");
                 int beginner = AskDifficulty(osz, "Beginner");
 
-                ConvertSongToOGG(ref osz, audica, expert);
                 audica.expert = expert == 404 ? null : osz.osufiles[expert].audicaDifficulty;
                 audica.advanced = advanced == 404 ? null : osz.osufiles[advanced].audicaDifficulty;
                 audica.moderate = standard == 404 ? null : osz.osufiles[standard].audicaDifficulty;
@@ -134,26 +137,26 @@ namespace AudicaConverter
             }
         }
 
-        private static void ConvertSongToOGG(ref OSZ osz, Audica audica, int diffIndex = 0)
+        private static void ConvertSongToOGG(ref OSZ osz, Audica audica)
         {
-            osufile difficulty = osz.osufiles[diffIndex];
-            string audioFileName = difficulty.general.audioFileName;
+            string audioFileName = osz.osufiles[0].general.audioFileName;
             string tempDirectory = Program.workingDirectory + @"\AudicaConverterTemp\";
             string tempAudioPath = tempDirectory + @"audio.mp3";
             string tempOggPath = tempDirectory + @"tempogg.ogg";
             string tempMoggPath = tempDirectory + @"tempMogg.mogg";
 
-            float paddingTime = 0f;
+            float firstHitObjectTime = float.PositiveInfinity;
             foreach (var osufile in osz.osufiles)
             {
-                if (osufile.hitObjects.Count > 0)
+                if (osufile.hitObjects.Count > 0 && osufile.hitObjects[0].time < firstHitObjectTime)
                 {
-                    HitObject firstHitObject = difficulty.hitObjects[0];
-                    if (firstHitObject.time < Config.parameters.introPadding)
-                    {
-                        paddingTime = Config.parameters.introPadding - firstHitObject.time;
-                    }
+                    firstHitObjectTime = osufile.hitObjects[0].time;
                 } 
+            }
+            float paddingTime = 0f;
+            if (firstHitObjectTime < Config.parameters.introPadding)
+            {
+                paddingTime = Config.parameters.introPadding - firstHitObjectTime;
             }
 
             if (paddingTime > 0f)
