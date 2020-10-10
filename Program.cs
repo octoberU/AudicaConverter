@@ -1,16 +1,12 @@
 using AudicaTools;
-using Newtonsoft.Json.Schema;
 using osutoaudica;
 using OsuTypes;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.ComponentModel.Design.Serialization;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace AudicaConverter
@@ -126,7 +122,6 @@ namespace AudicaConverter
                 int difficulty = int.Parse(userInput);
                 return difficulty;
             }
-            
         }
 
         private static void ConvertSongToOGG(ref OSZ osz, Audica audica, int diffIndex = 0)
