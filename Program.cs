@@ -52,11 +52,11 @@ namespace AudicaConverter
                 $"\nFound {osz.osufiles.Count} difficulties");
 
             Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.WriteLine("\n\nSelect Conversion Mode: \n[1] Convert audio/timing only.\n[2] Convert everything");
+            Console.WriteLine("\n\nSelect Conversion Mode: \n[1] Convert whole map.\n[2] Convert audio/timing only.");
             Console.ForegroundColor = ConsoleColor.Gray;
             int convertMode = int.Parse(Console.ReadLine());
 
-            if (convertMode == 2)
+            if (convertMode == 1)
             {
                 Console.Clear();
                 Console.WriteLine("Converting song to OGG");

@@ -69,7 +69,7 @@ namespace osutoaudica
 
         public bool convertSustains = true;
         public float minSustainLength = 960f;
-        public float sustainExtension = 160f;
+        public float sustainExtension = 240f;
 
         public bool convertChains = true;
         public float chainTimeThres = 120f;
