@@ -13,7 +13,7 @@ namespace AudicaConverter
 {
     class Program
     {
-        public static int version = 2; // You also need to change version.txt, only do so after pushing the new standalone release.
+        public static int version = 3; // You also need to change version.txt, only do so after pushing the new standalone release.
         public static string FFMPEGNAME = @"\ffmpeg.exe";
         public static string OGG2MOGGNAME = @"\ogg2mogg.exe";
         public static string workingDirectory = Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
