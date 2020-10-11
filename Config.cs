@@ -59,6 +59,9 @@ namespace osutoaudica
         public float standardScaleY = 0.6f;
         public float beginnerScaleX = 0.5f;
         public float beginnerScaleY = 0.5f;
+
+        public float streamTimeThres = 120f;
+        public float streamDistanceThres = 0.1f;
         
         public bool convertSliderEnds = false;
 
@@ -76,6 +79,7 @@ namespace osutoaudica
         public float minChainSize = 0.6f;
 
         public bool distributeStacks = true;
+        public float stackInclusionRange = 0.333f;
         public float stackItemDistance = 0.333f;
         public float stackMaxDistance = 1.5f;
         public float stackResetTime = 960f;
@@ -105,8 +109,6 @@ namespace osutoaudica
         public float holdRestTransformExponent = 2.5f;
         public float holdRestStrainWeight = 200f;
         
-        public float streamTimeThres = 120f;
-        public float streamDistanceThres = 0.1f;
         public string streamHandPreference = "right";
         public float streamStartStrainWeight = 50.0f;
     }
