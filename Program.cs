@@ -368,7 +368,7 @@ namespace AudicaConverter
             foreach (NoteStream noteStream in noteStreams)
             {
                 float averageStreamDistance = noteStream.length / (noteStream.hitObjects.Count - 1);
-                if (averageStreamDistance < Config.parameters.streamMinAverageDistance)
+                if (averageStreamDistance > 0f && averageStreamDistance < Config.parameters.streamMinAverageDistance)
                 {
                     noteStream.BoundScale(Config.parameters.streamMinAverageDistance / averageStreamDistance);
                 }
