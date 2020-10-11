@@ -25,10 +25,15 @@ namespace osutoaudica
                         File.Move(currentExecutable, currentExecutable + ".old");
                         var data = web.DownloadData("https://github.com/octoberU/AudicaConverter/raw/main/Standalone%20Releases/AudicaConverter.exe");
                         File.WriteAllBytes(currentExecutable, data);
+                        File.Delete(currentExecutable + ".old");
                         Console.WriteLine($"Successfully Updated!\nYou are currently running version {newestVersionNumber}");
                         Console.ReadLine();
-                        File.Delete(currentExecutable + ".old");
                     }
+                }
+                else if(Program.version == newestVersionNumber)
+                {
+                    Console.WriteLine($"You are currently running the latest release of AudicaConverter\nVersion:{Program.version}");
+                    Console.ReadLine();
                 }
             }
         }
