@@ -153,7 +153,7 @@ namespace AudicaConverter
                 Difficulty scaledDifficulty = ScaleDifficulty(osz.osufiles[i].audicaDifficulty, scaleX, scaleY);
                 scaledDifficulties.Add(scaledDifficulty);
                 float difficultyRating = audica.GetRatingForDifficulty(scaledDifficulty);
-                Console.WriteLine($"\n[{i}]{osz.osufiles[i].metadata.version} [{difficultyRating.ToString("n2")} Audica difficulty]");
+                Console.WriteLine($"\n[{i+1}]{osz.osufiles[i].metadata.version} [{difficultyRating.ToString("n2")} Audica difficulty]");
             }
             Console.ForegroundColor = ConsoleColor.Gray;
             string userInput = Console.ReadLine();
@@ -161,7 +161,7 @@ namespace AudicaConverter
             if (userInput == "") return null;// User hasn't picked a difficulty
             else
             {
-                int difficulty = int.Parse(userInput);
+                int difficulty = int.Parse(userInput)-1;
                 return scaledDifficulties[difficulty];
             }
         }
