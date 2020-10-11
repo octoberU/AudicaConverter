@@ -21,8 +21,15 @@ namespace AudicaConverter
         static void Main(string[] args)
         {
             Config.Init();
-            if (args.Length < 1) Updater.UpdateClient();
-            else Updater.CheckVersion();
+            try
+            {
+                if (args.Length < 1) Updater.UpdateClient();
+                else Updater.CheckVersion();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Updater has failed, make sure you're connected to the internet or update manually.\nhttps://github.com/octoberU/AudicaConverter/releases");
+            }
             foreach (var item in args)
             {
                 if(item.Contains(".osz")) ConversionProcess.ConvertToAudica(item);
