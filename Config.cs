@@ -71,16 +71,14 @@ namespace osutoaudica
         public float chainSwitchFrequency = 480f;
         public bool ignoreSlidersForChainConvert = false;
         public bool ignoreSustainsForChainConvert = true;
+        public int minChainLinks = 2;
+        public bool resizeSmallChains = true;
+        public float minChainSize = 0.6f;
 
         public bool distributeStacks = true;
         public float stackItemDistance = 0.333f;
         public float stackMaxDistance = 1.5f;
         public float stackResetTime = 960f;
-
-        public bool resizeSmallChains = true;
-        public float minChainSize = 0.5f;
-
-
 
         
         //HandColorHandler params

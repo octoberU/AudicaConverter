@@ -27,7 +27,7 @@ namespace AudicaConverter
             {
                 if(item.Contains(".osz")) ConversionProcess.ConvertToAudica(item);
             }
-            //ConversionProcess.ConvertToAudica(@"C:\audica\repos\AudicaConverter\bin\Release\netcoreapp3.1\1208396 Meguro Shoji - How much.osz");
+            //ConversionProcess.ConvertToAudica(@"C:\audica\repos\AudicaConverter\bin\Release\netcoreapp3.1\1261295 Luck Life - Namae o Yobu yo.osz");
         }
     }
 
@@ -268,6 +268,9 @@ namespace AudicaConverter
             for (int i = 0; i < osufile.hitObjects.Count; i++)
             {
                 var hitObject = osufile.hitObjects[i];
+
+                if (hitObject.audicaBehavior < 0) continue;
+
                 var audicaDataPos = OsuUtility.GetAudicaPosFromHitObject(hitObject);
                 var gridOffset = ConversionProcess.snapNotes ? new Cue.GridOffset() : audicaDataPos.offset;
                 int tickLength = 120;
@@ -427,6 +430,44 @@ namespace AudicaConverter
                         prevChainHeadHitObject.endY = currentHitObject.y;
                     }
                 }
+            }
+
+            //Find and prune too short chains
+            List<HitObject> chainHitObjects = new List<HitObject>();
+            foreach (HitObject hitObject in hitObjects)
+            {
+                if (hitObject.audicaBehavior == 4)
+                {
+                    if (chainHitObjects.Count != 0) CheckAndPruneChain(chainHitObjects, timingPoints);
+                    chainHitObjects = new List<HitObject>();
+                    chainHitObjects.Add(hitObject);
+                }
+                else if (hitObject.audicaBehavior == 5)
+                {
+                    chainHitObjects.Add(hitObject);
+                }
+            }
+            if (chainHitObjects.Count != 0) CheckAndPruneChain(chainHitObjects, timingPoints);
+        }
+
+        private static void CheckAndPruneChain(List<HitObject> chainHitObjects, List<TimingPoint> timingPoints)
+        {
+            if (chainHitObjects.Count <= Config.parameters.minChainLinks)
+            {
+                //Choose the chain hit object with highest GCD with a measure 
+                int bestGcd = 0;
+                HitObject bestGcdHitObject = null;
+                foreach (HitObject chainHitObject in chainHitObjects)
+                {
+                    chainHitObject.audicaBehavior = -1;
+                    int gcd = OsuUtility.GCD((int)OsuUtility.ticksSinceLastTimingPoint(chainHitObject.audicaTick, timingPoints), 1920);
+                    if (gcd > bestGcd)
+                    {
+                        bestGcd = gcd;
+                        bestGcdHitObject = chainHitObject;
+                    }
+                }
+                bestGcdHitObject.audicaBehavior = 0;
             }
         }
 

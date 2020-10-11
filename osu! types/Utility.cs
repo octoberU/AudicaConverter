@@ -183,6 +183,20 @@ namespace OsuTypes
             return (float)Math.Sqrt(Math.Pow(xTo - xFrom, 2) + Math.Pow(yTo - yFrom, 2));
         }
 
+        public static int GCD(int a, int b)
+        {
+            while (a != 0 && b != 0)
+            {
+                if (a > b)
+                    a %= b;
+                else
+                    b %= a;
+            }
+
+            return a | b;
+        }
+
+
         private static float GetZOffsetForX(float x)
         {
             if (x < 0f) x *= -1f;
