@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Linq;
+using osutoaudica;
 
 namespace OsuTypes
 {
@@ -18,6 +19,7 @@ namespace OsuTypes
         public List<TimingPoint> inheritedTimingPoints = new List<TimingPoint>();
         public List<TimingPoint> mergedTimingPoints = null;
         public List<HitObject> hitObjects = new List<HitObject>();
+        public List<NoteStream> noteStreams = new List<NoteStream>();
         public Difficulty audicaDifficulty;
         public float audicaDifficultyRating;
 
@@ -70,6 +72,7 @@ namespace OsuTypes
             MergeTimingPoints();
             CalculateSliderEndTimes();
             CalculateAudicaTicks();
+            DetectStreams();
         }
 
         private void MergeTimingPoints()
@@ -119,6 +122,48 @@ namespace OsuTypes
                 hitObject.audicaTick = OsuUtility.MsToTick(hitObject.time, timingPoints, roundingPrecision: 10);
                 hitObject.audicaEndTick = OsuUtility.MsToTick(hitObject.endTime, timingPoints, roundingPrecision: 10);
             }
+        }
+
+        private void DetectStreams()
+        {
+            float streamTimeThres = Config.parameters.streamTimeThres;
+            float streamDistanceThres = Config.parameters.streamDistanceThres;
+
+            List<HitObject> streamHitObjects = new List<HitObject>();
+            streamHitObjects.Add(hitObjects[0]);
+
+            for (int i = 1; i < hitObjects.Count; i++)
+            {
+                HitObject currentHitObject = hitObjects[i];
+                HitObject prevHitObject = hitObjects[i - 1];
+
+                if (currentHitObject.time - prevHitObject.time <= streamTimeThres &&
+                    OsuUtility.EuclideanDistance(prevHitObject.x, prevHitObject.y, currentHitObject.x, currentHitObject.y) <= streamDistanceThres)
+                {
+                    streamHitObjects.Add(currentHitObject);
+                }
+                else
+                {
+                    ConsiderStream(streamHitObjects);
+
+                    streamHitObjects = new List<HitObject>();
+                    streamHitObjects.Add(currentHitObject);
+                }
+            }
+            ConsiderStream(streamHitObjects);
+        }
+
+        private void ConsiderStream(List<HitObject> streamHitObjects)
+        {
+            float streamMinNoteCount = Config.parameters.streamMinNoteCount;
+            if (streamHitObjects.Count < streamMinNoteCount) return;
+
+            NoteStream noteStream = new NoteStream(streamHitObjects);
+            foreach (HitObject hitObject in streamHitObjects)
+            {
+                hitObject.noteStream = noteStream;
+            }
+            this.noteStreams.Add(noteStream);
         }
 
         private void ParseDifficulty(string line)

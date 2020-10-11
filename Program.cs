@@ -27,7 +27,7 @@ namespace AudicaConverter
             {
                 if(item.Contains(".osz")) ConversionProcess.ConvertToAudica(item);
             }
-            //ConversionProcess.ConvertToAudica(@"C:\audica\repos\AudicaConverter\bin\Release\netcoreapp3.1\1261295 Luck Life - Namae o Yobu yo.osz");
+            //ConversionProcess.ConvertToAudica(@"C:\audica\repos\AudicaConverter\bin\Release\netcoreapp3.1\323059 DragonForce - Defenders.osz");
         }
     }
 
@@ -260,6 +260,7 @@ namespace AudicaConverter
 
 
             if (Config.parameters.convertSliderEnds) RunSliderSplitPass(ref osufile.hitObjects, osufile.timingPoints);
+            if (Config.parameters.streamMinAverageDistance > 0f) RunStreamScalePass(ref osufile.noteStreams);
             if (Config.parameters.convertSustains) RunSustainPass(ref osufile.hitObjects, osufile.timingPoints);
             if (Config.parameters.convertChains) RunChainPass(ref osufile.hitObjects, osufile.timingPoints);
             ResetEndTimesAndPos(ref osufile.hitObjects);
@@ -315,7 +316,7 @@ namespace AudicaConverter
 
             if (Config.parameters.snapNotes) SnapNormalTargets(ref diff.cues);
             if (Config.parameters.distributeStacks) RunStackDistributionPass(ref osufile.hitObjects);
-            if (Config.parameters.resizeSmallChains) RunChainResizePass(ref diff.cues);
+            if (Config.parameters.minChainSize > 0f) RunChainResizePass(ref diff.cues);
             
             if(Config.parameters.useChainSounds) RunHitsoundPass(ref diff.cues);
 
@@ -353,6 +354,18 @@ namespace AudicaConverter
                 }
             }
             hitObjects.Sort((ho1, ho2) => ho1.time.CompareTo(ho2.time));
+        }
+
+        private static void RunStreamScalePass(ref List<NoteStream> noteStreams)
+        {
+            foreach (NoteStream noteStream in noteStreams)
+            {
+                float averageStreamDistance = noteStream.length / (noteStream.hitObjects.Count - 1);
+                if (averageStreamDistance < Config.parameters.streamMinAverageDistance)
+                {
+                    noteStream.BoundScale(Config.parameters.streamMinAverageDistance / averageStreamDistance);
+                }
+            }
         }
 
         private static void RunHitsoundPass(ref List<Cue> cues)
@@ -558,6 +571,19 @@ namespace AudicaConverter
                 Cue prevCue = prevHitObject?.audicaCue;
                 Cue nextCue = nextHitObject?.audicaCue;
 
+                bool isInStream = currentHitObject.noteStream != null;
+                bool isStreamStart = isInStream && currentHitObject == currentHitObject.noteStream.hitObjects[0];
+                bool isStreamEnd = isInStream && currentHitObject == currentHitObject.noteStream.hitObjects[currentHitObject.noteStream.hitObjects.Count - 1];
+
+                if (isStreamStart) activeStacks = new List<TargetStack>();
+
+                bool prevPosDifferent = prevHitObject == null || prevHitObject.x != currentHitObject.x || prevHitObject.y != currentHitObject.y;
+                bool nextPosDifferent = nextHitObject == null || nextHitObject.x != currentHitObject.x || nextHitObject.y != currentHitObject.y;
+
+
+                //Ignore moving targets in streams other than stream head and tail
+                if (isInStream && !isStreamStart && !isStreamEnd && prevPosDifferent && nextPosDifferent ) continue;
+
                 //Remove unactive stacks
                 for (int j = activeStacks.Count - 1; j >= 0; j--)
                 {
@@ -565,8 +591,10 @@ namespace AudicaConverter
                         activeStacks.RemoveAt(j);
                 }
 
+                OsuUtility.Coordinate2D currentCuePos = OsuUtility.GetPosFromCue(currentCue);
+
                 //Check if target fits in a currently active stack, if not create a stack for this target
-                TargetStack stack = activeStacks.Find(s => OsuUtility.DistanceBetweenCues(currentCue, s.stackStartCue) <= stackInclusionRange);
+                TargetStack stack = activeStacks.Find(s => OsuUtility.EuclideanDistance(currentCuePos.x, currentCuePos.y, s.lastPos.x, s.lastPos.y) <= stackInclusionRange);
                 if (stack == null)
                 {
                     TargetStack newStack = new TargetStack();
@@ -578,12 +606,6 @@ namespace AudicaConverter
                     continue;
                 }
 
-                //Don't distribute of target is a part of a stream
-                if (prevCue != null && !(OsuUtility.DistanceBetweenCues(prevCue, currentCue) <= stackInclusionRange) && currentHitObject.time - prevHitObject.time <= Config.parameters.streamTimeThres ||
-                    nextCue != null && !(OsuUtility.DistanceBetweenCues(nextCue, currentCue) <= stackInclusionRange) && nextHitObject.time - currentHitObject.time <= Config.parameters.streamTimeThres)
-                    continue;
-
-                OsuUtility.Coordinate2D currentCuePos = OsuUtility.GetPosFromCue(currentCue);
                 if (stack.direction.x == 0f && stack.direction.y == 0f)
                 {
 

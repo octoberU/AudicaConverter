@@ -17,12 +17,6 @@ namespace AudicaConverter
         //The exponent for which inversed time since last target will be power transformed by. Adjusting this allows adjusting relative strain of different time spacings.
         private float timeStrainTransformExponent => Config.parameters.timeStrainTransformExponent;
 
-        //The amount of time (ms) between notes to be counted as a stream
-        private float streamTimeThres => Config.parameters.streamTimeThres;
-
-        //The maximum distance between targets to be counted as a stream
-        private float streamDistanceThres => Config.parameters.streamDistanceThres;
-
         //The hand streams are prefered to start on
         private string streamStartHandPreference => Config.parameters.streamHandPreference;
 
@@ -61,6 +55,9 @@ namespace AudicaConverter
 
         //The weight for starting streams on left hand
         private float streamStartStrainWeight => Config.parameters.streamStartStrainWeight;
+
+        //The weight for alternating hands on streams
+        private float streamAlternationStrainWeight => Config.parameters.streamAlternationWeight;
 
         private float rightStrain = 0f;
         private float leftStrain = 0f;
@@ -129,22 +126,33 @@ namespace AudicaConverter
             if (prevLeftHitObject != null && (prevLeftHitObject.audicaBehavior == 3 || prevLeftHitObject.audicaBehavior == 4) && hitObject.time - prevLeftHitObject.endTime < holdRestTime)
                 leftHoldStrain = (float)Math.Pow(1 - (hitObject.time - prevLeftHitObject.endTime) / holdRestTime, holdRestTransformExponent);
 
-            //Stream start strain
+            //Stream start and alternation strains
             float rightStreamStartStrain = 0f;
             float leftStreamStartStrain = 0f;
-            if (nextHitObject != null && nextHitObject.time - hitObject.time <= streamTimeThres && (prevHitObject == null || hitObject.time - prevHitObject.time > streamTimeThres) &&
-                OsuUtility.EuclideanDistance(hitObject.x, hitObject.y, nextHitObject.x, nextHitObject.y) / 512f <= streamDistanceThres)
+            float rightStreamAlternationStrain = 0f;
+            float leftStreamAlternationStrain = 0f;
+            if (hitObject.noteStream != null && hitObject.audicaBehavior != 4)
             {
-                rightStreamStartStrain = streamStartHandPreference.ToLower() == "left" ? 1f : 0f;
-                leftStreamStartStrain = streamStartHandPreference.ToLower() == "right" ? 1f : 0f;
+                if (hitObject == hitObject.noteStream.hitObjects[0])
+                {
+                    rightStreamStartStrain = streamStartHandPreference.ToLower() == "left" ? 1f : 0f;
+                    leftStreamStartStrain = streamStartHandPreference.ToLower() == "right" ? 1f : 0f;
+                }
+                else
+                {
+                    if (prevHitObject.audicaHandType == 1) rightStreamAlternationStrain = 1f;
+                    else leftStreamAlternationStrain = 1f;
+                }
             }
 
             
             //Strain combination through weighted sum
             float rightStrainIncrease = timeStrainWeight * rightTimeStrain + movementStrainWeight * rightMovementStrain + directionStrainWeight * rightDirectionStrain + lookAheadDirectionStrainWeight * rightLookAheadDirectionStrain +
-                crossoverStrainWeight * rightCrossoverStrain + playspacePositionStrainWeight * rightPlayspacePositionStrain + holdRestStrainWeight * rightHoldStrain + streamStartStrainWeight * rightStreamStartStrain;
+                crossoverStrainWeight * rightCrossoverStrain + playspacePositionStrainWeight * rightPlayspacePositionStrain + holdRestStrainWeight * rightHoldStrain +
+                streamStartStrainWeight * rightStreamStartStrain + streamAlternationStrainWeight * rightStreamAlternationStrain;
             float leftStrainIncrease = timeStrainWeight * leftTimeStrain + movementStrainWeight * leftMovementStrain + directionStrainWeight * leftDirectionStrain + lookAheadDirectionStrainWeight * leftLookAheadDirectionStrain +
-                crossoverStrainWeight * leftCrossoverStrain + playspacePositionStrainWeight * leftPlayspacePositionStrain + holdRestStrainWeight * leftHoldStrain + streamStartStrainWeight * leftStreamStartStrain;
+                crossoverStrainWeight * leftCrossoverStrain + playspacePositionStrainWeight * leftPlayspacePositionStrain + holdRestStrainWeight * leftHoldStrain +
+                streamStartStrainWeight * leftStreamStartStrain + streamAlternationStrainWeight * leftStreamAlternationStrain;
 
             //Strain based hand selection and accumulated strain increase
             if (historicalStrainWeight * rightStrain + rightStrainIncrease <= historicalStrainWeight * leftStrain + leftStrainIncrease)
