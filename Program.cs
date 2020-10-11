@@ -13,7 +13,7 @@ namespace AudicaConverter
 {
     class Program
     {
-        public static int version = 2;
+        public static int version = 2; // You also need to change version.txt, only do so after pushing the new standalone release.
         public static string FFMPEGNAME = @"\ffmpeg.exe";
         public static string OGG2MOGGNAME = @"\ogg2mogg.exe";
         public static string workingDirectory = Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
@@ -21,7 +21,8 @@ namespace AudicaConverter
         static void Main(string[] args)
         {
             Config.Init();
-            Updater.UpdateClient();
+            if (args.Length < 1) Updater.UpdateClient();
+            else Updater.CheckVersion();
             foreach (var item in args)
             {
                 if(item.Contains(".osz")) ConversionProcess.ConvertToAudica(item);
@@ -35,7 +36,6 @@ namespace AudicaConverter
         public static bool snapNotes = false;
         public static void ConvertToAudica(string filePath)
         {
-            Console.Clear();
             var osz = new OSZ(filePath);
             var audica = new Audica(@$"{Program.workingDirectory}\template.audica");
             ConvertTempos(osz, ref audica);

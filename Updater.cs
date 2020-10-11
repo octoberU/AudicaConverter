@@ -1,6 +1,7 @@
 ﻿using AudicaConverter;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Net;
 using System.Text;
 
@@ -17,8 +18,33 @@ namespace osutoaudica
                 int.TryParse(web.DownloadString("https://raw.githubusercontent.com/octoberU/AudicaConverter/main/version.txt"), out newestVersionNumber);
                 if(Program.version < newestVersionNumber)
                 {
-                    var shouldUpdate = ConsolePrompt("There's a new update available!\nWould you like to download it now?\n");
-                    Console.WriteLine(shouldUpdate);
+                    var shouldUpdate = ConsolePrompt($"There's a new update available!\nWould you like update from {Program.version} to {newestVersionNumber}\n");
+                    if (shouldUpdate)
+                    {
+                        string currentExecutable = Program.workingDirectory + @"/AudicaConverter.exe";
+                        File.Move(currentExecutable, currentExecutable + ".old");
+                        var data = web.DownloadData("https://github.com/octoberU/AudicaConverter/raw/main/Standalone%20Releases/AudicaConverter.exe");
+                        File.WriteAllBytes(currentExecutable, data);
+                        Console.WriteLine($"Successfully Updated!\nYou are currently running version {newestVersionNumber}");
+                        Console.ReadLine();
+                        File.Delete(currentExecutable + ".old");
+                    }
+                }
+            }
+        }
+
+        public static void CheckVersion()
+        {
+            int newestVersionNumber;
+
+            using (WebClient web = new WebClient())
+            {
+                int.TryParse(web.DownloadString("https://raw.githubusercontent.com/octoberU/AudicaConverter/main/version.txt"), out newestVersionNumber);
+                if (Program.version < newestVersionNumber)
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine("There is a new version available! Launch AudicaConverter without any game files to update.");
+                    Console.ForegroundColor = ConsoleColor.Gray;
                 }
             }
         }
