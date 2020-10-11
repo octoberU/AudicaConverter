@@ -21,4 +21,5 @@ The converter is highly customizable with a lot of options that can be configure
 ### Dependencies
 [NAudio](https://www.nuget.org/packages/NAudio/)  
 [NewtonsoftJson](https://www.nuget.org/packages/Newtonsoft.Json/)  
+[System.Configuration.ConfigurationManager](https://www.nuget.org/packages/System.Configuration.ConfigurationManager/)
 [Audica .NET Tools](https://github.com/octoberU/Audica-.NET-Tools)  
