@@ -162,6 +162,26 @@ namespace AudicaConverter
             else
             {
                 int difficulty = int.Parse(userInput)-1;
+                
+                if (Config.parameters.customMapperName == "")
+                {
+                    switch (difficultyName.ToLower())
+                    {
+                        case ("expert"):
+                            audica.desc.customExpert = osz.osufiles[difficulty].metadata.version;
+                            break;
+                        case ("advanced"):
+                            audica.desc.customAdvanced = osz.osufiles[difficulty].metadata.version;
+                            break;
+                        case ("standard"):
+                            audica.desc.customModerate = osz.osufiles[difficulty].metadata.version;
+                            break;
+                        case ("beginner"):
+                            audica.desc.customBeginner = osz.osufiles[difficulty].metadata.version;
+                            break;
+                    }
+                }
+
                 return scaledDifficulties[difficulty];
             }
         }
