@@ -60,7 +60,7 @@ namespace osutoaudica
         public float beginnerScaleX = 0.6875f;
         public float beginnerScaleY = 0.5f;
 
-        public bool fovBasedLocalScaling = true;
+        public bool adaptiveScaling = true;
         public float fovRecenterTime = 2000f;
         public float scaleDistanceStartThres = 100f;
         public float scaleLogBase = 1.02f;
