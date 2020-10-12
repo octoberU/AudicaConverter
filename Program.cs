@@ -34,7 +34,7 @@ namespace AudicaConverter
             {
                 if(item.Contains(".osz")) ConversionProcess.ConvertToAudica(item);
             }
-            //ConversionProcess.ConvertToAudica(@"C:\audica\repos\AudicaConverter\bin\Release\netcoreapp3.1\323059 DragonForce - Defenders.osz");
+            //ConversionProcess.ConvertToAudica(@"C:\audica\repos\AudicaConverter\bin\Release\netcoreapp3.1\423527 dj TAKA - quaver.osz");
         }
     }
 
@@ -288,6 +288,7 @@ namespace AudicaConverter
 
             if (Config.parameters.convertSliderEnds) RunSliderSplitPass(ref osufile.hitObjects, osufile.timingPoints);
             if (Config.parameters.streamMinAverageDistance > 0f) RunStreamScalePass(ref osufile.noteStreams);
+            if (Config.parameters.fovBasedLocalScaling) RunFovScalePass(ref osufile.hitObjects);
             if (Config.parameters.convertSustains) RunSustainPass(ref osufile.hitObjects, osufile.timingPoints);
             if (Config.parameters.convertChains) RunChainPass(ref osufile.hitObjects, osufile.timingPoints);
             ResetEndTimesAndPos(ref osufile.hitObjects);
@@ -383,15 +384,84 @@ namespace AudicaConverter
             hitObjects.Sort((ho1, ho2) => ho1.time.CompareTo(ho2.time));
         }
 
-        private static void RunStreamScalePass(ref List<NoteStream> noteStreams)
+        private static void RunStreamScalePass(ref List<HitObjectGroup> noteStreams)
         {
-            foreach (NoteStream noteStream in noteStreams)
+            foreach (HitObjectGroup noteStream in noteStreams)
             {
                 float averageStreamDistance = noteStream.length / (noteStream.hitObjects.Count - 1);
                 if (averageStreamDistance > 0f && averageStreamDistance < Config.parameters.streamMinAverageDistance)
                 {
                     noteStream.BoundScale(Config.parameters.streamMinAverageDistance / averageStreamDistance);
                 }
+            }
+        }
+
+        private static void RunFovScalePass(ref List<HitObject> hitObjects)
+        {
+            float fovRecenterTime = Config.parameters.fovRecenterTime;
+            float scaleDistanceStartThres = Config.parameters.scaleDistanceStartThres;
+            float scaleLogBase = Config.parameters.scaleLogBase;
+            float scaleTimeThres = Config.parameters.scaleTimeThres;
+
+            float fovX = 256f;
+            float fovY = 192;
+
+            for (int i = 0; i < hitObjects.Count; i++)
+            {
+                HitObject currentHitObject = hitObjects[i];
+                HitObject prevHitObject = i > 0 ? hitObjects[i - 1] : null;
+
+                if (prevHitObject != null && currentHitObject.time - prevHitObject.time >= fovRecenterTime)
+                {
+                    fovX = 256f;
+                    fovY = 192f;
+                }
+
+                float diffX = currentHitObject.x - fovX;
+                float diffY = currentHitObject.y - fovY;
+                float diffLength = (float)Math.Sqrt(diffX * diffX + diffY * diffY);
+                float scaledDiffLength;
+                if (diffLength <= scaleDistanceStartThres)
+                {
+                    scaledDiffLength = diffLength;
+                }
+                else
+                {
+                    scaledDiffLength = scaleDistanceStartThres;
+                    float logTranslation = 1f / (float)Math.Log(scaleLogBase);
+                    scaledDiffLength += (float)Math.Log(diffLength - scaleDistanceStartThres + logTranslation, scaleLogBase) - (float)Math.Log(logTranslation, scaleLogBase);
+                }
+                float scaledDiffX = diffLength != 0  ? diffX / diffLength * scaledDiffLength : 0;
+                float scaledDiffY = diffLength != 0 ?  diffY / diffLength * scaledDiffLength : 0;
+                float newPosX = fovX + scaledDiffX;
+                float newPosY = fovY + scaledDiffY;
+                float translationX = newPosX - currentHitObject.x;
+                float translationY = newPosY - currentHitObject.y;
+
+
+                List<HitObject> syncTranslateHitObjects = new List<HitObject>();
+                syncTranslateHitObjects.Add(currentHitObject);
+                //If the object is in a stream, add all other stream objects to the group
+                if (currentHitObject.noteStream != null)
+                {
+                    for (int j = 1; j < currentHitObject.noteStream.hitObjects.Count; j++)
+                    {
+                        syncTranslateHitObjects.Add(currentHitObject.noteStream.hitObjects[j]);
+                        i++;
+                    }
+                }
+                //Add more objects to the group as long as the time difference is less than scaleTimeTHres
+                while (i + 1 < hitObjects.Count && hitObjects[i+1].time - hitObjects[i].time < scaleTimeThres)
+                {
+                    syncTranslateHitObjects.Add(hitObjects[i + 1]);
+                    i++;
+                }
+
+                HitObjectGroup hitObjectGroup = new HitObjectGroup(syncTranslateHitObjects);
+                hitObjectGroup.BoundTranslate(translationX, translationY);
+
+                fovX = hitObjectGroup.endX;
+                fovY = hitObjectGroup.endY;
             }
         }
 

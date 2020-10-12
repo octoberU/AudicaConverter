@@ -51,14 +51,20 @@ namespace osutoaudica
         public bool snapNotes = false;
         public bool useChainSounds = true;
 
-        public float expertScaleX = 0.8f;
-        public float expertScaleY = 0.8f;
-        public float advancedScaleX = 0.7f;
-        public float advancedScaleY = 0.7f;
+        public float expertScaleX = 1f;
+        public float expertScaleY = 1f;
+        public float advancedScaleX = 0.8f;
+        public float advancedScaleY = 0.8f;
         public float standardScaleX = 0.6f;
         public float standardScaleY = 0.6f;
         public float beginnerScaleX = 0.5f;
         public float beginnerScaleY = 0.5f;
+
+        public bool fovBasedLocalScaling = true;
+        public float fovRecenterTime = 2000f;
+        public float scaleDistanceStartThres = 150f;
+        public float scaleLogBase = 1.025f;
+        public float scaleTimeThres = 120f;
 
         public float streamTimeThres = 200f;
         public float streamDistanceThres = 80f;

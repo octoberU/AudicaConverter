@@ -4,7 +4,7 @@ using System.Text;
 
 namespace OsuTypes
 {
-    public class NoteStream
+    public class HitObjectGroup
     {
         //Bounds for how far outside the standard osu playing field notes are allowed to go on transformations
         public static float xLowerBound = -51.2f;
@@ -25,13 +25,13 @@ namespace OsuTypes
         public float minNoteDistance;
         public float maxNoteDistance;
 
-        public NoteStream(List<HitObject> hitObjects)
+        public HitObjectGroup(List<HitObject> hitObjects)
         {
             this.hitObjects = hitObjects;
             startX = hitObjects[0].x;
             startY = hitObjects[0].y;
             endX = hitObjects[hitObjects.Count - 1].x;
-            endY = hitObjects[hitObjects.Count - 1].x;
+            endY = hitObjects[hitObjects.Count - 1].y;
 
             minX = maxX = startX;
             minY = maxY = startY;
@@ -74,6 +74,8 @@ namespace OsuTypes
             maxX = scaleX(maxX);
             maxY = scaleY(maxY);
             length *= scaleFactor;
+            minNoteDistance *= scaleFactor;
+            maxNoteDistance *= scaleFactor;
 
             foreach (HitObject hitObject in hitObjects)
             {
@@ -96,6 +98,37 @@ namespace OsuTypes
             if (maxY != centerY) scaleFactor = Math.Min(scaleFactor, (yUpperBound - centerY) / (maxY - centerY));
 
             Scale(scaleFactor, centerX, centerY);
+        }
+
+        public void Translate(float xTranslation, float yTranslation)
+        {
+            startX += xTranslation;
+            startY += yTranslation;
+            endX += xTranslation;
+            endY += yTranslation;
+            minX += xTranslation;
+            minY += yTranslation;
+            maxX += xTranslation;
+            maxY += yTranslation;
+
+            foreach (HitObject hitObject in hitObjects)
+            {
+                hitObject.x += xTranslation;
+                hitObject.y += yTranslation;
+                hitObject.endX += xTranslation;
+                hitObject.endY += yTranslation;
+            }
+        }
+
+        public void BoundTranslate(float xTranslation, float yTranslation)
+        {
+            //Find greatest value that can be translated for each x and y without putting group members out of bounds
+            if (xTranslation > 0) xTranslation = Math.Min(xTranslation, xUpperBound - maxX);
+            if (xTranslation < 0) xTranslation = Math.Max(xTranslation, xLowerBound - minX);
+            if (yTranslation > 0) yTranslation = Math.Min(yTranslation, yUpperBound - maxY);
+            if (yTranslation < 0) yTranslation = Math.Max(yTranslation, yLowerBound - minY);
+
+            Translate(xTranslation, yTranslation);
         }
     }
 }

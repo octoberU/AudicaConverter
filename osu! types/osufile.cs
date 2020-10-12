@@ -19,7 +19,7 @@ namespace OsuTypes
         public List<TimingPoint> inheritedTimingPoints = new List<TimingPoint>();
         public List<TimingPoint> mergedTimingPoints = null;
         public List<HitObject> hitObjects = new List<HitObject>();
-        public List<NoteStream> noteStreams = new List<NoteStream>();
+        public List<HitObjectGroup> noteStreams = new List<HitObjectGroup>();
         public Difficulty audicaDifficulty;
         public float audicaDifficultyRating;
 
@@ -158,7 +158,7 @@ namespace OsuTypes
             float streamMinNoteCount = Config.parameters.streamMinNoteCount;
             if (streamHitObjects.Count < streamMinNoteCount) return;
 
-            NoteStream noteStream = new NoteStream(streamHitObjects);
+            HitObjectGroup noteStream = new HitObjectGroup(streamHitObjects);
             foreach (HitObject hitObject in streamHitObjects)
             {
                 hitObject.noteStream = noteStream;
