@@ -64,7 +64,6 @@ namespace osutoaudica
         public float fovRecenterTime = 2000f;
         public float scaleDistanceStartThres = 100f;
         public float scaleLogBase = 1.02f;
-        public float scaleTimeThres = 120f;
 
         public float streamTimeThres = 200f;
         public float streamDistanceThres = 80f;

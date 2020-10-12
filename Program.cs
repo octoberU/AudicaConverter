@@ -401,7 +401,7 @@ namespace AudicaConverter
             float fovRecenterTime = Config.parameters.fovRecenterTime;
             float scaleDistanceStartThres = Config.parameters.scaleDistanceStartThres;
             float scaleLogBase = Config.parameters.scaleLogBase;
-            float scaleTimeThres = Config.parameters.scaleTimeThres;
+            float scaleTimeThres = Config.parameters.convertChains ? Config.parameters.chainTimeThres : 0f;
 
             float fovX = 256f;
             float fovY = 192;
