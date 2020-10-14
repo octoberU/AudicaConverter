@@ -34,7 +34,7 @@ namespace AudicaConverter
             {
                 if(item.Contains(".osz")) ConversionProcess.ConvertToAudica(item);
             }
-            //ConversionProcess.ConvertToAudica(@"C:\audica\repos\AudicaConverter\bin\Release\netcoreapp3.1\423527 dj TAKA - quaver.osz");
+            //ConversionProcess.ConvertToAudica(@"C:\audica\repos\AudicaConverter\bin\Release\netcoreapp3.1\1016769 SOOOO - Happppy song.osz");
         }
     }
 
@@ -282,8 +282,6 @@ namespace AudicaConverter
             var diff = new Difficulty();
             diff.cues = new List<Cue>();
             var handColorHandler = new HandColorHandler();
-            HitObject prevRightHitObject = null;
-            HitObject prevLeftHitObject = null;
 
 
             if (Config.parameters.convertSliderEnds) RunSliderSplitPass(ref osufile.hitObjects, osufile.timingPoints);
@@ -294,36 +292,19 @@ namespace AudicaConverter
             ResetEndTimesAndPos(ref osufile.hitObjects);
             RemoveUnusedHitObjects(ref osufile.hitObjects);
 
+            handColorHandler.AssignHandTypes(osufile.hitObjects);
+
             // do conversion stuff here
             for (int i = 0; i < osufile.hitObjects.Count; i++)
             {
                 var hitObject = osufile.hitObjects[i];
 
-                if (hitObject.audicaBehavior < 0) continue;
-
                 var audicaDataPos = OsuUtility.GetAudicaPosFromHitObject(hitObject);
                 var gridOffset = ConversionProcess.snapNotes ? new Cue.GridOffset() : audicaDataPos.offset;
                 int tickLength = 120;
-
-                if (hitObject.audicaBehavior == 5)
+                if (hitObject.audicaBehavior == 3)
                 {
-                    hitObject.audicaHandType = osufile.hitObjects[i - 1].audicaHandType;
-                }
-                else
-                {
-                    if (hitObject.audicaBehavior == 3)
-                    {
-                        tickLength = (int)hitObject.audicaEndTick - (int)hitObject.audicaTick;
-                    }
-
-                    HitObject nextHitObject = null; //Next non chain-link hitObject
-                    for (int j = 1; nextHitObject==null && i+j < osufile.hitObjects.Count; j++)
-                    {
-                        if (osufile.hitObjects[i + j].audicaBehavior != 5) nextHitObject = osufile.hitObjects[i + j];
-                    }
-                    hitObject.audicaHandType = handColorHandler.GetHandType(hitObject, prevRightHitObject, prevLeftHitObject, nextHitObject);
-                    if (hitObject.audicaHandType == 1) prevRightHitObject = hitObject;
-                    else prevLeftHitObject = hitObject;
+                    tickLength = (int)hitObject.audicaEndTick - (int)hitObject.audicaTick;
                 }
 
                 var cue = new Cue

@@ -90,11 +90,14 @@ namespace osutoaudica
         public float stackMaxDistance = 1.5f;
         public float stackResetTime = 960f;
 
-        
-        //HandColorHandler params
-        public float strainDecayBase = 0.4f;
-        public float historicalStrainWeight = 0.2f;
 
+        //HandColorHandler params
+        public int exhaustiveSearchDepth = 5;
+        public int simulationSearchDepth = 1;
+        public float searchAbortTime = 2000f;
+
+        public float strainDecayBase = 0.4f;
+        public float historicalStrainWeight = 0.3f;
 
         public float timeStrainTransformExponent = 2f;
         public float timeStrainWeight = 1.2f;
