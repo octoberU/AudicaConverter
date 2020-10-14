@@ -4,7 +4,7 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <AssemblyName>AudicaConverter</AssemblyName>
-    <ApplicationIcon>OTA_icon.ico</ApplicationIcon>
+    <ApplicationIcon>osutoaudica.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
