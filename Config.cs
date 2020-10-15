@@ -93,15 +93,16 @@ namespace osutoaudica
 
 
         //HandColorHandler params
-        public int exhaustiveSearchDepth = 5;
-        public int simulationSearchDepth = 1;
+        public int exhaustiveSearchDepth = 8;
+        public int simulationSearchDepth = 30;
         public float searchAbortTime = 2000f;
+        public float searchStrainExponent = 1.5f;
 
         public float strainDecayBase = 0.4f;
-        public float historicalStrainWeight = 0.3f;
+        public float historicalStrainWeight = 0.2f;
 
-        public float timeStrainTransformExponent = 2f;
-        public float timeStrainWeight = 1.2f;
+        public float timeStrainTransformExponent = 2.5f;
+        public float timeStrainWeight = 0.5f;
 
         public float movementStrainWeight = 7f;
 
@@ -113,7 +114,7 @@ namespace osutoaudica
 
         public float crossoverStrainWeight = 10f;
 
-        public float playspacePositionStrainWeight = 3f;
+        public float playspacePositionStrainWeight = 5f;
 
         public float holdRestTime = 400f;
         public float holdRestTransformExponent = 2.5f;

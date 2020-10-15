@@ -16,6 +16,8 @@ namespace AudicaConverter
 
         private float searchAbortTime => Config.parameters.searchAbortTime;
 
+        private float searchStrainExponent => Config.parameters.searchStrainExponent;
+
         //The base for exponential decay of accumulated strain on each hand. e.g. a value of means accumulated strain on each hand is halved every second.
         private float strainDecayBase => Config.parameters.strainDecayBase;
 
@@ -80,7 +82,7 @@ namespace AudicaConverter
                 HitObject currentHitObject = assignableHitObjects[i];
                 HitObject prevHitObject = i > 0 ? assignableHitObjects[i - 1] : null;
 
-                var searchResult = ExhaustiveSearchStrain(assignableHitObjects, i, prevRightHitObject, prevLeftHitObject, rightHistoricStrain, leftHistoricStrain, float.PositiveInfinity, exhaustiveSearchDepth);
+                var searchResult = ExhaustiveSearchStrain(assignableHitObjects, i, prevRightHitObject, prevLeftHitObject, rightHistoricStrain, leftHistoricStrain, exhaustiveSearchDepth);
 
                 currentHitObject.audicaHandType = searchResult.handType;
 
@@ -101,13 +103,7 @@ namespace AudicaConverter
                     leftHistoricStrain += searchResult.targetStrain;
                     prevLeftHitObject = currentHitObject;
                 } 
-
-                //Console.WriteLine(rightHistoricStrain);
-                //Console.WriteLine(leftHistoricStrain);
-                //Console.WriteLine();
             }
-
-            //Console.WriteLine();
 
             for (int i = 0; i < hitObjects.Count; i++)
             {
@@ -117,11 +113,12 @@ namespace AudicaConverter
         }
 
         //Recursive method for exhaustive search for sequence of hand assignments that gives the lowest maximum hand strain.
-        public (int handType, float targetStrain, float minMaxStrain) ExhaustiveSearchStrain(List<HitObject> hitObjects, int currentHitObjectIdx, HitObject prevRightHitObject, HitObject prevLeftHitObject, float rightHistoricStrain, float leftHistoricStrain, float bestMinMaxStrain, int depth)
+        public (int handType, float targetStrain, float pathSumStrain) ExhaustiveSearchStrain(List<HitObject> hitObjects, int currentHitObjectIdx, HitObject prevRightHitObject, HitObject prevLeftHitObject, float rightHistoricStrain, float leftHistoricStrain, int depth,
+            float sumStrain = 0f, float bestPathSumStrain = float.PositiveInfinity)
         {
             if (depth == 0) //Base case, switch to greedy simulation search
             {
-                return GreedySearchStrain(hitObjects, currentHitObjectIdx, prevRightHitObject, prevLeftHitObject, rightHistoricStrain, leftHistoricStrain, bestMinMaxStrain, simulationSearchDepth);
+                return GreedySearchStrain(hitObjects, currentHitObjectIdx, prevRightHitObject, prevLeftHitObject, rightHistoricStrain, leftHistoricStrain, simulationSearchDepth, sumStrain, bestPathSumStrain);
             }
 
             HitObject currentHitObject = hitObjects[currentHitObjectIdx];
@@ -144,51 +141,58 @@ namespace AudicaConverter
             float rightCombStrain = historicalStrainWeight * rightHistoricStrain + rightTargetStrain;
             float leftCombStrain = historicalStrainWeight * leftHistoricStrain + leftTargetStrain;
 
-            float rightPathMinMaxStrain = rightCombStrain;
-            float leftPathMinMaxStrain = leftCombStrain;
+            float rightBranchSumStrain = sumStrain + (float)Math.Pow(rightCombStrain, searchStrainExponent);
+            float leftBranchSumStrain = sumStrain + (float)Math.Pow(leftCombStrain, searchStrainExponent);
 
-
+            float leftPathSumStrain = float.PositiveInfinity;
+            float rightPathSumStrain = float.PositiveInfinity;
             //Only keep searching if there are more targets within searchAbortTime
-            if (currentHitObjectIdx + 1 < hitObjects.Count &&  nextHitObject.time - currentHitObject.time < searchAbortTime)
+            if (currentHitObjectIdx + 1 < hitObjects.Count && nextHitObject.time - currentHitObject.time < searchAbortTime)
             {
                 //Search down the opposite path of the previous target hand first. Allows more efficient pruning since alternation is expected to be a relatively low-strain solution.
                 if ((prevRightHitObject != null ? prevRightHitObject.time : 0f) >= (prevLeftHitObject != null ? prevLeftHitObject.time : 0f))
                 {   
                     //Search left branch if it could be better than the previously best found full path
-                    if (leftCombStrain < bestMinMaxStrain)
+                    if (leftBranchSumStrain < bestPathSumStrain)
                     {
-                        leftPathMinMaxStrain = Math.Max(leftPathMinMaxStrain, ExhaustiveSearchStrain(hitObjects, currentHitObjectIdx + 1, prevRightHitObject, currentHitObject, rightHistoricStrain, leftHistoricStrain + leftTargetStrain, bestMinMaxStrain, depth - 1).minMaxStrain);
-                        bestMinMaxStrain = Math.Min(bestMinMaxStrain, leftPathMinMaxStrain);
+                        leftPathSumStrain = ExhaustiveSearchStrain(hitObjects, currentHitObjectIdx + 1, prevRightHitObject, currentHitObject, rightHistoricStrain, leftHistoricStrain + leftTargetStrain, depth - 1, leftBranchSumStrain, bestPathSumStrain).pathSumStrain;
+                        bestPathSumStrain = Math.Min(bestPathSumStrain, leftPathSumStrain);
                     }
                     //Search right branch if it could be better than the previously best found full path
-                    if (rightCombStrain < bestMinMaxStrain)
+                    if (rightBranchSumStrain < bestPathSumStrain)
                     {
-                        rightPathMinMaxStrain = Math.Max(rightPathMinMaxStrain, ExhaustiveSearchStrain(hitObjects, currentHitObjectIdx + 1, currentHitObject, prevLeftHitObject, rightHistoricStrain + rightTargetStrain, leftHistoricStrain, bestMinMaxStrain, depth - 1).minMaxStrain);
+                        rightPathSumStrain = ExhaustiveSearchStrain(hitObjects, currentHitObjectIdx + 1, currentHitObject, prevLeftHitObject, rightHistoricStrain + rightTargetStrain, leftHistoricStrain, depth - 1, rightBranchSumStrain, bestPathSumStrain).pathSumStrain;
                     }
                 }
                 else
                 {
                     //Search right branch if it could be better than the previously best found full path
-                    if (rightCombStrain < bestMinMaxStrain)
+                    if (rightBranchSumStrain < bestPathSumStrain)
                     {
-                        rightPathMinMaxStrain = Math.Max(rightPathMinMaxStrain, ExhaustiveSearchStrain(hitObjects, currentHitObjectIdx + 1, currentHitObject, prevLeftHitObject, rightHistoricStrain + rightTargetStrain, leftHistoricStrain, bestMinMaxStrain, depth - 1).minMaxStrain);
-                        bestMinMaxStrain = Math.Min(bestMinMaxStrain, rightPathMinMaxStrain);
+                        rightPathSumStrain = ExhaustiveSearchStrain(hitObjects, currentHitObjectIdx + 1, currentHitObject, prevLeftHitObject, rightHistoricStrain + rightTargetStrain, leftHistoricStrain, depth - 1, rightBranchSumStrain, bestPathSumStrain).pathSumStrain;
+                        bestPathSumStrain = Math.Min(bestPathSumStrain, rightPathSumStrain);
                     }
                     //Search left branch if it could be better than the previously best found full path
-                    if (leftCombStrain < bestMinMaxStrain)
+                    if (leftBranchSumStrain < bestPathSumStrain)
                     {
-                        leftPathMinMaxStrain = Math.Max(leftPathMinMaxStrain, ExhaustiveSearchStrain(hitObjects, currentHitObjectIdx + 1, prevRightHitObject, currentHitObject, rightHistoricStrain, leftHistoricStrain + leftTargetStrain, bestMinMaxStrain, depth - 1).minMaxStrain);
+                        leftPathSumStrain = ExhaustiveSearchStrain(hitObjects, currentHitObjectIdx + 1, prevRightHitObject, currentHitObject, rightHistoricStrain, leftHistoricStrain + leftTargetStrain, depth - 1, leftBranchSumStrain, bestPathSumStrain).pathSumStrain;
                     }
                 }
             }
+            else
+            {
+                rightPathSumStrain = rightBranchSumStrain;
+                leftPathSumStrain = leftBranchSumStrain;
+            }
             
 
-            if (rightPathMinMaxStrain <= leftPathMinMaxStrain) return (1, rightTargetStrain, rightPathMinMaxStrain);
-            else return (2, leftTargetStrain, leftPathMinMaxStrain);
+            if (rightPathSumStrain <= leftPathSumStrain) return (1, rightTargetStrain, rightPathSumStrain);
+            else return (2, leftTargetStrain, leftPathSumStrain);
         }
 
         //Recursive method for greedy simulation to find maximum future strain.
-        public (int handType, float targetStrain, float minMaxStrain) GreedySearchStrain(List<HitObject> hitObjects, int currentHitObjectIdx, HitObject prevRightHitObject, HitObject prevLeftHitObject, float rightHistoricStrain, float leftHistoricStrain, float bestMinMaxStrain, int depth)
+        public (int handType, float targetStrain, float pathSumStrain) GreedySearchStrain(List<HitObject> hitObjects, int currentHitObjectIdx, HitObject prevRightHitObject, HitObject prevLeftHitObject, float rightHistoricStrain, float leftHistoricStrain, int depth,
+            float sumStrain, float bestPathSumStrain)
         {
             HitObject currentHitObject = hitObjects[currentHitObjectIdx];
             HitObject nextHitObject = currentHitObjectIdx + 1 < hitObjects.Count ? hitObjects[currentHitObjectIdx + 1] : null;
@@ -210,24 +214,31 @@ namespace AudicaConverter
             float rightCombStrain = historicalStrainWeight * rightHistoricStrain + rightTargetStrain;
             float leftCombStrain = historicalStrainWeight * leftHistoricStrain + leftTargetStrain;
 
-            float minMaxStrain = Math.Min(rightCombStrain, leftCombStrain);
+            float rightBranchSumStrain = sumStrain + (float)Math.Pow(rightCombStrain, searchStrainExponent);
+            float leftBranchSumStrain = sumStrain + (float)Math.Pow(leftCombStrain, searchStrainExponent);
+
+            float pathSumStrain = float.PositiveInfinity;
 
 
             //Only keep searching if there is still depth left to search, and if there are more targets within searchAbortTime
             if (depth > 1 && currentHitObjectIdx + 1 < hitObjects.Count && nextHitObject.time - currentHitObject.time < searchAbortTime)
             {
-                if (rightCombStrain <= leftCombStrain && rightCombStrain < bestMinMaxStrain)
+                if (rightCombStrain <= leftCombStrain && rightBranchSumStrain < bestPathSumStrain)
                 {
-                    minMaxStrain = Math.Max(rightCombStrain, GreedySearchStrain(hitObjects, currentHitObjectIdx + 1, currentHitObject, prevLeftHitObject, rightHistoricStrain + rightTargetStrain, leftHistoricStrain, bestMinMaxStrain, depth - 1).minMaxStrain);
+                    pathSumStrain = GreedySearchStrain(hitObjects, currentHitObjectIdx + 1, currentHitObject, prevLeftHitObject, rightHistoricStrain + rightTargetStrain, leftHistoricStrain, depth - 1, rightBranchSumStrain, bestPathSumStrain).pathSumStrain;
                 }
-                else if (leftCombStrain < rightCombStrain && leftCombStrain < bestMinMaxStrain)
+                else if (leftCombStrain < rightCombStrain && leftBranchSumStrain < bestPathSumStrain)
                 {
-                    minMaxStrain = Math.Max(leftCombStrain, GreedySearchStrain(hitObjects, currentHitObjectIdx + 1, prevRightHitObject, currentHitObject, rightHistoricStrain, leftHistoricStrain + leftTargetStrain, bestMinMaxStrain, depth - 1).minMaxStrain);
+                    pathSumStrain = GreedySearchStrain(hitObjects, currentHitObjectIdx + 1, prevRightHitObject, currentHitObject, rightHistoricStrain, leftHistoricStrain + leftTargetStrain, depth - 1, leftBranchSumStrain, bestPathSumStrain).pathSumStrain;
                 }
             }
+            else
+            {
+                pathSumStrain = (float)Math.Min(rightBranchSumStrain, leftBranchSumStrain);
+            }
 
-            if (rightCombStrain <= leftCombStrain) return (1, rightTargetStrain, minMaxStrain);
-            else return (2, leftTargetStrain, minMaxStrain);
+            if (rightCombStrain <= leftCombStrain) return (1, rightTargetStrain, pathSumStrain);
+            else return (2, leftTargetStrain, pathSumStrain);
         }
 
         public float GetRightTargetStrain(HitObject hitObject, HitObject prevHitObject, HitObject prevRightHitObject, HitObject nextHitObject)
@@ -239,7 +250,7 @@ namespace AudicaConverter
             if (prevRightHitObject != null) movementStrain = OsuUtility.EuclideanDistance(prevRightHitObject.endX, prevRightHitObject.endY, hitObject.x, hitObject.y) / 512f / (Math.Max(hitObject.time - prevRightHitObject.endTime, 50f) / 1000f);
 
             float directionStrain = 0f;
-            if (prevHitObject != null) directionStrain = Math.Max(-(hitObject.x - prevHitObject.endX) / 512f, 0f) / (Math.Max(hitObject.time - prevHitObject.endTime, 50f) / 1000f);
+            if (prevHitObject != null) directionStrain = Math.Max(-(hitObject.x - prevHitObject.endX) / 512f, 0f) / (Math.Max(hitObject.time - prevHitObject.endTime, 100f) / 1000f);
 
             float lookAheadDirectionStrain = 0f;
             if (nextHitObject != null && nextHitObject.x - hitObject.endX > 0)
@@ -247,7 +258,7 @@ namespace AudicaConverter
 
             float crossoverStrain = 0f;
             if (prevHitObject != null && nextHitObject != null)
-                crossoverStrain = Math.Max(Math.Min(-(hitObject.x - prevHitObject.endX), (nextHitObject.x - hitObject.endX)) / 512f, 0f) / ((nextHitObject.time - prevHitObject.endTime) / 2000f);
+                crossoverStrain = Math.Max(Math.Min(-(hitObject.x - prevHitObject.endX), (nextHitObject.x - hitObject.endX)) / 512f, 0f) / (Math.Max(nextHitObject.time - hitObject.endTime + hitObject.time - prevHitObject.endTime, 100f) / 2000f);
 
             float playspacePositionStrain = Math.Max(1f - hitObject.x / 256f, 0f);
 
@@ -282,7 +293,7 @@ namespace AudicaConverter
             if (prevLeftHitObject != null) movementStrain = OsuUtility.EuclideanDistance(prevLeftHitObject.endX, prevLeftHitObject.endY, hitObject.x, hitObject.y) / 512f / (Math.Max(hitObject.time - prevLeftHitObject.endTime, 50f) / 1000f);
 
             float directionStrain = 0f;
-            if (prevHitObject != null) directionStrain = Math.Max((hitObject.x - prevHitObject.endY) / 512f, 0f) / (Math.Max(hitObject.time - prevHitObject.endTime, 50f) / 1000f);
+            if (prevHitObject != null) directionStrain = Math.Max((hitObject.x - prevHitObject.endY) / 512f, 0f) / (Math.Max(hitObject.time - prevHitObject.endTime, 100f) / 1000f);
 
             float lookAheadDirectionStrain = 0f;
             if (nextHitObject != null && nextHitObject.x - hitObject.endX < 0)
@@ -290,7 +301,7 @@ namespace AudicaConverter
 
             float crossoverStrain = 0f;
             if (prevHitObject != null && nextHitObject != null)
-                crossoverStrain = Math.Max(Math.Min((hitObject.x - prevHitObject.endX), -(nextHitObject.x - hitObject.endX)) / 512f, 0f) / ((nextHitObject.time - prevHitObject.endTime) / 2000f);
+                crossoverStrain = Math.Max(Math.Min((hitObject.x - prevHitObject.endX), -(nextHitObject.x - hitObject.endX)) / 512f, 0f) / (Math.Max(nextHitObject.time - hitObject.endTime + hitObject.time - prevHitObject.endTime, 100f) / 2000f);
 
             float playspacePositionStrain = Math.Max(hitObject.x / 256f - 1f, 0f); ;
 
