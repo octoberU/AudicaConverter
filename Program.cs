@@ -104,7 +104,7 @@ namespace AudicaConverter
             {
                 if (Directory.Exists(Config.parameters.customExportDirectory))
                 {
-                    audica.Export(@$"{Config.parameters.customExportDirectory}\{audicaFileName}");
+                    audica.Export($"{Config.parameters.customExportDirectory}\\{audicaFileName}");
                 }
                 else
                 {
