@@ -259,7 +259,10 @@ namespace AudicaConverter
             float streamAlternationStrain = 0f;
             if (hitObject.noteStream != null && hitObject.audicaBehavior != 4)
             {
-                if (hitObject == hitObject.noteStream.hitObjects[0] && streamStartHandPreference.ToLower() == "left") streamStartStrain = 1f;
+                if (hitObject == hitObject.noteStream.hitObjects[0])
+                {
+                    if (streamStartHandPreference.ToLower() == "left") streamStartStrain = 1f;
+                }
                 else if (prevHitObject.audicaBehavior == 1) streamAlternationStrain = 1f;
             }
 
@@ -299,7 +302,10 @@ namespace AudicaConverter
             float streamAlternationStrain = 0f;
             if (hitObject.noteStream != null && hitObject.audicaBehavior != 4)
             {
-                if (hitObject == hitObject.noteStream.hitObjects[0] && streamStartHandPreference.ToLower() == "right") streamStartStrain = 1f;
+                if (hitObject == hitObject.noteStream.hitObjects[0])
+                {
+                    if (streamStartHandPreference.ToLower() == "right") streamStartStrain = 1f;
+                }
                 else if (prevHitObject.audicaBehavior == 2) streamAlternationStrain = 1f;
             }
 
