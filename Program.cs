@@ -88,10 +88,36 @@ namespace AudicaConverter
 
             ConvertMetadata(osz, audica);
 
+            string audicaFileName = $"{audica.desc.songID}.audica";
 
             //at the end
-            if (!Directory.Exists(@$"{Program.workingDirectory}\audicaFiles")) Directory.CreateDirectory(@$"{Program.workingDirectory}\audicaFiles");
-            audica.Export(@$"{Program.workingDirectory}\audicaFiles\{audica.desc.songID}.audica");
+            ExportConvert(audica, audicaFileName);
+        }
+
+        private static void ExportConvert(Audica audica, string audicaFileName)
+        {
+            if (Config.parameters.customExportDirectory == "")
+            {
+                ExportToDefaultDirectory(audica, audicaFileName);
+            }
+            else
+            {
+                if (Directory.Exists(Config.parameters.customExportDirectory))
+                {
+                    audica.Export(@$"{Config.parameters.customExportDirectory}\{audicaFileName}");
+                }
+                else
+                {
+                    Console.WriteLine("Custom directory doesn't exist, exporting to default /audicaFiles");
+                    ExportToDefaultDirectory(audica, audicaFileName);
+                }
+            }
+
+            static void ExportToDefaultDirectory(Audica audica, string audicaFileName)
+            {
+                if (!Directory.Exists(@$"{Program.workingDirectory}\audicaFiles")) Directory.CreateDirectory(@$"{Program.workingDirectory}\audicaFiles");
+                audica.Export(@$"{Program.workingDirectory}\audicaFiles\{audicaFileName}");
+            }
         }
 
         private static void ConvertTempos(OSZ osz, ref Audica audica)

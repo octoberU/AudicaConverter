@@ -47,6 +47,7 @@ namespace osutoaudica
     internal class ConfigParameters
     {
         public string customMapperName = "";
+        public string customExportDirectory = "";
         public float introPadding = 2000f;
         public bool snapNotes = false;
         public bool useChainSounds = true;
