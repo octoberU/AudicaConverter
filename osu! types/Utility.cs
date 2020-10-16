@@ -26,6 +26,20 @@ namespace OsuTypes
             return (float)Math.Round(tickTime) + (float)Math.Round((ms - timingPoints[i].ms) * 480f / (float)timingPoints[i].beatTime / roundingPrecision) * roundingPrecision;
         }
 
+        public static float TickToMs(float tick, List<TimingPoint> timingPoints)
+        {
+            float ms = 0;
+            TimingPoint prevTimingPoint = timingPoints[0];
+            for (int i = 1; i < timingPoints.Count && timingPoints[i].audicaTick < tick; i++)
+            {
+                TimingPoint nextTimingPoint = timingPoints[i];
+                ms += (float)prevTimingPoint.beatTime * (nextTimingPoint.audicaTick - prevTimingPoint.audicaTick) / 480f;
+                prevTimingPoint = nextTimingPoint;
+            }
+            ms += (float)prevTimingPoint.beatTime * (tick - prevTimingPoint.audicaTick) / 480f;
+            return ms;
+        }
+
         public static float ticksSinceLastTimingPoint(float tick, List<TimingPoint> timingPoints)
         {
             int timingPointIndex = timingPoints.FindIndex(tp => tp.audicaTick > tick) - 1;

@@ -34,7 +34,7 @@ namespace AudicaConverter
             {
                 if(item.Contains(".osz")) ConversionProcess.ConvertToAudica(item);
             }
-            //ConversionProcess.ConvertToAudica(@"C:\audica\repos\AudicaConverter\bin\Release\netcoreapp3.1\1118112 CHiCO with HoneyWorks - Kessen Spirit.osz");
+            ConversionProcess.ConvertToAudica(@"C:\audica\repos\AudicaConverter\bin\Release\netcoreapp3.1\532522 SakiZ - osu!memories.osz");
         }
     }
 
@@ -595,6 +595,7 @@ namespace AudicaConverter
             {
                 HitObject currentHitObject = hitObjects[i];
                 HitObject nextHitObject = i + 1 < hitObjects.Count ? hitObjects[i + 1] : null;
+                HitObject nextNextHitObject = i + 2 < hitObjects.Count ? hitObjects[i + 2] : null;
 
                 if (currentHitObject.audicaBehavior == 4) continue;
 
@@ -606,6 +607,13 @@ namespace AudicaConverter
                         currentHitObject.endTime = nextHitObject.time;
                         currentHitObject.audicaEndTick = nextHitObject.audicaTick;
                     }
+                }
+
+                //Shorten duration if there are two targets within too short time after the sustain
+                if (nextNextHitObject != null && nextNextHitObject.time - currentHitObject.endTime < Config.parameters.holdRestTime)
+                {
+                    currentHitObject.audicaEndTick -= 240f;
+                    currentHitObject.endTime = OsuUtility.TickToMs(currentHitObject.audicaEndTick, timingPoints);
                 }
 
                 if (currentHitObject.audicaEndTick - currentHitObject.audicaTick >= Config.parameters.minSustainLength)
