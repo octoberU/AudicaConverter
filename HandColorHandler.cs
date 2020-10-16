@@ -12,9 +12,7 @@ namespace AudicaConverter
     {
         private int exhaustiveSearchDepth => Config.parameters.exhaustiveSearchDepth;
 
-        private int simulationSearchDepth => Config.parameters.simulationSearchDepth;
-
-        private float searchAbortTime => Config.parameters.searchAbortTime;
+        private int greedySimulationDepth => Config.parameters.greedySimulationDepth;
 
         private float searchStrainExponent => Config.parameters.searchStrainExponent;
 
@@ -112,13 +110,13 @@ namespace AudicaConverter
             }
         }
 
-        //Recursive method for exhaustive search for sequence of hand assignments that gives the lowest maximum hand strain.
+        //Recursive method for exhaustive search for sequence of hand assignments that gives the least combined, transformed future strain.
         public (int handType, float targetStrain, float pathSumStrain) ExhaustiveSearchStrain(List<HitObject> hitObjects, int currentHitObjectIdx, HitObject prevRightHitObject, HitObject prevLeftHitObject, float rightHistoricStrain, float leftHistoricStrain, int depth,
             float sumStrain = 0f, float bestPathSumStrain = float.PositiveInfinity)
         {
             if (depth == 0) //Base case, switch to greedy simulation search
             {
-                return GreedySearchStrain(hitObjects, currentHitObjectIdx, prevRightHitObject, prevLeftHitObject, rightHistoricStrain, leftHistoricStrain, simulationSearchDepth, sumStrain, bestPathSumStrain);
+                return GreedySimulationStrain(hitObjects, currentHitObjectIdx, prevRightHitObject, prevLeftHitObject, rightHistoricStrain, leftHistoricStrain, greedySimulationDepth, sumStrain, bestPathSumStrain);
             }
 
             HitObject currentHitObject = hitObjects[currentHitObjectIdx];
@@ -146,8 +144,9 @@ namespace AudicaConverter
 
             float leftPathSumStrain = float.PositiveInfinity;
             float rightPathSumStrain = float.PositiveInfinity;
-            //Only keep searching if there are more targets within searchAbortTime
-            if (currentHitObjectIdx + 1 < hitObjects.Count && nextHitObject.time - currentHitObject.time < searchAbortTime)
+            
+            //Only keep searching if there are targets remaining
+            if (currentHitObjectIdx + 1 < hitObjects.Count)
             {
                 //Search down the opposite path of the previous target hand first. Allows more efficient pruning since alternation is expected to be a relatively low-strain solution.
                 if ((prevRightHitObject != null ? prevRightHitObject.time : 0f) >= (prevLeftHitObject != null ? prevLeftHitObject.time : 0f))
@@ -190,8 +189,8 @@ namespace AudicaConverter
             else return (2, leftTargetStrain, leftPathSumStrain);
         }
 
-        //Recursive method for greedy simulation to find maximum future strain.
-        public (int handType, float targetStrain, float pathSumStrain) GreedySearchStrain(List<HitObject> hitObjects, int currentHitObjectIdx, HitObject prevRightHitObject, HitObject prevLeftHitObject, float rightHistoricStrain, float leftHistoricStrain, int depth,
+        //Recursive method for greedy simulation to find future strain.
+        public (int handType, float targetStrain, float pathSumStrain) GreedySimulationStrain(List<HitObject> hitObjects, int currentHitObjectIdx, HitObject prevRightHitObject, HitObject prevLeftHitObject, float rightHistoricStrain, float leftHistoricStrain, int depth,
             float sumStrain, float bestPathSumStrain)
         {
             HitObject currentHitObject = hitObjects[currentHitObjectIdx];
@@ -220,16 +219,16 @@ namespace AudicaConverter
             float pathSumStrain = float.PositiveInfinity;
 
 
-            //Only keep searching if there is still depth left to search, and if there are more targets within searchAbortTime
-            if (depth > 1 && currentHitObjectIdx + 1 < hitObjects.Count && nextHitObject.time - currentHitObject.time < searchAbortTime)
+            //Only keep simulating if there is still depth left to search, and if there are more targets
+            if (depth > 1 && currentHitObjectIdx + 1 < hitObjects.Count)
             {
                 if (rightCombStrain <= leftCombStrain && rightBranchSumStrain < bestPathSumStrain)
                 {
-                    pathSumStrain = GreedySearchStrain(hitObjects, currentHitObjectIdx + 1, currentHitObject, prevLeftHitObject, rightHistoricStrain + rightTargetStrain, leftHistoricStrain, depth - 1, rightBranchSumStrain, bestPathSumStrain).pathSumStrain;
+                    pathSumStrain = GreedySimulationStrain(hitObjects, currentHitObjectIdx + 1, currentHitObject, prevLeftHitObject, rightHistoricStrain + rightTargetStrain, leftHistoricStrain, depth - 1, rightBranchSumStrain, bestPathSumStrain).pathSumStrain;
                 }
                 else if (leftCombStrain < rightCombStrain && leftBranchSumStrain < bestPathSumStrain)
                 {
-                    pathSumStrain = GreedySearchStrain(hitObjects, currentHitObjectIdx + 1, prevRightHitObject, currentHitObject, rightHistoricStrain, leftHistoricStrain + leftTargetStrain, depth - 1, leftBranchSumStrain, bestPathSumStrain).pathSumStrain;
+                    pathSumStrain = GreedySimulationStrain(hitObjects, currentHitObjectIdx + 1, prevRightHitObject, currentHitObject, rightHistoricStrain, leftHistoricStrain + leftTargetStrain, depth - 1, leftBranchSumStrain, bestPathSumStrain).pathSumStrain;
                 }
             }
             else

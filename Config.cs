@@ -94,8 +94,7 @@ namespace osutoaudica
 
         //HandColorHandler params
         public int exhaustiveSearchDepth = 8;
-        public int simulationSearchDepth = 30;
-        public float searchAbortTime = 2000f;
+        public int greedySimulationDepth = 30;
         public float searchStrainExponent = 1.5f;
 
         public float strainDecayBase = 0.4f;
