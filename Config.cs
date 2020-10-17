@@ -44,6 +44,34 @@ namespace osutoaudica
     }
 
     [Serializable]
+    internal struct AutoOptions
+    {
+        public bool useDifficultySlot;
+        public float targetDifficultyRating;
+        public float acceptedDifficultyRatingRange;
+
+        public AutoOptions(bool useDifficultySlot, float targetDifficultyRating, float acceptedDifficultyRatingRange)
+        {
+            this.useDifficultySlot = useDifficultySlot;
+            this.targetDifficultyRating = targetDifficultyRating;
+            this.acceptedDifficultyRatingRange = acceptedDifficultyRatingRange;
+        }
+    }
+
+    [Serializable]
+    internal struct ScalingOptions
+    {
+        public float xScale;
+        public float yScale;
+
+        public ScalingOptions(float xScale, float yScale)
+        {
+            this.xScale = xScale;
+            this.yScale = yScale;
+        }
+    }
+
+    [Serializable]
     internal struct MeleeOptions
     {
         public bool convertMelees;
@@ -69,20 +97,22 @@ namespace osutoaudica
     [Serializable]
     internal class ConfigParameters
     {
-        public string customMapperName = "";
         public string customExportDirectory = "";
+        public string processingMode = "manual";
+        public AutoOptions expertAutoOptions = new AutoOptions(true, 6f, 3f);
+        public AutoOptions advancedAutoOptions = new AutoOptions(true, 4f, 2f);
+        public AutoOptions standardAutoOptions = new AutoOptions(true, 3f, 2f);
+        public AutoOptions beginnerAutoOptions = new AutoOptions(true, 2f, 2f);
+
+        public string customMapperName = "";
         public float introPadding = 2000f;
         public bool snapNotes = false;
         public bool useStandardSounds = true;
 
-        public float expertScaleX = 1.2f;
-        public float expertScaleY = 1f;
-        public float advancedScaleX = 0.96f;
-        public float advancedScaleY = 0.8f;
-        public float standardScaleX = 0.78f;
-        public float standardScaleY = 0.65f;
-        public float beginnerScaleX = 0.6f;
-        public float beginnerScaleY = 0.5f;
+        public ScalingOptions expertScalingOptions = new ScalingOptions(1.2f, 1f);
+        public ScalingOptions advancedScalingOptions = new ScalingOptions(0.96f, 0.8f);
+        public ScalingOptions standardScalingOptions = new ScalingOptions(0.78f, 0.65f);
+        public ScalingOptions beginnerScalingOptions = new ScalingOptions(0.6f, 0.5f);
 
         public bool adaptiveScaling = true;
         public float fovRecenterTime = 2000f;

@@ -31,40 +31,72 @@ namespace AudicaConverter
             {
                 Console.WriteLine("Updater has failed, make sure you're connected to the internet or update manually.\nhttps://github.com/octoberU/AudicaConverter/releases");
             }
+
+            List<string> oszFileNames = new List<string>();
             foreach (var item in args)
             {
-                if(item.Contains(".osz")) ConversionProcess.ConvertToAudica(item);
+                if (Directory.Exists(item))
+                {
+                    foreach (string dirItem in Directory.GetFiles(item))
+                    {
+                        if (dirItem.Contains(".osz")) oszFileNames.Add(dirItem);
+                    }
+                }
+                else if (item.Contains(".osz"))
+                    oszFileNames.Add(item);
             }
-            //ConversionProcess.ConvertToAudica(@"C:\audica\repos\AudicaConverter\bin\Release\netcoreapp3.1\355322 nekodex - circles!.osz");
+
+            for (int i = 0; i < oszFileNames.Count; i++)
+            {
+                string oszFileName = oszFileNames[i];
+                string[] pathElements = oszFileName.Split("\\");
+                string oszName = pathElements[pathElements.Length-1];
+                if (Config.parameters.processingMode.ToLower() == "auto")
+                {
+                    Console.Clear();
+                    Console.WriteLine(String.Format("({0}/{1}) Converting {2}...", i+1, oszFileNames.Count, oszName));
+                }
+                ConversionProcess.ConvertToAudica(oszFileName, Config.parameters.processingMode.ToLower());
+            }
+            //ConversionProcess.ConvertToAudica(@"C:\audica\repos\AudicaConverter\bin\Release\netcoreapp3.1\355322 nekodex - circles!.osz", "manual");
         }
     }
 
     public class ConversionProcess
     {
         public static bool snapNotes = false;
-        public static void ConvertToAudica(string filePath)
+        public static void ConvertToAudica(string filePath, string mode)
         {
             var osz = new OSZ(filePath);
             var audica = new Audica(@$"{Program.workingDirectory}\template.audica");
             ConvertTempos(osz, ref audica);
 
-            Console.WriteLine($"{osz.osufiles[0].metadata.artist} - {osz.osufiles[0].metadata.title}" +
+            int convertMode = 1;
+            if (mode == "manual")
+            {
+                Console.WriteLine($"{osz.osufiles[0].metadata.artist} - {osz.osufiles[0].metadata.title}" +
                 $"\nMapped by {osz.osufiles[0].metadata.creator}" +
                 $"\nFound {osz.osufiles.Count} difficulties");
-
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.WriteLine("\n\nSelect Conversion Mode: \n[1] Convert whole map.\n[2] Convert audio/timing only.");
-            Console.ForegroundColor = ConsoleColor.Gray;
-            int convertMode = int.Parse(Console.ReadLine());
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.WriteLine("\n\nSelect Conversion Mode: \n[1] Convert whole map.\n[2] Convert audio/timing only.");
+                Console.ForegroundColor = ConsoleColor.Gray;
+                convertMode = int.Parse(Console.ReadLine());
+            }
 
             if (convertMode == 1)
             {
-                Console.Clear();
-                Console.WriteLine("Converting song to OGG");
+                if (mode == "manual")
+                {
+                    Console.Clear();
+                    Console.WriteLine("Converting song to OGG");
+                }
                 ConvertSongToOGG(ref osz, audica);
 
-                Console.Clear();
-                Console.WriteLine("Converting beatmaps...");
+                if (mode == "manual")
+                {
+                    Console.Clear();
+                    Console.WriteLine("Converting beatmaps...");
+                }
                 foreach (osufile file in osz.osufiles)
                 {
                     file.audicaDifficulty = ConvertToAudica(file);
@@ -72,11 +104,12 @@ namespace AudicaConverter
                 }
                 SortOSZ(osz);
 
-                Console.Clear();
-                audica.expert = AskDifficulty(osz, audica, "Expert");
-                audica.advanced = AskDifficulty(osz, audica, "Advanced");
-                audica.moderate = AskDifficulty(osz, audica, "Standard");
-                audica.beginner = AskDifficulty(osz, audica, "Beginner");
+                audica.expert = AskDifficulty(osz, audica, "Expert", mode);
+                audica.advanced = AskDifficulty(osz, audica, "Advanced", mode);
+                audica.moderate = AskDifficulty(osz, audica, "Standard", mode);
+                audica.beginner = AskDifficulty(osz, audica, "Beginner", mode);
+
+                if (audica.expert == null && audica.advanced == null && audica.moderate == null && audica.beginner == null) return; //Abort conversion if all slots are empty
             }
             else
             {
@@ -148,73 +181,97 @@ namespace AudicaConverter
             audica.desc.fxSong = "";
         }
 
-        private static Difficulty AskDifficulty(OSZ osz, Audica audica, string difficultyName)
+        private static Difficulty AskDifficulty(OSZ osz, Audica audica, string difficultyName, string mode)
         {
-            float scaleX = 1f;
-            float scaleY = 1f;
+            ScalingOptions scalingOptions = new ScalingOptions();
+            AutoOptions autoOptions = new AutoOptions();
             switch (difficultyName.ToLower())
             {
                 case ("expert"):
-                    scaleX = Config.parameters.expertScaleX;
-                    scaleY = Config.parameters.expertScaleY;
+                    scalingOptions = Config.parameters.expertScalingOptions;
+                    autoOptions = Config.parameters.expertAutoOptions;
                     break;
                 case ("advanced"):
-                    scaleX = Config.parameters.advancedScaleX;
-                    scaleY = Config.parameters.advancedScaleY;
+                    scalingOptions = Config.parameters.advancedScalingOptions;
+                    autoOptions = Config.parameters.advancedAutoOptions;
                     break;
                 case ("standard"):
-                    scaleX = Config.parameters.standardScaleX;
-                    scaleY = Config.parameters.standardScaleY;
+                    scalingOptions = Config.parameters.standardScalingOptions;
+                    autoOptions = Config.parameters.standardAutoOptions;
                     break;
                 case ("beginner"):
-                    scaleX = Config.parameters.beginnerScaleX;
-                    scaleY = Config.parameters.beginnerScaleY;
+                    scalingOptions = Config.parameters.beginnerScalingOptions;
+                    autoOptions = Config.parameters.beginnerAutoOptions;
                     break;
             }
 
-            Console.WriteLine($"\n\nSelect {difficultyName} difficulty[Leave empty for none]:");
-            Console.ForegroundColor = ConsoleColor.Yellow;
+            if (mode == "auto" && !autoOptions.useDifficultySlot) return null; //Difficulty slot not in use
+
+            if (mode == "manual")
+            {
+                Console.Clear();
+                Console.WriteLine($"\n\nSelect {difficultyName} difficulty[Leave empty for none]:");
+                Console.ForegroundColor = ConsoleColor.Yellow;
+            }
 
             //Conversion steps (Scaling and melee pass) here is not very clean and should probably be refactored in the future
-            List<Difficulty> scaledDifficulties = new List<Difficulty>();
+            var scaledDifficulties = new List<(Difficulty difficulty, float difficultyRating)>();
             for (int i = 0; i < osz.osufiles.Count; i++)
             {
-                Difficulty scaledDifficulty = ScaleDifficulty(osz.osufiles[i].audicaDifficulty, scaleX, scaleY);
+                Difficulty scaledDifficulty = ScaleDifficulty(osz.osufiles[i].audicaDifficulty, scalingOptions.xScale, scalingOptions.yScale);
                 RunMeleePass(scaledDifficulty.cues, osz.osufiles[i].timingPoints, osz.osufiles[i].mergedTimingPoints, difficultyName);
                 if (Config.parameters.useStandardSounds) RunHitsoundPass(scaledDifficulty.cues);
-                scaledDifficulties.Add(scaledDifficulty);
                 float difficultyRating = audica.GetRatingForDifficulty(scaledDifficulty);
-                Console.WriteLine($"\n[{i+1}]{osz.osufiles[i].metadata.version} [{difficultyRating.ToString("n2")} Audica difficulty]");
+                scaledDifficulties.Add((scaledDifficulty, difficultyRating));
+
+                if (mode == "manual") Console.WriteLine($"\n[{i+1}]{osz.osufiles[i].metadata.version} [{difficultyRating.ToString("n2")} Audica difficulty]");
             }
-            Console.ForegroundColor = ConsoleColor.Gray;
-            string userInput = Console.ReadLine();
-            Console.Clear();
-            if (userInput == "") return null;// User hasn't picked a difficulty
+
+            int difficultyIdx=0;
+            if (mode == "manual")
+            {
+                Console.ForegroundColor = ConsoleColor.Gray;
+                string userInput = Console.ReadLine();
+                Console.Clear();
+                if (userInput == "") return null;// User hasn't picked a difficulty
+                else difficultyIdx = int.Parse(userInput)-1;
+            }
             else
             {
-                int difficulty = int.Parse(userInput)-1;
-                
-                if (Config.parameters.customMapperName == "")
+                float bestDifficultyRatingDeviation = float.PositiveInfinity;
+                for (int i = 0; i < scaledDifficulties.Count; i++)
                 {
-                    switch (difficultyName.ToLower())
+                    float difficultyRatingDeviation = Math.Abs(autoOptions.targetDifficultyRating - scaledDifficulties[i].difficultyRating);
+                    if (difficultyRatingDeviation < bestDifficultyRatingDeviation)
                     {
-                        case ("expert"):
-                            audica.desc.customExpert = osz.osufiles[difficulty].metadata.version;
-                            break;
-                        case ("advanced"):
-                            audica.desc.customAdvanced = osz.osufiles[difficulty].metadata.version;
-                            break;
-                        case ("standard"):
-                            audica.desc.customModerate = osz.osufiles[difficulty].metadata.version;
-                            break;
-                        case ("beginner"):
-                            audica.desc.customBeginner = osz.osufiles[difficulty].metadata.version;
-                            break;
+                        bestDifficultyRatingDeviation = difficultyRatingDeviation;
+                        difficultyIdx = i;
                     }
                 }
 
-                return scaledDifficulties[difficulty];
+                if (bestDifficultyRatingDeviation > autoOptions.acceptedDifficultyRatingRange) return null; //No difficulty meets difficulty range requirement
             }
+                
+            if (Config.parameters.customMapperName == "")
+            {
+                switch (difficultyName.ToLower())
+                {
+                    case ("expert"):
+                        audica.desc.customExpert = osz.osufiles[difficultyIdx].metadata.version;
+                        break;
+                    case ("advanced"):
+                        audica.desc.customAdvanced = osz.osufiles[difficultyIdx].metadata.version;
+                        break;
+                    case ("standard"):
+                        audica.desc.customModerate = osz.osufiles[difficultyIdx].metadata.version;
+                        break;
+                    case ("beginner"):
+                        audica.desc.customBeginner = osz.osufiles[difficultyIdx].metadata.version;
+                        break;
+                }
+            }
+
+            return scaledDifficulties[difficultyIdx].difficulty;
         }
 
         private static void ConvertSongToOGG(ref OSZ osz, Audica audica)
