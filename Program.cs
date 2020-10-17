@@ -994,8 +994,10 @@ namespace AudicaConverter
             {
                 Cue currentCue = cues[i];
                 Cue prevCue = i > 0 ? cues[i - 1] : null;
+                Cue nextCue = i + 1 < cues.Count ? cues[i + 1] : null;
                 float currentCueMsTime = OsuUtility.TickToMs(currentCue.tick, timingPoints);
                 float prevCueMsTime = prevCue != null ? OsuUtility.TickToMs(prevCue.tick, timingPoints) : 0f;
+                float nextCueMsTime = nextCue != null ? OsuUtility.TickToMs(nextCue.tick, timingPoints) : 0f;
                 TimingPoint prevNormalTimingPoint = OsuUtility.getPrevTimingPoint(currentCue.tick, timingPoints);
                 TimingPoint prevEitherTimingPoints = OsuUtility.getPrevTimingPoint(currentCue.tick, mergedTimingPoints);
 
@@ -1037,6 +1039,14 @@ namespace AudicaConverter
                         OsuUtility.Coordinate2D prevHitObjectPos = OsuUtility.GetPosFromCue(prevCue);
                         if (prevHitObjectPos.x > 7.5f - meleeOptions.positionWindowMinDistance || prevHitObjectPos.x < 7.5f - meleeOptions.positionWindowMaxDistance) rightMeleeOk = false;
                         if (prevHitObjectPos.x < 3.5f + meleeOptions.positionWindowMinDistance || prevHitObjectPos.x > 3.5f + meleeOptions.positionWindowMaxDistance) leftMeleeOk = false;
+                    }
+
+                    //Require next target to be on the inside of the side of the position window far away from the melee, or be sufficiently long ago that the fov has recentered
+                    if (nextCue != null && currentCueMsTime - nextCueMsTime < fovRecenterTime)
+                    {
+                        OsuUtility.Coordinate2D nextHitObjectPos = OsuUtility.GetPosFromCue(nextCue);
+                        if (nextHitObjectPos.x < 7.5f - meleeOptions.positionWindowMaxDistance) rightMeleeOk = false;
+                        if (nextHitObjectPos.x > 3.5f + meleeOptions.positionWindowMaxDistance) leftMeleeOk = false;
                     }
                     
                     //Convert to melee
