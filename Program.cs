@@ -58,7 +58,7 @@ namespace AudicaConverter
                 }
                 ConversionProcess.ConvertToAudica(oszFileName, Config.parameters.autoMode ? "auto" : "manual");
             }
-            //ConversionProcess.ConvertToAudica(@"C:\audica\repos\AudicaConverter\bin\Release\netcoreapp3.1\355322 nekodex - circles!.osz", "manual");
+            ConversionProcess.ConvertToAudica(@"C:\Users\adamk\source\repos\AudicaConverter\1173192 Ricky Montgomery - This December (3).osz", "manual");
         }
     }
 
@@ -295,32 +295,28 @@ namespace AudicaConverter
             {
                 paddingTime = Config.parameters.introPadding - firstHitObjectTime;
             }
+            else if (Config.parameters.skipIntro.enabled && firstHitObjectTime > Config.parameters.skipIntro.threshold)
+            {
+                //Checks if the first hitobject is after the threshold, if it is, we cut it.
+                paddingTime = (firstHitObjectTime - Config.parameters.skipIntro.fadeTime) * -1; //We need a negative value to not mess wih padding
+                
+            }
 
             if (paddingTime > 0f)
             {
-                foreach (var osuDifficulty in osz.osufiles)
-                {
-                    foreach (var timingPoint in osuDifficulty.mergedTimingPoints)
-                    {
-                        if (timingPoint.ms > 0f)
-                        {
-                            timingPoint.ms += paddingTime;
-                            timingPoint.audicaTick += OsuUtility.MsToTick(paddingTime, osuDifficulty.timingPoints);
-                        }
-                    }
-
-                    foreach (var hitObject in osuDifficulty.hitObjects)
-                    {
-                        hitObject.time += paddingTime;
-                        hitObject.audicaTick += OsuUtility.MsToTick(paddingTime, osuDifficulty.timingPoints);
-                        hitObject.endTime += paddingTime;
-                        hitObject.audicaEndTick += OsuUtility.MsToTick(paddingTime, osuDifficulty.timingPoints);
-                    }
-                    osuDifficulty.general.previewTime += (int)paddingTime;
-                }
+                ShiftEverythingByMs(osz, paddingTime);
                 ConvertTempos(osz, ref audica);
             }
 
+            string pruneString = "-ss 0.025"; //Default 25ms to deal with compression block latency
+            if (paddingTime < 0f)
+            {
+                ShiftEverythingByMs(osz, paddingTime);
+                ConvertTempos(osz, ref audica);
+                float pruneValue = (paddingTime / 1000f) * -1; //Convert ms to seconds and invert again
+                float fadeTime = Config.parameters.skipIntro.fadeTime / 1000f; //Convert ms to seconds
+                pruneString = $"-af \"afade=t=in:st=0:d={fadeTime.ToString("n1")}\" -ss {(0.025 + pruneValue).ToString("n3")}";
+            }
 
             if (Directory.Exists(tempDirectory)) Directory.Delete(tempDirectory, true);
 
@@ -346,7 +342,7 @@ namespace AudicaConverter
             string paddingString = paddingTime > 0 ? $"-af \"adelay = {paddingTime} | {paddingTime}\"" : "";
 
 
-            ffmpeg.StartInfo.Arguments = $"-y -i \"{tempAudioPath}\" -hide_banner -loglevel panic -ab 256k -ss 0.025 {paddingString} -map 0:a \"{tempOggPath}\"";
+            ffmpeg.StartInfo.Arguments = $"-y -i \"{tempAudioPath}\" -hide_banner -loglevel panic -ab 256k {pruneString} {paddingString} -map 0:a \"{tempOggPath}\"";
             ffmpeg.Start();
             ffmpeg.WaitForExit();
 
@@ -357,6 +353,30 @@ namespace AudicaConverter
             audica.song = new Mogg(ms);
 
             Directory.Delete(tempDirectory, true);
+        }
+
+        private static void ShiftEverythingByMs(OSZ osz, float paddingTime)
+        {
+            foreach (var osuDifficulty in osz.osufiles)
+            {
+                foreach (var timingPoint in osuDifficulty.mergedTimingPoints)
+                {
+                    if (timingPoint.ms > 0f)
+                    {
+                        timingPoint.ms += paddingTime;
+                        timingPoint.audicaTick += OsuUtility.MsToTick(paddingTime, osuDifficulty.timingPoints);
+                    }
+                }
+
+                foreach (var hitObject in osuDifficulty.hitObjects)
+                {
+                    hitObject.time += paddingTime;
+                    hitObject.audicaTick += OsuUtility.MsToTick(paddingTime, osuDifficulty.timingPoints);
+                    hitObject.endTime += paddingTime;
+                    hitObject.audicaEndTick += OsuUtility.MsToTick(paddingTime, osuDifficulty.timingPoints);
+                }
+                osuDifficulty.general.previewTime += (int)paddingTime;
+            }
         }
 
         public static Difficulty ConvertToAudica(osufile osufile)

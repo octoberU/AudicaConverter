@@ -93,6 +93,13 @@ namespace osutoaudica
             this.positionWindowMaxDistance = positionWindowMaxDistance;
         }
     }
+    [Serializable]
+    internal class SkipIntro
+    {
+        public bool enabled = true;
+        public float threshold = 10000f;
+        public float fadeTime = 5000f;
+    }
 
     [Serializable]
     internal class ConfigParameters
@@ -106,6 +113,7 @@ namespace osutoaudica
 
         public string customMapperName = "";
         public float introPadding = 2000f;
+        public SkipIntro skipIntro = new SkipIntro();
         public bool snapNotes = false;
         public bool useStandardSounds = true;
 
