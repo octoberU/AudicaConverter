@@ -1,5 +1,7 @@
 using AudicaTools;
+using NAudio.Wave.SampleProviders;
 using osutoaudica;
+using osutoaudica.osu__types;
 using OsuTypes;
 using System;
 using System.Collections.Generic;
@@ -58,7 +60,7 @@ namespace AudicaConverter
                 }
                 ConversionProcess.ConvertToAudica(oszFileName, Config.parameters.autoMode ? "auto" : "manual");
             }
-            ConversionProcess.ConvertToAudica(@"C:\Users\adamk\source\repos\AudicaConverter\1173192 Ricky Montgomery - This December (3).osz", "manual");
+            //ConversionProcess.ConvertToAudica(@"C:\Users\adamk\source\repos\AudicaConverter\1173192 Ricky Montgomery - This December (3).osz", "manual");
         }
     }
 
@@ -364,18 +366,69 @@ namespace AudicaConverter
                     if (timingPoint.ms > 0f)
                     {
                         timingPoint.ms += paddingTime;
-                        timingPoint.audicaTick += OsuUtility.MsToTick(paddingTime, osuDifficulty.timingPoints);
                     }
                 }
 
                 foreach (var hitObject in osuDifficulty.hitObjects)
                 {
                     hitObject.time += paddingTime;
-                    hitObject.audicaTick += OsuUtility.MsToTick(paddingTime, osuDifficulty.timingPoints);
                     hitObject.endTime += paddingTime;
-                    hitObject.audicaEndTick += OsuUtility.MsToTick(paddingTime, osuDifficulty.timingPoints);
                 }
                 osuDifficulty.general.previewTime += (int)paddingTime;
+
+                List<TimingPoint> negativeMergedTimingPoints = osuDifficulty.mergedTimingPoints.Where(tp => tp.ms < 0).ToList();
+                List<TimingPoint> negativeTimingPoints = osuDifficulty.timingPoints.Where(tp => tp.ms < 0).ToList();
+
+                if (negativeTimingPoints.Count > 0)
+                {
+                    //Find and push forward the last negative normal timing point
+                    TimingPoint lastNegativeTimingPoint = negativeTimingPoints[negativeTimingPoints.Count - 1];
+                    float newMs = lastNegativeTimingPoint.ms - ((float)lastNegativeTimingPoint.beatTime * 4) * (float)Math.Floor(lastNegativeTimingPoint.ms/((float)lastNegativeTimingPoint.beatTime * 4));
+                    //Only keep and shift this timing point if it becomes the first timing point
+                    if (!osuDifficulty.timingPoints.Exists(tp => tp.ms > 0 && tp.ms < newMs))
+                    {
+                        lastNegativeTimingPoint.ms = newMs;
+                        //Inherit the slider velocity of the most recent merged timing point
+                        int prevMergedTimingPointIdx = osuDifficulty.mergedTimingPoints.FindIndex(tp => tp.ms > newMs) - 1;
+                        if (prevMergedTimingPointIdx == -2) prevMergedTimingPointIdx = osuDifficulty.mergedTimingPoints.Count - 1;
+                        if (prevMergedTimingPointIdx != -2)
+                        {
+                            TimingPoint prevMergedTimingPoint = osuDifficulty.mergedTimingPoints[prevMergedTimingPointIdx];
+                            lastNegativeTimingPoint.sliderVelocity = prevMergedTimingPoint.sliderVelocity;
+                            lastNegativeTimingPoint.kiai = prevMergedTimingPoint.kiai;
+                        }
+                        negativeMergedTimingPoints.Remove(lastNegativeTimingPoint);
+                    }
+                }
+
+                //Remove all negative timing points except the most recent one
+                for (int i = 0; i < negativeMergedTimingPoints.Count; i++)
+                {
+                    TimingPoint timingPoint = negativeMergedTimingPoints[i];
+
+                    osuDifficulty.mergedTimingPoints.Remove(timingPoint);
+                    if (!timingPoint.inherited)
+                    {
+                        osuDifficulty.timingPoints.Remove(timingPoint);
+                    }
+                }
+
+                //Resort timing points
+                osuDifficulty.mergedTimingPoints.Sort((tp1, tp2) => tp1.ms.CompareTo(tp2.ms));
+                osuDifficulty.timingPoints.Sort((tp1, tp2) => tp1.ms.CompareTo(tp2.ms));
+
+                //Update initial 0ms timing point to the new first timing point bpm
+                if (osuDifficulty.timingPoints.Count > 1)
+                    osuDifficulty.timingPoints[0].beatTime = osuDifficulty.timingPoints[1].beatTime;
+
+                //recalculate all the audica tick timings on every timing point and hitObject...
+                foreach (TimingPoint timingPoint in osuDifficulty.mergedTimingPoints)
+                    timingPoint.audicaTick = OsuUtility.MsToTick(timingPoint.ms, osuDifficulty.timingPoints, roundingPrecision: 1);
+                foreach (HitObject hitObject in osuDifficulty.hitObjects)
+                {
+                    hitObject.audicaTick = OsuUtility.MsToTick(hitObject.time, osuDifficulty.timingPoints, roundingPrecision: 10);
+                    hitObject.audicaEndTick = OsuUtility.MsToTick(hitObject.time, osuDifficulty.timingPoints, roundingPrecision: 10);
+                }
             }
         }
 
