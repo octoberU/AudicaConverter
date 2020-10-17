@@ -44,6 +44,29 @@ namespace osutoaudica
     }
 
     [Serializable]
+    internal struct MeleeOptions
+    {
+        public bool convertMelees;
+        public float normalFrequency;
+        public float kiaiFrequency;
+        public float preRestTime;
+        public float postRestTime;
+        public float positionWindowMinDistance;
+        public float positionWindowMaxDistance;
+
+        public MeleeOptions(bool convertMelees, float normalFrequency, float kiaiFrequency, float preRestTime, float postRestTime, float positionWindowMinDistance, float positionWindowMaxDistance)
+        {
+            this.convertMelees = convertMelees;
+            this.normalFrequency = normalFrequency;
+            this.kiaiFrequency = kiaiFrequency;
+            this.preRestTime = preRestTime;
+            this.postRestTime = postRestTime;
+            this.positionWindowMinDistance = positionWindowMinDistance;
+            this.positionWindowMaxDistance = positionWindowMaxDistance;
+        }
+    }
+
+    [Serializable]
     internal class ConfigParameters
     {
         public string customMapperName = "";
@@ -85,13 +108,10 @@ namespace osutoaudica
         public int minChainLinks = 2;
         public float minChainSize = 0.6f;
 
-        public bool convertMelees = true;
-        public bool meleeKiaiOnly = true;
-        public float meleeFrequency = 1f;
-        public float meleePreRestTime = 400f;
-        public float meleePostRestTime = 400f;
-        public float meleePositionWindowMinDistance = 0.5f;
-        public float meleePositionWindowMaxDistance = 4f;
+        public MeleeOptions expertMeleeOptions = new MeleeOptions(true, 1f, 2f, 400f, 400f, 0.5f, 4f);
+        public MeleeOptions advancedMeleeOptions = new MeleeOptions(true, 0.5f, 1f, 500f, 500f, 0.5f, 4f);
+        public MeleeOptions standardMeleeOptions = new MeleeOptions(true, 0.25f, 1f, 600f, 600f, 1f, 3.5f);
+        public MeleeOptions beginnerMeleeOptions = new MeleeOptions(false, 0f, 0.5f, 800f, 800f, 1f, 3f);
 
         public bool distributeStacks = true;
         public float stackInclusionRange = 0.333f;

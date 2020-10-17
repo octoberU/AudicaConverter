@@ -180,7 +180,7 @@ namespace AudicaConverter
             for (int i = 0; i < osz.osufiles.Count; i++)
             {
                 Difficulty scaledDifficulty = ScaleDifficulty(osz.osufiles[i].audicaDifficulty, scaleX, scaleY);
-                if (Config.parameters.convertMelees) RunMeleePass(scaledDifficulty.cues, osz.osufiles[i].timingPoints, osz.osufiles[i].mergedTimingPoints);
+                RunMeleePass(scaledDifficulty.cues, osz.osufiles[i].timingPoints, osz.osufiles[i].mergedTimingPoints, difficultyName);
                 if (Config.parameters.useStandardSounds) RunHitsoundPass(scaledDifficulty.cues);
                 scaledDifficulties.Add(scaledDifficulty);
                 float difficultyRating = audica.GetRatingForDifficulty(scaledDifficulty);
@@ -817,15 +817,27 @@ namespace AudicaConverter
             }
         }
 
-        private static void RunMeleePass(List<Cue> cues, List<TimingPoint> timingPoints, List<TimingPoint> mergedTimingPoints)
+        private static void RunMeleePass(List<Cue> cues, List<TimingPoint> timingPoints, List<TimingPoint> mergedTimingPoints, string difficultyName)
         {
-            bool meleeKiaiOnly = Config.parameters.meleeKiaiOnly;
-            float meleeFrequency = Config.parameters.meleeFrequency;
-            float meleePreRestTime = Config.parameters.meleePreRestTime;
-            float meleePostRestTime = Config.parameters.meleePostRestTime;
-            float meleePositionWindowMinDistance = Config.parameters.meleePositionWindowMinDistance;
-            float meleePositionWindowMaxDistance = Config.parameters.meleePositionWindowMaxDistance;
+            MeleeOptions meleeOptions = new MeleeOptions();
+            switch (difficultyName.ToLower())
+            {
+                case ("expert"):
+                    meleeOptions = Config.parameters.expertMeleeOptions;
+                    break;
+                case ("advanced"):
+                    meleeOptions = Config.parameters.advancedMeleeOptions;
+                    break;
+                case ("standard"):
+                    meleeOptions = Config.parameters.standardMeleeOptions;
+                    break;
+                case ("beginner"):
+                    meleeOptions = Config.parameters.beginnerMeleeOptions;
+                    break;
+            }
             float fovRecenterTime = Config.parameters.fovRecenterTime;
+
+            if (!meleeOptions.convertMelees) return;
 
             bool prevMeleeRight = false;
             for (int i = 0; i < cues.Count; i++)
@@ -838,8 +850,10 @@ namespace AudicaConverter
                 TimingPoint prevEitherTimingPoints = OsuUtility.getPrevTimingPoint(currentCue.tick, mergedTimingPoints);
 
                 float timeSinceTimingPoint = currentCue.tick - prevNormalTimingPoint.audicaTick;
-                bool onMeleeConvertTime = timeSinceTimingPoint > 0 && timeSinceTimingPoint % (480f * prevNormalTimingPoint.meter / Config.parameters.meleeFrequency) == 0;
-                if ((!meleeKiaiOnly || prevEitherTimingPoints.kiai) && onMeleeConvertTime && currentCue.behavior != Cue.Behavior.Hold && currentCue.behavior != Cue.Behavior.ChainStart && currentCue.behavior != Cue.Behavior.Chain)
+                float frequency = prevEitherTimingPoints.kiai ? meleeOptions.kiaiFrequency : meleeOptions.normalFrequency;
+                if (frequency == 0) continue;
+                bool onMeleeConvertTime = timeSinceTimingPoint > 0 && timeSinceTimingPoint % (480f * prevNormalTimingPoint.meter / frequency) == 0;
+                if (onMeleeConvertTime && currentCue.behavior != Cue.Behavior.Hold && currentCue.behavior != Cue.Behavior.ChainStart && currentCue.behavior != Cue.Behavior.Chain)
                 {
                     //Check melee conversion conditions for each target
                     bool rightMeleeOk = true;
@@ -849,7 +863,7 @@ namespace AudicaConverter
                         otherCue =>
                         {
                             float otherCueMsTime = OsuUtility.TickToMs(otherCue.tick, timingPoints);
-                            return otherCue.behavior != Cue.Behavior.Melee && otherCueMsTime >= currentCueMsTime - meleePreRestTime && otherCueMsTime <= currentCueMsTime + meleePostRestTime;
+                            return otherCue.behavior != Cue.Behavior.Melee && otherCueMsTime >= currentCueMsTime - meleeOptions.preRestTime && otherCueMsTime <= currentCueMsTime + meleeOptions.postRestTime;
                         }
                     ))
                     {
@@ -862,8 +876,8 @@ namespace AudicaConverter
 
                         //Don't convert to melee if any targets within the rest window are outside the corresponding melee target position window
                         OsuUtility.Coordinate2D otherCuePos = OsuUtility.GetPosFromCue(otherCue);
-                        if (otherCuePos.x > 7.5f - meleePositionWindowMinDistance || otherCuePos.x < 7.5f - meleePositionWindowMaxDistance) rightMeleeOk = false;
-                        if (otherCuePos.x < 3.5f + meleePositionWindowMinDistance || otherCuePos.x > 3.5f + meleePositionWindowMaxDistance) leftMeleeOk = false;
+                        if (otherCuePos.x > 7.5f - meleeOptions.positionWindowMinDistance || otherCuePos.x < 7.5f - meleeOptions.positionWindowMaxDistance) rightMeleeOk = false;
+                        if (otherCuePos.x < 3.5f + meleeOptions.positionWindowMinDistance || otherCuePos.x > 3.5f + meleeOptions.positionWindowMaxDistance) leftMeleeOk = false;
 
                     }
 
@@ -871,8 +885,8 @@ namespace AudicaConverter
                     if (prevCue!= null && prevCue.behavior != Cue.Behavior.Melee && currentCueMsTime - prevCueMsTime < fovRecenterTime)
                     {
                         OsuUtility.Coordinate2D prevHitObjectPos = OsuUtility.GetPosFromCue(prevCue);
-                        if (prevHitObjectPos.x > 7.5f - meleePositionWindowMinDistance || prevHitObjectPos.x < 7.5f - meleePositionWindowMaxDistance) rightMeleeOk = false;
-                        if (prevHitObjectPos.x < 3.5f + meleePositionWindowMinDistance || prevHitObjectPos.x > 3.5f + meleePositionWindowMaxDistance) leftMeleeOk = false;
+                        if (prevHitObjectPos.x > 7.5f - meleeOptions.positionWindowMinDistance || prevHitObjectPos.x < 7.5f - meleeOptions.positionWindowMaxDistance) rightMeleeOk = false;
+                        if (prevHitObjectPos.x < 3.5f + meleeOptions.positionWindowMinDistance || prevHitObjectPos.x > 3.5f + meleeOptions.positionWindowMaxDistance) leftMeleeOk = false;
                     }
                     
                     //Convert to melee
