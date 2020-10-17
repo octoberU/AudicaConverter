@@ -98,7 +98,7 @@ namespace osutoaudica
     internal class ConfigParameters
     {
         public string customExportDirectory = "";
-        public string processingMode = "manual";
+        public bool autoMode = false;
         public AutoOptions expertAutoOptions = new AutoOptions(true, 6f, 3f);
         public AutoOptions advancedAutoOptions = new AutoOptions(true, 4f, 2f);
         public AutoOptions standardAutoOptions = new AutoOptions(true, 3f, 2f);

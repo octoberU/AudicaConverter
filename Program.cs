@@ -51,12 +51,12 @@ namespace AudicaConverter
                 string oszFileName = oszFileNames[i];
                 string[] pathElements = oszFileName.Split("\\");
                 string oszName = pathElements[pathElements.Length-1];
-                if (Config.parameters.processingMode.ToLower() == "auto")
+                if (Config.parameters.autoMode)
                 {
                     Console.Clear();
                     Console.WriteLine(String.Format("({0}/{1}) Converting {2}...", i+1, oszFileNames.Count, oszName));
                 }
-                ConversionProcess.ConvertToAudica(oszFileName, Config.parameters.processingMode.ToLower());
+                ConversionProcess.ConvertToAudica(oszFileName, Config.parameters.autoMode ? "auto" : "manual");
             }
             //ConversionProcess.ConvertToAudica(@"C:\audica\repos\AudicaConverter\bin\Release\netcoreapp3.1\355322 nekodex - circles!.osz", "manual");
         }
