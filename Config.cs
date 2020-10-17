@@ -146,6 +146,7 @@ namespace osutoaudica
         public bool distributeStacks = true;
         public float stackInclusionRange = 0.333f;
         public float stackItemDistance = 0.333f;
+        public float stackHandSeparation = 0.75f;
         public float stackMaxDistance = 1.5f;
         public float stackResetTime = 960f;
 

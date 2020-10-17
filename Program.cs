@@ -511,7 +511,7 @@ namespace AudicaConverter
                         i++;
                     }
                 }
-                //Add more objects to the group as long as the time difference is less than scaleTimeTHres
+                //Add more objects to the group as long as the time difference is less than scaleTimeThres
                 while (i + 1 < hitObjects.Count && hitObjects[i+1].time - hitObjects[i].time < scaleTimeThres)
                 {
                     syncTranslateHitObjects.Add(hitObjects[i + 1]);
@@ -823,10 +823,30 @@ namespace AudicaConverter
                 stack.stackMovementSpeed = Math.Min(stackItemDistance / (stack.tailCues[0].tick - stack.stackStartCue.tick), stackMaxDistance / (stack.tailCues[stack.tailCues.Count - 1].tick - stack.stackStartCue.tick));
                 OsuUtility.Coordinate2D stackHeadPos = OsuUtility.GetPosFromCue(stack.stackStartCue);
 
-                foreach (Cue cue in stack.tailCues)
+                //Direction to move the right hand for hand separation.
+                float handSepDirectionX = -stack.direction.y;
+                float handSepDirectionY = stack.direction.x;
+                if (stack.direction.y > 0)
                 {
-                    OsuUtility.Coordinate2D newPos = new OsuUtility.Coordinate2D(stackHeadPos.x + stack.direction.x * stack.stackMovementSpeed * (cue.tick - stack.stackStartCue.tick),
-                        stackHeadPos.y + stack.direction.y * stack.stackMovementSpeed * (cue.tick - stack.stackStartCue.tick));
+                    handSepDirectionX = -handSepDirectionX;
+                    handSepDirectionY = -handSepDirectionY;
+                }
+
+                Cue cue = stack.stackStartCue;
+                for (int i = -1; i < stack.tailCues.Count; i++)
+                {
+                    if (i >= 0) cue = stack.tailCues[i];
+                    float distributionX = stack.direction.x * stack.stackMovementSpeed * (cue.tick - stack.stackStartCue.tick);
+                    float distributionY = stack.direction.y * stack.stackMovementSpeed * (cue.tick - stack.stackStartCue.tick);
+                    float handSepX = 0f;
+                    float handSepY = 0f;
+                    if (cue.behavior != Cue.Behavior.ChainStart || cue.behavior != Cue.Behavior.Chain)
+                    {
+                        handSepX = (cue.handType == Cue.HandType.Right ? handSepDirectionX : -handSepDirectionX) * Config.parameters.stackHandSeparation / 2;
+                        handSepY = (cue.handType == Cue.HandType.Right ? handSepDirectionY : -handSepDirectionY) * Config.parameters.stackHandSeparation / 2;
+                    }
+                    OsuUtility.Coordinate2D newPos = new OsuUtility.Coordinate2D(stackHeadPos.x + distributionX + handSepX,
+                        stackHeadPos.y + distributionY + handSepY);
                     OsuUtility.SetCuePos(cue, newPos);
                 }
             }
