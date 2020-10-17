@@ -50,7 +50,7 @@ namespace osutoaudica
         public string customExportDirectory = "";
         public float introPadding = 2000f;
         public bool snapNotes = false;
-        public bool useChainSounds = true;
+        public bool useStandardSounds = true;
 
         public float expertScaleX = 1.2f;
         public float expertScaleY = 1f;
@@ -84,6 +84,14 @@ namespace osutoaudica
         public bool ignoreSustainsForChainConvert = true;
         public int minChainLinks = 2;
         public float minChainSize = 0.6f;
+
+        public bool convertMelees = true;
+        public bool meleeKiaiOnly = true;
+        public float meleeFrequency = 1f;
+        public float meleePreRestTime = 400f;
+        public float meleePostRestTime = 400f;
+        public float meleePositionWindowMinDistance = 0.5f;
+        public float meleePositionWindowMaxDistance = 4f;
 
         public bool distributeStacks = true;
         public float stackInclusionRange = 0.333f;

@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace AudicaConverter
@@ -34,7 +35,7 @@ namespace AudicaConverter
             {
                 if(item.Contains(".osz")) ConversionProcess.ConvertToAudica(item);
             }
-            ConversionProcess.ConvertToAudica(@"C:\audica\repos\AudicaConverter\bin\Release\netcoreapp3.1\532522 SakiZ - osu!memories.osz");
+            //ConversionProcess.ConvertToAudica(@"C:\audica\repos\AudicaConverter\bin\Release\netcoreapp3.1\355322 nekodex - circles!.osz");
         }
     }
 
@@ -171,12 +172,16 @@ namespace AudicaConverter
                     break;
             }
 
-            List<Difficulty> scaledDifficulties = new List<Difficulty>();
             Console.WriteLine($"\n\nSelect {difficultyName} difficulty[Leave empty for none]:");
             Console.ForegroundColor = ConsoleColor.Yellow;
+
+            //Conversion steps (Scaling and melee pass) here is not very clean and should probably be refactored in the future
+            List<Difficulty> scaledDifficulties = new List<Difficulty>();
             for (int i = 0; i < osz.osufiles.Count; i++)
             {
                 Difficulty scaledDifficulty = ScaleDifficulty(osz.osufiles[i].audicaDifficulty, scaleX, scaleY);
+                if (Config.parameters.convertMelees) RunMeleePass(scaledDifficulty.cues, osz.osufiles[i].timingPoints, osz.osufiles[i].mergedTimingPoints);
+                if (Config.parameters.useStandardSounds) RunHitsoundPass(scaledDifficulty.cues);
                 scaledDifficulties.Add(scaledDifficulty);
                 float difficultyRating = audica.GetRatingForDifficulty(scaledDifficulty);
                 Console.WriteLine($"\n[{i+1}]{osz.osufiles[i].metadata.version} [{difficultyRating.ToString("n2")} Audica difficulty]");
@@ -238,17 +243,11 @@ namespace AudicaConverter
             {
                 foreach (var osuDifficulty in osz.osufiles)
                 {
-                    foreach (var timingPoint in osuDifficulty.timingPoints)
+                    foreach (var timingPoint in osuDifficulty.mergedTimingPoints)
                     {
                         if (timingPoint.ms > 0f)
                         {
                             timingPoint.ms += paddingTime;
-                        }
-                    }
-                    foreach (var timingPoint in osuDifficulty.timingPoints)
-                    {
-                        if (timingPoint.ms > 0f)
-                        {
                             timingPoint.audicaTick += OsuUtility.MsToTick(paddingTime, osuDifficulty.timingPoints);
                         }
                     }
@@ -310,13 +309,13 @@ namespace AudicaConverter
             var handColorHandler = new HandColorHandler();
 
 
-            if (Config.parameters.convertSliderEnds) RunSliderSplitPass(ref osufile.hitObjects, osufile.timingPoints);
-            if (Config.parameters.streamMinAverageDistance > 0f) RunStreamScalePass(ref osufile.noteStreams);
-            if (Config.parameters.adaptiveScaling) RunFovScalePass(ref osufile.hitObjects);
-            if (Config.parameters.convertSustains) RunSustainPass(ref osufile.hitObjects, osufile.timingPoints);
-            if (Config.parameters.convertChains) RunChainPass(ref osufile.hitObjects, osufile.timingPoints);
-            ResetEndTimesAndPos(ref osufile.hitObjects);
-            RemoveUnusedHitObjects(ref osufile.hitObjects);
+            if (Config.parameters.convertSliderEnds) RunSliderSplitPass(osufile.hitObjects, osufile.timingPoints);
+            if (Config.parameters.streamMinAverageDistance > 0f) RunStreamScalePass(osufile.noteStreams);
+            if (Config.parameters.adaptiveScaling) RunFovScalePass(osufile.hitObjects);
+            if (Config.parameters.convertSustains) RunSustainPass(osufile.hitObjects, osufile.timingPoints);
+            if (Config.parameters.convertChains) RunChainPass(osufile.hitObjects, osufile.timingPoints);
+            ResetEndTimesAndPos(osufile.hitObjects);
+            RemoveUnusedHitObjects(osufile.hitObjects);
 
             handColorHandler.AssignHandTypes(osufile.hitObjects);
 
@@ -349,16 +348,14 @@ namespace AudicaConverter
             }
 
 
-            if (Config.parameters.snapNotes) SnapNormalTargets(ref diff.cues);
-            if (Config.parameters.distributeStacks) RunStackDistributionPass(ref osufile.hitObjects);
-            if (Config.parameters.minChainSize > 0f) RunChainResizePass(ref diff.cues);
-            
-            if(Config.parameters.useChainSounds) RunHitsoundPass(ref diff.cues);
+            if (Config.parameters.snapNotes) SnapNormalTargets(diff.cues);
+            if (Config.parameters.distributeStacks) RunStackDistributionPass(osufile.hitObjects);
+            if (Config.parameters.minChainSize > 0f) RunChainResizePass(diff.cues);
 
             return diff;
         }
 
-        private static void RunSliderSplitPass(ref List<HitObject> hitObjects, List<TimingPoint> timingPoints)
+        private static void RunSliderSplitPass(List<HitObject> hitObjects, List<TimingPoint> timingPoints)
         {
             int hitObjectsOrgCount = hitObjects.Count;
             for (int i = 0; i < hitObjectsOrgCount - 1; i++)
@@ -367,7 +364,7 @@ namespace AudicaConverter
                 HitObject nextHitObject = hitObjects[i + 1];
 
                 //Add a hitObject for sliders if the end is on beat and the next target is within 1/12th of the slider end.
-                if ((hitObject.type == 2 || hitObject.type == 6) && OsuUtility.ticksSinceLastTimingPoint(hitObject.audicaEndTick, timingPoints) % 240f == 0f &&
+                if ((hitObject.type == 2 || hitObject.type == 6) && OsuUtility.ticksSincePrevTimingPoint(hitObject.audicaEndTick, timingPoints) % 240f == 0f &&
                     nextHitObject.audicaTick - hitObject.audicaEndTick <= 160f)
                 {
                     HitObject newHitObject = new HitObject
@@ -391,7 +388,7 @@ namespace AudicaConverter
             hitObjects.Sort((ho1, ho2) => ho1.time.CompareTo(ho2.time));
         }
 
-        private static void RunStreamScalePass(ref List<HitObjectGroup> noteStreams)
+        private static void RunStreamScalePass(List<HitObjectGroup> noteStreams)
         {
             foreach (HitObjectGroup noteStream in noteStreams)
             {
@@ -403,7 +400,7 @@ namespace AudicaConverter
             }
         }
 
-        private static void RunFovScalePass(ref List<HitObject> hitObjects)
+        private static void RunFovScalePass(List<HitObject> hitObjects)
         {
             float fovRecenterTime = Config.parameters.fovRecenterTime;
             float scaleDistanceStartThres = Config.parameters.scaleDistanceStartThres;
@@ -472,7 +469,7 @@ namespace AudicaConverter
             }
         }
 
-        private static void RunHitsoundPass(ref List<Cue> cues)
+        private static void RunHitsoundPass(List<Cue> cues)
         {
             foreach (var cue in cues)
             {
@@ -494,7 +491,7 @@ namespace AudicaConverter
             }
         }
 
-        private static void SnapNormalTargets(ref List<Cue> cues)
+        private static void SnapNormalTargets(List<Cue> cues)
         {
             foreach (Cue cue in cues)
             {
@@ -505,7 +502,7 @@ namespace AudicaConverter
             }
         }
 
-        private static void RunChainPass(ref List<HitObject> hitObjects, List<TimingPoint> timingPoints)
+        private static void RunChainPass(List<HitObject> hitObjects, List<TimingPoint> timingPoints)
         {
 
             HitObject prevChainHeadHitObject = null;
@@ -534,7 +531,7 @@ namespace AudicaConverter
                 else if (prevHitObject != null && currentHitObject.time - prevHitObject.time <= Config.parameters.chainTimeThres)
                 {   
                     if (currentHitObject.time - prevChainHeadHitObject.time > Config.parameters.chainTimeThres && currentHitObject.audicaTick - prevChainHeadHitObject.audicaTick >= Config.parameters.chainSwitchFrequency && nextHitObject != null &&
-                        nextHitObject.time - currentHitObject.time <= Config.parameters.chainTimeThres && OsuUtility.ticksSinceLastTimingPoint(currentHitObject.audicaTick, timingPoints) % Config.parameters.chainSwitchFrequency == 0 && !nextIsIgnoredChainEnd)
+                        nextHitObject.time - currentHitObject.time <= Config.parameters.chainTimeThres && OsuUtility.ticksSincePrevTimingPoint(currentHitObject.audicaTick, timingPoints) % Config.parameters.chainSwitchFrequency == 0 && !nextIsIgnoredChainEnd)
                     {
                         currentHitObject.audicaBehavior = 4;
                         prevChainHeadHitObject = currentHitObject;
@@ -578,7 +575,7 @@ namespace AudicaConverter
                 foreach (HitObject chainHitObject in chainHitObjects)
                 {
                     chainHitObject.audicaBehavior = -1;
-                    int gcd = OsuUtility.GCD((int)OsuUtility.ticksSinceLastTimingPoint(chainHitObject.audicaTick, timingPoints), 1920);
+                    int gcd = OsuUtility.GCD((int)OsuUtility.ticksSincePrevTimingPoint(chainHitObject.audicaTick, timingPoints), 1920);
                     if (gcd > bestGcd)
                     {
                         bestGcd = gcd;
@@ -589,7 +586,7 @@ namespace AudicaConverter
             }
         }
 
-        private static void RunSustainPass(ref List<HitObject> hitObjects, List<TimingPoint> timingPoints)
+        private static void RunSustainPass(List<HitObject> hitObjects, List<TimingPoint> timingPoints)
         {
             for (int i = 0; i < hitObjects.Count; i++)
             {
@@ -602,7 +599,7 @@ namespace AudicaConverter
                 //Extend duration to next target if next target is on beat and within extension time
                 if (nextHitObject != null && nextHitObject.audicaTick - currentHitObject.audicaEndTick <= Config.parameters.sustainExtension)
                 {
-                    if (OsuUtility.ticksSinceLastTimingPoint(nextHitObject.audicaTick, timingPoints) % 480f == 0f)
+                    if (OsuUtility.ticksSincePrevTimingPoint(nextHitObject.audicaTick, timingPoints) % 480f == 0f)
                     {
                         currentHitObject.endTime = nextHitObject.time;
                         currentHitObject.audicaEndTick = nextHitObject.audicaTick;
@@ -623,7 +620,7 @@ namespace AudicaConverter
             }
         }
 
-        private static void ResetEndTimesAndPos(ref List<HitObject> hitObjects)
+        private static void ResetEndTimesAndPos(List<HitObject> hitObjects)
         {
             foreach (HitObject hitObject in hitObjects)
             {
@@ -641,7 +638,7 @@ namespace AudicaConverter
             }
         }
 
-        private static void RemoveUnusedHitObjects(ref List<HitObject> hitObjects)
+        private static void RemoveUnusedHitObjects(List<HitObject> hitObjects)
         {
             for (int i = hitObjects.Count-1; i >= 0; i--)
             {
@@ -664,7 +661,7 @@ namespace AudicaConverter
             }
         }
 
-        private static void RunStackDistributionPass(ref List<HitObject> hitObjects)
+        private static void RunStackDistributionPass(List<HitObject> hitObjects)
         {
             float stackInclusionRange = Config.parameters.stackInclusionRange;
             float stackItemDistance = Config.parameters.stackItemDistance; //Offset for stack items. Time proportionate distancing is used through the stack based on getting this distance between first and second item in stack
@@ -778,7 +775,7 @@ namespace AudicaConverter
             }
         }
 
-        private static void RunChainResizePass(ref List<Cue> cues)
+        private static void RunChainResizePass(List<Cue> cues)
         {
             Cue chainHead = null;
             List<Cue> chainLinks = new List<Cue>();
@@ -820,6 +817,84 @@ namespace AudicaConverter
             }
         }
 
+        private static void RunMeleePass(List<Cue> cues, List<TimingPoint> timingPoints, List<TimingPoint> mergedTimingPoints)
+        {
+            bool meleeKiaiOnly = Config.parameters.meleeKiaiOnly;
+            float meleeFrequency = Config.parameters.meleeFrequency;
+            float meleePreRestTime = Config.parameters.meleePreRestTime;
+            float meleePostRestTime = Config.parameters.meleePostRestTime;
+            float meleePositionWindowMinDistance = Config.parameters.meleePositionWindowMinDistance;
+            float meleePositionWindowMaxDistance = Config.parameters.meleePositionWindowMaxDistance;
+            float fovRecenterTime = Config.parameters.fovRecenterTime;
+
+            bool prevMeleeRight = false;
+            for (int i = 0; i < cues.Count; i++)
+            {
+                Cue currentCue = cues[i];
+                Cue prevCue = i > 0 ? cues[i - 1] : null;
+                float currentCueMsTime = OsuUtility.TickToMs(currentCue.tick, timingPoints);
+                float prevCueMsTime = prevCue != null ? OsuUtility.TickToMs(prevCue.tick, timingPoints) : 0f;
+                TimingPoint prevNormalTimingPoint = OsuUtility.getPrevTimingPoint(currentCue.tick, timingPoints);
+                TimingPoint prevEitherTimingPoints = OsuUtility.getPrevTimingPoint(currentCue.tick, mergedTimingPoints);
+
+                float timeSinceTimingPoint = currentCue.tick - prevNormalTimingPoint.audicaTick;
+                bool onMeleeConvertTime = timeSinceTimingPoint > 0 && timeSinceTimingPoint % (480f * prevNormalTimingPoint.meter / Config.parameters.meleeFrequency) == 0;
+                if ((!meleeKiaiOnly || prevEitherTimingPoints.kiai) && onMeleeConvertTime && currentCue.behavior != Cue.Behavior.Hold && currentCue.behavior != Cue.Behavior.ChainStart && currentCue.behavior != Cue.Behavior.Chain)
+                {
+                    //Check melee conversion conditions for each target
+                    bool rightMeleeOk = true;
+                    bool leftMeleeOk = true;
+
+                    foreach (Cue otherCue in cues.Where(
+                        otherCue =>
+                        {
+                            float otherCueMsTime = OsuUtility.TickToMs(otherCue.tick, timingPoints);
+                            return otherCue.behavior != Cue.Behavior.Melee && otherCueMsTime >= currentCueMsTime - meleePreRestTime && otherCueMsTime <= currentCueMsTime + meleePostRestTime;
+                        }
+                    ))
+                    {
+                        if (otherCue == currentCue) continue;
+
+
+                        //Don't convert to melee if other targets for the same hand are within rest window
+                        if (otherCue.handType == Cue.HandType.Right) rightMeleeOk = false;
+                        if (otherCue.handType == Cue.HandType.Left) leftMeleeOk = false;
+
+                        //Don't convert to melee if any targets within the rest window are outside the corresponding melee target position window
+                        OsuUtility.Coordinate2D otherCuePos = OsuUtility.GetPosFromCue(otherCue);
+                        if (otherCuePos.x > 7.5f - meleePositionWindowMinDistance || otherCuePos.x < 7.5f - meleePositionWindowMaxDistance) rightMeleeOk = false;
+                        if (otherCuePos.x < 3.5f + meleePositionWindowMinDistance || otherCuePos.x > 3.5f + meleePositionWindowMaxDistance) leftMeleeOk = false;
+
+                    }
+
+                    //Require previous target to either be within the melee target position window or sufficiently long ago that fov has recentered
+                    if (prevCue!= null && prevCue.behavior != Cue.Behavior.Melee && currentCueMsTime - prevCueMsTime < fovRecenterTime)
+                    {
+                        OsuUtility.Coordinate2D prevHitObjectPos = OsuUtility.GetPosFromCue(prevCue);
+                        if (prevHitObjectPos.x > 7.5f - meleePositionWindowMinDistance || prevHitObjectPos.x < 7.5f - meleePositionWindowMaxDistance) rightMeleeOk = false;
+                        if (prevHitObjectPos.x < 3.5f + meleePositionWindowMinDistance || prevHitObjectPos.x > 3.5f + meleePositionWindowMaxDistance) leftMeleeOk = false;
+                    }
+                    
+                    //Convert to melee
+                    if (rightMeleeOk || leftMeleeOk)
+                    {
+                        //Prioritize opposite hand of previous melee if both are ok
+                        if (rightMeleeOk && leftMeleeOk)
+                        {
+                            rightMeleeOk = !prevMeleeRight;
+                        }
+
+                        currentCue.handType = Cue.HandType.Either;
+                        currentCue.behavior = Cue.Behavior.Melee;
+                        currentCue.pitch = rightMeleeOk ? 101 : 100;
+                        currentCue.gridOffset = new Cue.GridOffset();
+
+                        prevMeleeRight = !rightMeleeOk;
+                    }
+                }
+            }
+        }
+
         public static string RemoveSpecialCharacters(string str)
         {
             StringBuilder sb = new StringBuilder();
@@ -842,6 +917,7 @@ namespace AudicaConverter
             Difficulty scaledDifficulty = OsuUtility.DeepClone(unscaledDifficulty);
             foreach (Cue cue in scaledDifficulty.cues)
             {
+                if (cue.behavior == Cue.Behavior.Melee) continue;
                 OsuUtility.Coordinate2D cuePos = OsuUtility.GetPosFromCue(cue);
                 cuePos.x = (cuePos.x - 5.5f) * scaleX + 5.5f;
                 cuePos.y = (cuePos.y - 3f) * scaleY + 3f;

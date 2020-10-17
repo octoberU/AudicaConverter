@@ -40,11 +40,16 @@ namespace OsuTypes
             return ms;
         }
 
-        public static float ticksSinceLastTimingPoint(float tick, List<TimingPoint> timingPoints)
+        public static float ticksSincePrevTimingPoint(float tick, List<TimingPoint> timingPoints)
+        {
+            return tick - getPrevTimingPoint(tick, timingPoints).audicaTick;
+        }
+
+        public static TimingPoint getPrevTimingPoint(float tick, List<TimingPoint> timingPoints)
         {
             int timingPointIndex = timingPoints.FindIndex(tp => tp.audicaTick > tick) - 1;
             if (timingPointIndex == -2) timingPointIndex = timingPoints.Count - 1;
-            return tick - timingPoints[timingPointIndex].audicaTick;
+            return timingPoints[timingPointIndex];
         }
 
         public static float CalculateSliderDuration(HitObject hitObject, float globalSliderVelocity, List<TimingPoint> mergedTimingPoints)

@@ -68,6 +68,10 @@ namespace OsuTypes
                 else if (line.Length < 0) mode = ParseMode.None;
             }
 
+            TimingPoint initialTimingPoint = new TimingPoint(0f, timingPoints[0].beatTime, false, false);
+            initialTimingPoint.meter = timingPoints[0].meter;
+            timingPoints.Insert(0, initialTimingPoint);
+
             FixFirstTimingPoint(timingPoints);
             MergeTimingPoints();
             CalculateSliderEndTimes();
@@ -90,6 +94,7 @@ namespace OsuTypes
                 else if (timingPoint.ms == prevUninheritedTimingPoint.ms)
                 {
                     prevUninheritedTimingPoint.sliderVelocity = timingPoint.sliderVelocity;
+                    prevUninheritedTimingPoint.kiai = prevUninheritedTimingPoint.kiai || timingPoint.kiai; //No clue if this is necessary...
                     mergedTimingPoints.RemoveAt(i--);
                 }
                 else
@@ -112,7 +117,7 @@ namespace OsuTypes
 
         private void CalculateAudicaTicks()
         {
-            foreach (TimingPoint timingPoint in timingPoints)
+            foreach (TimingPoint timingPoint in mergedTimingPoints)
             {
                 timingPoint.audicaTick = OsuUtility.MsToTick(timingPoint.ms, timingPoints, roundingPrecision: 1);
             }
@@ -174,7 +179,7 @@ namespace OsuTypes
 
         private void FixFirstTimingPoint(List<TimingPoint> timingPoints)
         {
-            while (timingPoints[1].ms < 0) timingPoints[1].ms += (float)timingPoints[1].beatTime;
+            while (timingPoints[1].ms < 0) timingPoints[1].ms += (float)timingPoints[1].beatTime * 4;
             
             timingPoints[1].ms = timingPoints[1].ms % (float)(timingPoints[1].beatTime * 4);
             
@@ -229,10 +234,12 @@ namespace OsuTypes
             var split = line.Split(",");
             if (split.Length > 2)
             {
-                var timingPoint = new TimingPoint((int)float.Parse(split[0]), float.Parse(split[1]), !Convert.ToBoolean(int.Parse(split[6])));
+                int effects = int.Parse(split[7]);
+                bool kiai = effects == 1 || effects == 5;
+                var timingPoint = new TimingPoint((int)float.Parse(split[0]), float.Parse(split[1]), kiai, !Convert.ToBoolean(int.Parse(split[6])));
                 if (!timingPoint.inherited)
                 {
-                    if (timingPoints.Count == 0) timingPoints.Add(new TimingPoint(0f, timingPoint.beatTime, false));
+                    timingPoint.meter = int.Parse(split[2]);
                     timingPoints.Add(timingPoint);
                 }
                 else inheritedTimingPoints.Add(timingPoint);
