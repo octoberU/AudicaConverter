@@ -48,13 +48,13 @@ namespace osutoaudica
     {
         public bool useDifficultySlot;
         public float targetDifficultyRating;
-        public float acceptedDifficultyRatingRange;
+        public float acceptedDifficultyRatingDifference;
 
-        public AutoOptions(bool useDifficultySlot, float targetDifficultyRating, float acceptedDifficultyRatingRange)
+        public AutoOptions(bool useDifficultySlot, float targetDifficultyRating, float acceptedDifficultyRatingDifference)
         {
             this.useDifficultySlot = useDifficultySlot;
             this.targetDifficultyRating = targetDifficultyRating;
-            this.acceptedDifficultyRatingRange = acceptedDifficultyRatingRange;
+            this.acceptedDifficultyRatingDifference = acceptedDifficultyRatingDifference;
         }
     }
 

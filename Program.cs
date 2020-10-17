@@ -249,7 +249,7 @@ namespace AudicaConverter
                     }
                 }
 
-                if (bestDifficultyRatingDeviation > autoOptions.acceptedDifficultyRatingRange) return null; //No difficulty meets difficulty range requirement
+                if (bestDifficultyRatingDeviation > autoOptions.acceptedDifficultyRatingDifference) return null; //No difficulty meets difficulty range requirement
             }
                 
             if (Config.parameters.customMapperName == "")
