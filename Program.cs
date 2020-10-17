@@ -427,7 +427,7 @@ namespace AudicaConverter
                 foreach (HitObject hitObject in osuDifficulty.hitObjects)
                 {
                     hitObject.audicaTick = OsuUtility.MsToTick(hitObject.time, osuDifficulty.timingPoints, roundingPrecision: 10);
-                    hitObject.audicaEndTick = OsuUtility.MsToTick(hitObject.time, osuDifficulty.timingPoints, roundingPrecision: 10);
+                    hitObject.audicaEndTick = OsuUtility.MsToTick(hitObject.endTime, osuDifficulty.timingPoints, roundingPrecision: 10);
                 }
             }
         }
