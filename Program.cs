@@ -903,7 +903,7 @@ namespace AudicaConverter
                         currentCue.pitch = rightMeleeOk ? 101 : 100;
                         currentCue.gridOffset = new Cue.GridOffset();
 
-                        prevMeleeRight = !rightMeleeOk;
+                        prevMeleeRight = rightMeleeOk;
                     }
                 }
             }
