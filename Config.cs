@@ -146,10 +146,10 @@ namespace osutoaudica
         public int minChainLinks = 2;
         public float minChainSize = 0.6f;
 
-        public MeleeOptions expertMeleeOptions = new MeleeOptions(true, 1f, 2f, 400f, 400f, 0.5f, 4f);
-        public MeleeOptions advancedMeleeOptions = new MeleeOptions(true, 0.5f, 1f, 500f, 500f, 0.5f, 4f);
-        public MeleeOptions standardMeleeOptions = new MeleeOptions(true, 0.25f, 1f, 600f, 600f, 1f, 3.5f);
-        public MeleeOptions beginnerMeleeOptions = new MeleeOptions(false, 0f, 0.5f, 800f, 800f, 1f, 3f);
+        public MeleeOptions expertMeleeOptions = new MeleeOptions(true, 0.5f, 1f, 400f, 400f, 0.5f, 3.5f);
+        public MeleeOptions advancedMeleeOptions = new MeleeOptions(true, 0.5f, 1f, 600f, 600f, 0.5f, 3.5f);
+        public MeleeOptions standardMeleeOptions = new MeleeOptions(true, 0.25f, 0.5f, 800f, 800f, 1f, 3f);
+        public MeleeOptions beginnerMeleeOptions = new MeleeOptions(false, 0f, 0.5f, 1000f, 1000f, 1f, 2.5f);
 
         public bool distributeStacks = true;
         public float stackInclusionRange = 0.333f;
