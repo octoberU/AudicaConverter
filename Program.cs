@@ -11,6 +11,7 @@ using System.IO.Compression;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Threading;
 
 namespace AudicaConverter
 {
@@ -23,6 +24,7 @@ namespace AudicaConverter
 
         static void Main(string[] args)
         {
+            Thread.CurrentThread.CurrentCulture = System.Globalization.CultureInfo.InvariantCulture; //Ensures locale independent parsing.
             Config.Init();
             try
             {
