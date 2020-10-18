@@ -992,14 +992,21 @@ namespace AudicaConverter
             if (!meleeOptions.convertMelees) return;
 
             bool prevMeleeRight = false;
+
+            var cueTimes = new List<(Cue cue, float time)>();
+            foreach (Cue cue in cues)
+            {
+                cueTimes.Add((cue, OsuUtility.TickToMs(cue.tick, timingPoints)));
+            }
+
             for (int i = 0; i < cues.Count; i++)
             {
                 Cue currentCue = cues[i];
                 Cue prevCue = i > 0 ? cues[i - 1] : null;
                 Cue nextCue = i + 1 < cues.Count ? cues[i + 1] : null;
-                float currentCueMsTime = OsuUtility.TickToMs(currentCue.tick, timingPoints);
-                float prevCueMsTime = prevCue != null ? OsuUtility.TickToMs(prevCue.tick, timingPoints) : 0f;
-                float nextCueMsTime = nextCue != null ? OsuUtility.TickToMs(nextCue.tick, timingPoints) : 0f;
+                float currentCueMsTime = cueTimes[i].time;
+                float prevCueMsTime = prevCue != null ? cueTimes[i-1].time : 0f;
+                float nextCueMsTime = nextCue != null ? cueTimes[i+1].time : 0f;
                 TimingPoint prevNormalTimingPoint = OsuUtility.getPrevTimingPoint(currentCue.tick, timingPoints);
                 TimingPoint prevEitherTimingPoints = OsuUtility.getPrevTimingPoint(currentCue.tick, mergedTimingPoints);
 
@@ -1013,14 +1020,9 @@ namespace AudicaConverter
                     bool rightMeleeOk = true;
                     bool leftMeleeOk = true;
 
-                    foreach (Cue otherCue in cues.Where(
-                        otherCue =>
-                        {
-                            float otherCueMsTime = OsuUtility.TickToMs(otherCue.tick, timingPoints);
-                            return otherCue.behavior != Cue.Behavior.Melee && otherCueMsTime >= currentCueMsTime - meleeOptions.preRestTime && otherCueMsTime <= currentCueMsTime + meleeOptions.postRestTime;
-                        }
-                    ))
+                    foreach (var otherCueTime in cueTimes.Where(oct => oct.cue.behavior != Cue.Behavior.Melee && oct.time >= currentCueMsTime - meleeOptions.preRestTime && oct.time <= currentCueMsTime + meleeOptions.postRestTime))
                     {
+                        Cue otherCue = otherCueTime.cue;
                         if (otherCue == currentCue) continue;
 
 
@@ -1032,7 +1034,22 @@ namespace AudicaConverter
                         OsuUtility.Coordinate2D otherCuePos = OsuUtility.GetPosFromCue(otherCue);
                         if (otherCuePos.x > 7.5f - meleeOptions.positionWindowMinDistance || otherCuePos.x < 7.5f - meleeOptions.positionWindowMaxDistance) rightMeleeOk = false;
                         if (otherCuePos.x < 3.5f + meleeOptions.positionWindowMinDistance || otherCuePos.x > 3.5f + meleeOptions.positionWindowMaxDistance) leftMeleeOk = false;
+                    }
 
+                    foreach (var otherCueTime in cueTimes.Where(oct => oct.cue.behavior != Cue.Behavior.Melee && oct.time >= currentCueMsTime - meleeOptions.prePositionTime && oct.time <= currentCueMsTime))
+                    {
+                        if (otherCueTime.cue == currentCue) continue;
+                        //Require all targets between the position time window start and melee to be on the inside of the edge of the position window opposite of the melee.
+                        OsuUtility.Coordinate2D otherCuePos = OsuUtility.GetPosFromCue(otherCueTime.cue);
+                        if (otherCuePos.x < 7.5f - meleeOptions.positionWindowMaxDistance) rightMeleeOk = false;
+                        if (otherCuePos.x > 3.5f + meleeOptions.positionWindowMaxDistance) leftMeleeOk = false;
+
+                        //Don't allow targets for the melee hand within the prePositionTime window to be on the same height and same half of the playfield as the melee. Prevents some occlusion and hand collisions
+                        if (otherCuePos.y > 3 && otherCuePos.y < 5)
+                        {
+                            if (otherCueTime.cue.handType == Cue.HandType.Right && otherCuePos.x > 5.5f) rightMeleeOk = false;
+                            else if (otherCueTime.cue.handType == Cue.HandType.Left && otherCuePos.x < 5.5f) leftMeleeOk = false;
+                        }
                     }
 
                     //Require previous target to either be within the melee target position window or sufficiently long ago that fov has recentered
