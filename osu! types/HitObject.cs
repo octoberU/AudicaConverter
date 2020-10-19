@@ -17,6 +17,7 @@ namespace OsuTypes
         public float endY;
         public int endHitsound;
         public HitObjectGroup noteStream;
+        public HitObjectGroup chain;
 
         public float audicaTick;
         public float audicaEndTick;

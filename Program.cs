@@ -62,7 +62,7 @@ namespace AudicaConverter
                 }
                 ConversionProcess.ConvertToAudica(oszFileName, Config.parameters.autoMode ? "auto" : "manual");
             }
-            //ConversionProcess.ConvertToAudica(@"C:\Users\adamk\source\repos\AudicaConverter\1173192 Ricky Montgomery - This December (3).osz", "manual");
+            //ConversionProcess.ConvertToAudica(@"C:\audica\Repos\AudicaConverter\bin\Release\netcoreapp3.1\853565 Camellia feat. Yukacco - Be Wild.osz", "manual");
         }
     }
 
@@ -481,7 +481,7 @@ namespace AudicaConverter
 
 
             if (Config.parameters.snapNotes) SnapNormalTargets(diff.cues);
-            if (Config.parameters.distributeStacks) RunStackDistributionPass(osufile.hitObjects);
+            if (Config.parameters.distributeStacks) RunStackDistributionPass(osufile.hitObjects, diff.cues);
             if (Config.parameters.minChainSize > 0f) RunChainResizePass(diff.cues);
 
             return diff;
@@ -636,7 +636,6 @@ namespace AudicaConverter
 
         private static void RunChainPass(List<HitObject> hitObjects, List<TimingPoint> timingPoints)
         {
-
             HitObject prevChainHeadHitObject = null;
 
             for (int i = 0; i < hitObjects.Count; i++)
@@ -695,6 +694,25 @@ namespace AudicaConverter
                 }
             }
             if (chainHitObjects.Count != 0) CheckAndPruneChain(chainHitObjects, timingPoints);
+
+            if (Config.parameters.reformSharpChains)
+            {
+                chainHitObjects = new List<HitObject>();
+                foreach (HitObject hitObject in hitObjects)
+                {
+                    if (hitObject.audicaBehavior == 4)
+                    {
+                        if (chainHitObjects.Count != 0) CheckAndReformSharpChain(chainHitObjects);
+                        chainHitObjects = new List<HitObject>();
+                        chainHitObjects.Add(hitObject);
+                    }
+                    else if (hitObject.audicaBehavior == 5)
+                    {
+                        chainHitObjects.Add(hitObject);
+                    }
+                }
+                if (chainHitObjects.Count != 0) CheckAndReformSharpChain(chainHitObjects);
+            }
         }
 
         private static void CheckAndPruneChain(List<HitObject> chainHitObjects, List<TimingPoint> timingPoints)
@@ -715,6 +733,54 @@ namespace AudicaConverter
                     }
                 }
                 bestGcdHitObject.audicaBehavior = 0;
+            }
+        }
+
+        private static void CheckAndReformSharpChain(List<HitObject> chainHitObjects)
+        {
+            foreach (HitObject ho in chainHitObjects) Console.WriteLine(ho.audicaBehavior);
+
+            bool isSharp = false;
+            for (int i = 1; i < chainHitObjects.Count - 1; i++)
+            {
+                HitObject currentHitObject = chainHitObjects[i];
+                HitObject prevHitObject = chainHitObjects[i - 1];
+                HitObject nextHitObject = chainHitObjects[i + 1];
+
+                float inVecX = currentHitObject.x - prevHitObject.x;
+                float inVecY = currentHitObject.y - prevHitObject.y;
+                float outVecX = nextHitObject.x - currentHitObject.x;
+                float outVecY = nextHitObject.y - currentHitObject.y;
+
+                //Calculate angle from dot product
+                float angle = (float)Math.Acos((inVecX * outVecX + inVecY * outVecY) / (Math.Sqrt(inVecX * inVecX + inVecY * inVecY) * Math.Sqrt(outVecX * outVecX + outVecY * outVecY)));
+                angle *= 180f / (float)Math.PI;
+
+                if (angle > Config.parameters.sharpChainAngle)
+                {
+                    isSharp = true;
+                    break;
+                }
+            }
+
+            if (!isSharp) return;
+
+            //Reform the chain as a time proportionally spaced chain from first to last link.
+
+            HitObject chainHead = chainHitObjects[0];
+            HitObject lastLink = chainHitObjects[chainHitObjects.Count - 1];
+
+            float posDiffX = lastLink.x - chainHead.x;
+            float posDiffY = lastLink.y - chainHead.y;
+            float timeDiff = lastLink.time - chainHead.time;
+
+            for (int i = 1; i < chainHitObjects.Count - 1; i++)
+            {
+                HitObject chainLink = chainHitObjects[i];
+
+                float chainTimeProgress = (chainLink.time - chainHead.time) / timeDiff;
+                chainLink.x = chainHead.x + posDiffX * chainTimeProgress;
+                chainLink.y = chainHead.y + posDiffY * chainTimeProgress;
             }
         }
 
@@ -793,7 +859,7 @@ namespace AudicaConverter
             }
         }
 
-        private static void RunStackDistributionPass(List<HitObject> hitObjects)
+        private static void RunStackDistributionPass(List<HitObject> hitObjects, List<Cue> cues)
         {
             float stackInclusionRange = Config.parameters.stackInclusionRange;
             float stackItemDistance = Config.parameters.stackItemDistance; //Offset for stack items. Time proportionate distancing is used through the stack based on getting this distance between first and second item in stack
@@ -822,8 +888,8 @@ namespace AudicaConverter
                 bool nextPosDifferent = nextHitObject == null || nextHitObject.x != currentHitObject.x || nextHitObject.y != currentHitObject.y;
 
 
-                //Ignore moving targets in streams other than stream head and tail
-                if (isInStream && !isStreamStart && !isStreamEnd && prevPosDifferent && nextPosDifferent ) continue;
+                //Ignore moving targets in chains and in streams other than stream head and tail
+                if ((currentHitObject.audicaBehavior == 5 || isInStream && !isStreamStart && !isStreamEnd) && prevPosDifferent && nextPosDifferent) continue;
 
                 //Remove unactive stacks
                 for (int j = activeStacks.Count - 1; j >= 0; j--)
@@ -915,14 +981,33 @@ namespace AudicaConverter
                     float distributionY = stack.direction.y * stack.stackMovementSpeed * (cue.tick - stack.stackStartCue.tick);
                     float handSepX = 0f;
                     float handSepY = 0f;
-                    if (cue.behavior != Cue.Behavior.ChainStart || cue.behavior != Cue.Behavior.Chain)
+                    if (cue.behavior != Cue.Behavior.ChainStart && cue.behavior != Cue.Behavior.Chain)
                     {
                         handSepX = (cue.handType == Cue.HandType.Right ? handSepDirectionX : -handSepDirectionX) * Config.parameters.stackHandSeparation / 2;
                         handSepY = (cue.handType == Cue.HandType.Right ? handSepDirectionY : -handSepDirectionY) * Config.parameters.stackHandSeparation / 2;
                     }
+
                     OsuUtility.Coordinate2D newPos = new OsuUtility.Coordinate2D(stackHeadPos.x + distributionX + handSepX,
                         stackHeadPos.y + distributionY + handSepY);
                     OsuUtility.SetCuePos(cue, newPos);
+
+                    //If the cue is a chain head, also translate subsequent chain links
+                    if (cue.behavior == Cue.Behavior.ChainStart)
+                    {
+                        int cueIdx = cues.IndexOf(cue);
+                        for (int j = 1; j < cues.Count - cueIdx; j++)
+                        {
+                            Cue otherCue = cues[cueIdx + j];
+                            if (otherCue.handType != cue.handType) continue;
+
+                            if (otherCue.behavior != Cue.Behavior.Chain) break;
+
+                            OsuUtility.Coordinate2D otherCuePos = OsuUtility.GetPosFromCue(otherCue);
+                            OsuUtility.Coordinate2D newOtherCuePos = new OsuUtility.Coordinate2D(otherCuePos.x + distributionX + handSepX,
+                                otherCuePos.y + distributionY + handSepY);
+                            OsuUtility.SetCuePos(otherCue, newOtherCuePos);
+                        }
+                    }
                 }
             }
         }

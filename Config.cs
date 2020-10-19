@@ -147,7 +147,9 @@ namespace osutoaudica
         public bool ignoreSlidersForChainConvert = false;
         public bool ignoreSustainsForChainConvert = true;
         public int minChainLinks = 2;
-        public float minChainSize = 0.6f;
+        public float minChainSize = 1f;
+        public bool reformSharpChains = true;
+        public float sharpChainAngle = 60f;
 
         public MeleeOptions expertMeleeOptions = new MeleeOptions(true, 0.5f, 1f, 400f, 400f, 800f, 0.5f, 3.5f);
         public MeleeOptions advancedMeleeOptions = new MeleeOptions(true, 0.5f, 1f, 600f, 600f, 1000f, 0.5f, 3.5f);
@@ -156,8 +158,8 @@ namespace osutoaudica
 
         public bool distributeStacks = true;
         public float stackInclusionRange = 0.333f;
-        public float stackItemDistance = 0.333f;
         public float stackHandSeparation = 0.75f;
+        public float stackItemDistance = 0.333f;
         public float stackMaxDistance = 1.5f;
         public float stackResetTime = 960f;
 
