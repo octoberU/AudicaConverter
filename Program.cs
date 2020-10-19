@@ -1079,10 +1079,12 @@ namespace AudicaConverter
 
             bool prevMeleeRight = false;
 
-            var cueTimes = new List<(Cue cue, float time)>();
+            var cueTimes = new List<(Cue cue, float time, float endTime)>();
             foreach (Cue cue in cues)
             {
-                cueTimes.Add((cue, OsuUtility.TickToMs(cue.tick, timingPoints)));
+                float time = OsuUtility.TickToMs(cue.tick, timingPoints);
+                float endTime = cue.behavior == Cue.Behavior.Hold ? OsuUtility.TickToMs(cue.tick + cue.tickLength, timingPoints) : time;
+                cueTimes.Add((cue, time, endTime));
             }
 
             for (int i = 0; i < cues.Count; i++)
@@ -1091,8 +1093,9 @@ namespace AudicaConverter
                 Cue prevCue = i > 0 ? cues[i - 1] : null;
                 Cue nextCue = i + 1 < cues.Count ? cues[i + 1] : null;
                 float currentCueMsTime = cueTimes[i].time;
-                float prevCueMsTime = prevCue != null ? cueTimes[i-1].time : 0f;
-                float nextCueMsTime = nextCue != null ? cueTimes[i+1].time : 0f;
+                float prevCueMsTime = prevCue != null ? cueTimes[i - 1].time : 0f;
+                float nextCueMsTime = nextCue != null ? cueTimes[i + 1].time : 0f;
+                float prevCueMsEndTime = prevCue != null ? cueTimes[i - 1].endTime : 0f;
                 TimingPoint prevNormalTimingPoint = OsuUtility.getPrevTimingPoint(currentCue.tick, timingPoints);
                 TimingPoint prevEitherTimingPoints = OsuUtility.getPrevTimingPoint(currentCue.tick, mergedTimingPoints);
 
@@ -1139,15 +1142,15 @@ namespace AudicaConverter
                     }
 
                     //Require previous target to either be within the melee target position window or sufficiently long ago that fov has recentered
-                    if (prevCue!= null && prevCue.behavior != Cue.Behavior.Melee && currentCueMsTime - prevCueMsTime < fovRecenterTime)
+                    if (prevCue!= null && prevCue.behavior != Cue.Behavior.Melee && currentCueMsTime - prevCueMsEndTime < fovRecenterTime)
                     {
                         OsuUtility.Coordinate2D prevHitObjectPos = OsuUtility.GetPosFromCue(prevCue);
                         if (prevHitObjectPos.x > 7.5f - meleeOptions.positionWindowMinDistance || prevHitObjectPos.x < 7.5f - meleeOptions.positionWindowMaxDistance) rightMeleeOk = false;
                         if (prevHitObjectPos.x < 3.5f + meleeOptions.positionWindowMinDistance || prevHitObjectPos.x > 3.5f + meleeOptions.positionWindowMaxDistance) leftMeleeOk = false;
                     }
 
-                    //Require next target to be on the inside of the side of the position window far away from the melee, or be sufficiently long ago that the fov has recentered
-                    if (nextCue != null && currentCueMsTime - nextCueMsTime < fovRecenterTime)
+                    //Require next target to be on the inside of the side of the position window far away from the melee, or be sufficiently long to that the fov will have recentered
+                    if (nextCue != null && nextCueMsTime - currentCueMsTime < fovRecenterTime)
                     {
                         OsuUtility.Coordinate2D nextHitObjectPos = OsuUtility.GetPosFromCue(nextCue);
                         if (nextHitObjectPos.x < 7.5f - meleeOptions.positionWindowMaxDistance) rightMeleeOk = false;
