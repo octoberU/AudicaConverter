@@ -739,8 +739,6 @@ namespace AudicaConverter
 
         private static void CheckAndReformSharpChain(List<HitObject> chainHitObjects)
         {
-            foreach (HitObject ho in chainHitObjects) Console.WriteLine(ho.audicaBehavior);
-
             bool isSharp = false;
             for (int i = 1; i < chainHitObjects.Count - 1; i++)
             {
