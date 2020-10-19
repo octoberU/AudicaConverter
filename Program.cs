@@ -594,7 +594,8 @@ namespace AudicaConverter
                 }
 
                 HitObjectGroup hitObjectGroup = new HitObjectGroup(syncTranslateHitObjects);
-                hitObjectGroup.BoundTranslate(translationX, translationY);
+                hitObjectGroup.Translate(translationX, translationY);
+                hitObjectGroup.BoundScale(1f);
 
                 fovX = hitObjectGroup.endX;
                 fovY = hitObjectGroup.endY;
