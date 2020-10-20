@@ -719,14 +719,14 @@ namespace AudicaConverter
             }
             if (chainHitObjects.Count != 0) CheckAndPruneChain(chainHitObjects, timingPoints);
 
-            if (Config.parameters.reformSharpChains)
+            if (Config.parameters.reformChains)
             {
                 chainHitObjects = new List<HitObject>();
                 foreach (HitObject hitObject in hitObjects)
                 {
                     if (hitObject.audicaBehavior == 4)
                     {
-                        if (chainHitObjects.Count != 0) CheckAndReformSharpChain(chainHitObjects);
+                        if (chainHitObjects.Count != 0) CheckAndReformChain(chainHitObjects);
                         chainHitObjects = new List<HitObject>();
                         chainHitObjects.Add(hitObject);
                     }
@@ -735,7 +735,7 @@ namespace AudicaConverter
                         chainHitObjects.Add(hitObject);
                     }
                 }
-                if (chainHitObjects.Count != 0) CheckAndReformSharpChain(chainHitObjects);
+                if (chainHitObjects.Count != 0) CheckAndReformChain(chainHitObjects);
             }
         }
 
@@ -760,9 +760,11 @@ namespace AudicaConverter
             }
         }
 
-        private static void CheckAndReformSharpChain(List<HitObject> chainHitObjects)
+        private static void CheckAndReformChain(List<HitObject> chainHitObjects)
         {
-            bool isSharp = false;
+            bool reformChain = false;
+
+            //Reform chain if they contain too sharp angles
             for (int i = 1; i < chainHitObjects.Count - 1; i++)
             {
                 HitObject currentHitObject = chainHitObjects[i];
@@ -780,29 +782,47 @@ namespace AudicaConverter
 
                 if (angle > Config.parameters.sharpChainAngle)
                 {
-                    isSharp = true;
+                    reformChain = true;
                     break;
                 }
             }
 
-            if (!isSharp) return;
-
-            //Reform the chain as a time proportionally spaced chain from first to last link.
-
-            HitObject chainHead = chainHitObjects[0];
-            HitObject lastLink = chainHitObjects[chainHitObjects.Count - 1];
-
-            float posDiffX = lastLink.x - chainHead.x;
-            float posDiffY = lastLink.y - chainHead.y;
-            float timeDiff = lastLink.time - chainHead.time;
-
-            for (int i = 1; i < chainHitObjects.Count - 1; i++)
+            //Reform chains if the chain link movement speed vary too much
+            float minSpeed = float.PositiveInfinity;
+            float maxSpeed = 0f;
+            for (int i = 1; i < chainHitObjects.Count; i++)
             {
-                HitObject chainLink = chainHitObjects[i];
+                HitObject currentHitObject = chainHitObjects[i];
+                HitObject prevHitObject = chainHitObjects[i - 1];
+                float speed = OsuUtility.EuclideanDistance(currentHitObject.x, currentHitObject.y, prevHitObject.x, prevHitObject.y) / (currentHitObject.time - prevHitObject.time);
+                minSpeed = Math.Min(minSpeed, speed);
+                maxSpeed = Math.Max(maxSpeed, speed);
+            }
+            if (maxSpeed / minSpeed > Config.parameters.chainMaxSpeedRatio) reformChain = true;
 
-                float chainTimeProgress = (chainLink.time - chainHead.time) / timeDiff;
-                chainLink.x = chainHead.x + posDiffX * chainTimeProgress;
-                chainLink.y = chainHead.y + posDiffY * chainTimeProgress;
+            //Reform chains if the last link is too close to the chain head
+            HitObject chainStart = chainHitObjects[0];
+            HitObject chainEnd = chainHitObjects[chainHitObjects.Count - 1];
+            if (OsuUtility.EuclideanDistance(chainStart.x, chainStart.y, chainEnd.x, chainEnd.y) < Config.parameters.chainEndMinDistanceFromHead) reformChain = true;
+
+            if (reformChain)
+            {
+                //Reform the chain as a time proportionally spaced chain from first to last link.
+                HitObject chainHead = chainHitObjects[0];
+                HitObject lastLink = chainHitObjects[chainHitObjects.Count - 1];
+
+                float posDiffX = lastLink.x - chainHead.x;
+                float posDiffY = lastLink.y - chainHead.y;
+                float timeDiff = lastLink.time - chainHead.time;
+
+                for (int i = 1; i < chainHitObjects.Count - 1; i++)
+                {
+                    HitObject chainLink = chainHitObjects[i];
+
+                    float chainTimeProgress = (chainLink.time - chainHead.time) / timeDiff;
+                    chainLink.x = chainHead.x + posDiffX * chainTimeProgress;
+                    chainLink.y = chainHead.y + posDiffY * chainTimeProgress;
+                }
             }
         }
 
@@ -871,7 +891,7 @@ namespace AudicaConverter
             public Cue stackStartCue;
             public List<Cue> tailCues;
             public float stackMovementSpeed;
-            public float lastStackTick;
+            public float lastStackTime;
             public OsuUtility.Coordinate2D lastPos;
             public OsuUtility.Coordinate2D direction;
 
@@ -916,7 +936,7 @@ namespace AudicaConverter
                 //Remove unactive stacks
                 for (int j = activeStacks.Count - 1; j >= 0; j--)
                 {
-                    if (currentCue.tick - activeStacks[j].lastStackTick >= stackResetTime)
+                    if (currentHitObject.time - activeStacks[j].lastStackTime >= stackResetTime)
                         activeStacks.RemoveAt(j);
                 }
 
@@ -928,7 +948,7 @@ namespace AudicaConverter
                 {
                     TargetStack newStack = new TargetStack();
                     newStack.stackStartCue = currentCue;
-                    newStack.lastStackTick = currentCue.tick;
+                    newStack.lastStackTime = currentHitObject.time;
                     newStack.lastPos = OsuUtility.GetPosFromCue(currentCue);
                     allStacks.Add(newStack);
                     activeStacks.Add(newStack);
@@ -976,7 +996,7 @@ namespace AudicaConverter
                 }
                 stack.tailCues.Add(currentCue);
                 stack.lastPos = currentCuePos;
-                stack.lastStackTick = currentCue.tick;
+                stack.lastStackTime = currentHitObject.time;
             }
 
             foreach (TargetStack stack in allStacks)
