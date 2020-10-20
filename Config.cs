@@ -75,20 +75,24 @@ namespace osutoaudica
     internal struct MeleeOptions
     {
         public bool convertMelees;
-        public float normalFrequency;
-        public float kiaiFrequency;
+        public float normalAttemptFrequency;
+        public float normalCooldown;
+        public float kiaiAttemptFrequency;
+        public float kiaiCooldown;
         public float preRestTime;
         public float postRestTime;
         public float prePositionTime;
         public float positionWindowMinDistance;
         public float positionWindowMaxDistance;
 
-        public MeleeOptions(bool convertMelees, float normalFrequency, float kiaiFrequency, float preRestTime, float postRestTime, float prePositionTime,
-            float positionWindowMinDistance, float positionWindowMaxDistance)
+        public MeleeOptions(bool convertMelees, float normalAttemptFrequency, float normalCooldown, float kiaiAttemptFrequency, float kiaiCooldown,
+            float preRestTime, float postRestTime, float prePositionTime, float positionWindowMinDistance, float positionWindowMaxDistance)
         {
             this.convertMelees = convertMelees;
-            this.normalFrequency = normalFrequency;
-            this.kiaiFrequency = kiaiFrequency;
+            this.normalAttemptFrequency = normalAttemptFrequency;
+            this.normalCooldown = normalCooldown;
+            this.kiaiAttemptFrequency = kiaiAttemptFrequency;
+            this.kiaiCooldown = kiaiCooldown;
             this.preRestTime = preRestTime;
             this.postRestTime = postRestTime;
             this.prePositionTime = prePositionTime;
@@ -154,10 +158,10 @@ namespace osutoaudica
         public float chainMaxSpeedRatio = 1.5f;
         public float chainEndMinDistanceFromHead = 20f;
 
-        public MeleeOptions expertMeleeOptions = new MeleeOptions(true, 0.5f, 1f, 400f, 400f, 800f, 0.5f, 3.5f);
-        public MeleeOptions advancedMeleeOptions = new MeleeOptions(true, 0.5f, 1f, 600f, 600f, 1000f, 0.5f, 3.5f);
-        public MeleeOptions standardMeleeOptions = new MeleeOptions(true, 0.25f, 0.5f, 800f, 800f, 1500f,  1f, 3f);
-        public MeleeOptions beginnerMeleeOptions = new MeleeOptions(false, 0f, 0.5f, 1000f, 1000f, 2000f, 1f, 2.5f);
+        public MeleeOptions expertMeleeOptions = new MeleeOptions(true, 1f, 2f, 2f, 1f, 400f, 400f, 800f, 0.5f, 3.5f);
+        public MeleeOptions advancedMeleeOptions = new MeleeOptions(true, 1f, 2f, 2f, 1f, 600f, 600f, 1000f, 0.5f, 3.5f);
+        public MeleeOptions standardMeleeOptions = new MeleeOptions(true, 0.5f, 4f, 1f, 2f, 800f, 800f, 1500f,  1f, 3f);
+        public MeleeOptions beginnerMeleeOptions = new MeleeOptions(false, 0f, 4f, 0.5f, 4f, 1000f, 1000f, 2000f, 1f, 2.5f);
 
         public bool distributeStacks = true;
         public float stackInclusionRange = 0.333f;

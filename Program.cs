@@ -1119,6 +1119,7 @@ namespace AudicaConverter
             if (!meleeOptions.convertMelees) return;
 
             bool prevMeleeRight = false;
+            float prevMeleeTick = float.NegativeInfinity;
 
             var cueTimes = new List<(Cue cue, float time, float endTime)>();
             foreach (Cue cue in cues)
@@ -1141,10 +1142,14 @@ namespace AudicaConverter
                 TimingPoint prevEitherTimingPoints = OsuUtility.getPrevTimingPoint(currentCue.tick, mergedTimingPoints);
 
                 float timeSinceTimingPoint = currentCue.tick - prevNormalTimingPoint.audicaTick;
-                float frequency = prevEitherTimingPoints.kiai ? meleeOptions.kiaiFrequency : meleeOptions.normalFrequency;
+                float frequency = prevEitherTimingPoints.kiai ? meleeOptions.kiaiAttemptFrequency : meleeOptions.normalAttemptFrequency;
                 if (frequency == 0) continue;
                 bool onMeleeConvertTime = timeSinceTimingPoint > 0 && timeSinceTimingPoint % (480f * prevNormalTimingPoint.meter / frequency) == 0;
-                if (onMeleeConvertTime && currentCue.behavior != Cue.Behavior.Hold && currentCue.behavior != Cue.Behavior.ChainStart && currentCue.behavior != Cue.Behavior.Chain)
+
+                float cooldown = prevEitherTimingPoints.kiai ? meleeOptions.kiaiCooldown : meleeOptions.normalCooldown;
+                bool offCooldown = (currentCue.tick - prevMeleeTick) / (480f * prevNormalTimingPoint.meter) >= cooldown;
+
+                if (onMeleeConvertTime && offCooldown && currentCue.behavior != Cue.Behavior.Hold && currentCue.behavior != Cue.Behavior.ChainStart && currentCue.behavior != Cue.Behavior.Chain)
                 {
                     //Check melee conversion conditions for each target
                     bool rightMeleeOk = true;
@@ -1213,6 +1218,7 @@ namespace AudicaConverter
                         currentCue.gridOffset = new Cue.GridOffset();
 
                         prevMeleeRight = rightMeleeOk;
+                        prevMeleeTick = currentCue.tick;
                     }
                 }
             }
