@@ -34,22 +34,20 @@ namespace osutoaudica
 
     public static string GetSongEndEvent(string artist, string songName)
         {
+            artist = Regex.Replace(artist, @"\s+\(.+\)", "", RegexOptions.IgnoreCase); //Remove anything within parenthesees
             artist = Regex.Replace(artist, @"\s+\(?Feat\..+", "", RegexOptions.IgnoreCase); //Remove feat.
             songName = Regex.Replace(songName, @"\s+\(.+\)", "", RegexOptions.IgnoreCase); //Remove anything within parenthesees, such as (TV Size) or (Cut ver.)
 
             string key = GetKey($@"{artist} {songName}");
 
-            if (key == "" && Config.parameters.artistlessSearchFallback)
-            {
-                key = GetKey(songName);
-            }
-
             if (key == "") return Config.parameters.defaultEndEvent;
+            else
+            {
+                string pitch = key.Split(" ")[0];
 
-            string pitch = key.Split(" ")[0];
-
-            if (pitchEventDict.ContainsKey(pitch)) return "event:/song_end/song_end_" + pitchEventDict[pitch];
-            else return Config.parameters.defaultEndEvent;
+                if (pitchEventDict.ContainsKey(pitch)) return "event:/song_end/song_end_" + pitchEventDict[pitch];
+                else return Config.parameters.defaultEndEvent;
+            }
         }
 
         public static string GetKey(string search)

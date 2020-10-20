@@ -126,7 +126,6 @@ namespace osutoaudica
         public bool useStandardSounds = true;
 
         public bool scrapeKey = true;
-        public bool artistlessSearchFallback = true;
         public int scrapeLimit = 14;
         public string defaultEndEvent = "event:/song_end/song_end_C";
 
