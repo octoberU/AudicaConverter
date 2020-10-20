@@ -34,6 +34,9 @@ namespace osutoaudica
 
     public static string GetSongEndEvent(string artist, string songName)
         {
+            artist = Regex.Replace(artist, @"\s+\(?Feat\..+", "", RegexOptions.IgnoreCase); //Remove feat.
+            songName = Regex.Replace(songName, @"\s+\(.+\)", "", RegexOptions.IgnoreCase); //Remove anything within parenthesees, such as (TV Size) or (Cut ver.)
+
             string key = GetKey($@"{artist} {songName}");
 
             if (key == "" && Config.parameters.artistlessSearchFallback)
@@ -66,7 +69,7 @@ namespace osutoaudica
                 return "";
             }
 
-            Match match = Regex.Match(content, ">.{1,2} (minor|major)", RegexOptions.IgnoreCase);
+            Match match = Regex.Match(content, @">.{1,2} (minor|major)", RegexOptions.IgnoreCase);
             if (!match.Success) return "";
             return match.Value.Replace(">", "");
         }
