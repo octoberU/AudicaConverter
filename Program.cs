@@ -58,11 +58,11 @@ namespace AudicaConverter
                 if (Config.parameters.autoMode)
                 {
                     Console.Clear();
-                    Console.WriteLine(String.Format("({0}/{1}) Converting {2}...", i+1, oszFileNames.Count, oszName));
+                    Console.WriteLine(@$"({i + 1}/{oszFileNames.Count}) Converting {oszName}...");
                 }
                 ConversionProcess.ConvertToAudica(oszFileName, Config.parameters.autoMode ? "auto" : "manual");
             }
-            //ConversionProcess.ConvertToAudica(@"C:\audica\Repos\AudicaConverter\bin\Release\netcoreapp3.1\853565 Camellia feat. Yukacco - Be Wild.osz", "manual");
+            //ConversionProcess.ConvertToAudica(@"C:\audica\Repos\AudicaConverter\bin\Release\netcoreapp3.1\809655 Camellia Feat. Nanahira - Can I Friend You On Bassbook  Lol.osz", "manual");
         }
     }
 
@@ -72,7 +72,9 @@ namespace AudicaConverter
         public static void ConvertToAudica(string filePath, string mode)
         {
             var osz = new OSZ(filePath);
+
             var audica = new Audica(@$"{Program.workingDirectory}\template.audica");
+
             ConvertTempos(osz, ref audica);
 
             //Find number of osu!standard difficulties.
@@ -89,6 +91,17 @@ namespace AudicaConverter
                 Console.ForegroundColor = ConsoleColor.Gray;
                 convertMode = int.Parse(Console.ReadLine());
             }
+
+            if (Config.parameters.scrapeKey)
+            {
+                if (mode == "manual")
+                {
+                    Console.Clear();
+                    Console.WriteLine("Scraping key");
+                }
+                audica.desc.songEndEvent = KeyScraper.GetSongEndEvent(osz.osufiles[0].metadata.artist, osz.osufiles[0].metadata.title);
+            }
+            else audica.desc.songEndEvent = Config.parameters.defaultEndEvent;
 
             if (convertMode == 1)
             {

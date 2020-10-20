@@ -125,6 +125,11 @@ namespace osutoaudica
         public bool snapNotes = false;
         public bool useStandardSounds = true;
 
+        public bool scrapeKey = true;
+        public bool artistlessSearchFallback = true;
+        public int scrapeLimit = 14;
+        public string defaultEndEvent = "event:/song_end/song_end_C";
+
         public ScalingOptions expertScalingOptions = new ScalingOptions(1.2f, 1f);
         public ScalingOptions advancedScalingOptions = new ScalingOptions(0.96f, 0.8f);
         public ScalingOptions standardScalingOptions = new ScalingOptions(0.78f, 0.65f);
