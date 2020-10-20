@@ -75,12 +75,15 @@ namespace AudicaConverter
             var audica = new Audica(@$"{Program.workingDirectory}\template.audica");
             ConvertTempos(osz, ref audica);
 
+            //Find number of osu!standard difficulties.
+            int standardDiffCount = osz.osufiles.Count(of => of.general.mode == 0);
+
             int convertMode = 1;
             if (mode == "manual")
             {
                 Console.WriteLine($"{osz.osufiles[0].metadata.artist} - {osz.osufiles[0].metadata.title}" +
                 $"\nMapped by {osz.osufiles[0].metadata.creator}" +
-                $"\nFound {osz.osufiles.Count} difficulties");
+                $"\nFound {standardDiffCount} osu!standard difficulties ({osz.osufiles.Count} difficulties across all modes)");
                 Console.ForegroundColor = ConsoleColor.Yellow;
                 Console.WriteLine("\n\nSelect Conversion Mode: \n[1] Convert whole map.\n[2] Convert audio/timing only.");
                 Console.ForegroundColor = ConsoleColor.Gray;
@@ -89,6 +92,18 @@ namespace AudicaConverter
 
             if (convertMode == 1)
             {
+                if (!Config.parameters.allowOtherGameModes && standardDiffCount == 0)
+                {
+                    if (mode == "manual")
+                    {
+                        Console.WriteLine("\nThis song has no osu!standard difficulties. While full map conversion of other modes are possible, they generally make for unplayable maps and " +
+                            "are disabled by default. You can enable conversion of other modes in the config.json, but this is not recommended if you intend to play the maps unedited. " +
+                            "[Press enter to continue]");
+                        Console.ReadLine();
+                    }
+                    return;
+                }
+
                 if (mode == "manual")
                 {
                     Console.Clear();
@@ -101,7 +116,7 @@ namespace AudicaConverter
                     Console.Clear();
                     Console.WriteLine("Converting beatmaps...");
                 }
-                foreach (osufile file in osz.osufiles)
+                foreach (Osufile file in osz.osufiles)
                 {
                     file.audicaDifficulty = ConvertToAudica(file);
                     file.audicaDifficultyRating = audica.GetRatingForDifficulty(file.audicaDifficulty);
@@ -219,16 +234,24 @@ namespace AudicaConverter
             }
 
             //Conversion steps (Scaling and melee pass) here is not very clean and should probably be refactored in the future
-            var scaledDifficulties = new List<(Difficulty difficulty, float difficultyRating)>();
+            var scaledDifficulties = new List<(Difficulty difficulty, Osufile osufile, float difficultyRating)>();
+            int count = 1;
             for (int i = 0; i < osz.osufiles.Count; i++)
             {
+                if (!Config.parameters.allowOtherGameModes && osz.osufiles[i].general.mode != 0) continue; //Don't allow full conversion of other modes than osu!standard
                 Difficulty scaledDifficulty = ScaleDifficulty(osz.osufiles[i].audicaDifficulty, scalingOptions.xScale, scalingOptions.yScale);
                 RunMeleePass(scaledDifficulty.cues, osz.osufiles[i].timingPoints, osz.osufiles[i].mergedTimingPoints, difficultyName);
                 if (Config.parameters.useStandardSounds) RunHitsoundPass(scaledDifficulty.cues);
                 float difficultyRating = audica.GetRatingForDifficulty(scaledDifficulty);
-                scaledDifficulties.Add((scaledDifficulty, difficultyRating));
+                scaledDifficulties.Add((scaledDifficulty, osz.osufiles[i], difficultyRating));
 
-                if (mode == "manual") Console.WriteLine($"\n[{i+1}]{osz.osufiles[i].metadata.version} [{difficultyRating.ToString("n2")} Audica difficulty]");
+                if (mode == "manual") Console.WriteLine($"\n[{count}]{osz.osufiles[i].metadata.version} [{difficultyRating.ToString("n2")} Audica difficulty]");
+                count++;
+            }
+
+            if (scaledDifficulties.Count == 0)
+            {
+                return null;
             }
 
             int difficultyIdx=0;
@@ -261,16 +284,16 @@ namespace AudicaConverter
                 switch (difficultyName.ToLower())
                 {
                     case ("expert"):
-                        audica.desc.customExpert = osz.osufiles[difficultyIdx].metadata.version;
+                        audica.desc.customExpert = scaledDifficulties[difficultyIdx].osufile.metadata.version;
                         break;
                     case ("advanced"):
-                        audica.desc.customAdvanced = osz.osufiles[difficultyIdx].metadata.version;
+                        audica.desc.customAdvanced = scaledDifficulties[difficultyIdx].osufile.metadata.version;
                         break;
                     case ("standard"):
-                        audica.desc.customModerate = osz.osufiles[difficultyIdx].metadata.version;
+                        audica.desc.customModerate = scaledDifficulties[difficultyIdx].osufile.metadata.version;
                         break;
                     case ("beginner"):
-                        audica.desc.customBeginner = osz.osufiles[difficultyIdx].metadata.version;
+                        audica.desc.customBeginner = scaledDifficulties[difficultyIdx].osufile.metadata.version;
                         break;
                 }
             }
@@ -434,7 +457,7 @@ namespace AudicaConverter
             }
         }
 
-        public static Difficulty ConvertToAudica(osufile osufile)
+        public static Difficulty ConvertToAudica(Osufile osufile)
         {
             var diff = new Difficulty();
             diff.cues = new List<Cue>();
@@ -1212,7 +1235,7 @@ namespace AudicaConverter
     {
         public string oszFilePath;
         
-        public List<osufile> osufiles = new List<osufile>();
+        public List<Osufile> osufiles = new List<Osufile>();
         public OSZ(string filePath)
         {
             oszFilePath = filePath;
@@ -1221,7 +1244,7 @@ namespace AudicaConverter
             {
                 if (entry.Name.Contains(".osu"))
                 {
-                    osufiles.Add(new osufile(entry.Open()));   
+                    osufiles.Add(new Osufile(entry.Open()));   
                 }
             }
         }

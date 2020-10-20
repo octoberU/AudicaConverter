@@ -10,7 +10,7 @@ using osutoaudica;
 
 namespace OsuTypes
 {
-    public class osufile
+    public class Osufile
     {
         public General general = new General();
         public Metadata metadata = new Metadata();
@@ -23,7 +23,7 @@ namespace OsuTypes
         public Difficulty audicaDifficulty;
         public float audicaDifficultyRating;
 
-        public osufile(Stream stream)
+        public Osufile(Stream stream)
         {
             var ms = new MemoryStream();
             stream.CopyTo(ms);

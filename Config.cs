@@ -114,6 +114,7 @@ namespace osutoaudica
         public AutoOptions standardAutoOptions = new AutoOptions(true, 3f, 2f);
         public AutoOptions beginnerAutoOptions = new AutoOptions(true, 2f, 2f);
 
+        public bool allowOtherGameModes = false;
         public string customMapperName = "";
         public float introPadding = 2000f;
         public SkipIntro skipIntro = new SkipIntro();
