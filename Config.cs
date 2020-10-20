@@ -152,11 +152,12 @@ namespace osutoaudica
         public bool ignoreSlidersForChainConvert = false;
         public bool ignoreSustainsForChainConvert = true;
         public int minChainLinks = 2;
-        public float minChainSize = 1f;
         public bool reformChains = true;
         public float sharpChainAngle = 75f;
         public float chainMaxSpeedRatio = 1.5f;
         public float chainEndMinDistanceFromHead = 20f;
+        public float chainMaxAvgLinkDistance = 80f;
+        public float chainMinSize = 1f;
 
         public MeleeOptions expertMeleeOptions = new MeleeOptions(true, 1f, 2f, 2f, 1f, 400f, 400f, 800f, 0.5f, 3.5f);
         public MeleeOptions advancedMeleeOptions = new MeleeOptions(true, 1f, 2f, 2f, 1f, 600f, 600f, 1000f, 0.5f, 3.5f);

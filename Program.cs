@@ -466,11 +466,11 @@ namespace AudicaConverter
 
             if (Config.parameters.convertSliderEnds) RunSliderSplitPass(osufile.hitObjects, osufile.timingPoints);
             if (Config.parameters.streamMinAverageDistance > 0f) RunStreamScalePass(osufile.noteStreams);
-            if (Config.parameters.adaptiveScaling) RunFovScalePass(osufile.hitObjects);
             if (Config.parameters.convertSustains) RunSustainPass(osufile.hitObjects, osufile.timingPoints);
             if (Config.parameters.convertChains) RunChainPass(osufile.hitObjects, osufile.timingPoints);
             ResetEndTimesAndPos(osufile.hitObjects);
             RemoveUnusedHitObjects(osufile.hitObjects);
+            if (Config.parameters.adaptiveScaling) RunFovScalePass(osufile.hitObjects);
 
             handColorHandler.AssignHandTypes(osufile.hitObjects);
 
@@ -505,7 +505,7 @@ namespace AudicaConverter
 
             if (Config.parameters.snapNotes) SnapNormalTargets(diff.cues);
             if (Config.parameters.distributeStacks) RunStackDistributionPass(osufile.hitObjects, diff.cues);
-            if (Config.parameters.minChainSize > 0f) RunChainResizePass(diff.cues);
+            if (Config.parameters.chainMinSize > 0f) RunChainEnlargePass(diff.cues);
 
             return diff;
         }
@@ -737,6 +737,23 @@ namespace AudicaConverter
                 }
                 if (chainHitObjects.Count != 0) CheckAndReformChain(chainHitObjects);
             }
+
+            //Shrink chains with too high average distance per 
+            chainHitObjects = new List<HitObject>();
+            foreach (HitObject hitObject in hitObjects)
+            {
+                if (hitObject.audicaBehavior == 4)
+                {
+                    if (chainHitObjects.Count != 0) CheckAndShrinkChain(chainHitObjects);
+                    chainHitObjects = new List<HitObject>();
+                    chainHitObjects.Add(hitObject);
+                }
+                else if (hitObject.audicaBehavior == 5)
+                {
+                    chainHitObjects.Add(hitObject);
+                }
+            }
+            if (chainHitObjects.Count != 0) CheckAndShrinkChain(chainHitObjects);
         }
 
         private static void CheckAndPruneChain(List<HitObject> chainHitObjects, List<TimingPoint> timingPoints)
@@ -823,6 +840,17 @@ namespace AudicaConverter
                     chainLink.x = chainHead.x + posDiffX * chainTimeProgress;
                     chainLink.y = chainHead.y + posDiffY * chainTimeProgress;
                 }
+            }
+        }
+
+        private static void CheckAndShrinkChain(List<HitObject> chainHitObjects)
+        {
+            HitObjectGroup chainHitObjectGroup = new HitObjectGroup(chainHitObjects);
+
+            float avgLinkDistance = chainHitObjectGroup.length / (chainHitObjects.Count - 1);
+            if (avgLinkDistance > Config.parameters.chainMaxAvgLinkDistance)
+            {
+                chainHitObjectGroup.Scale(Config.parameters.chainMaxAvgLinkDistance / avgLinkDistance);
             }
         }
 
@@ -1054,7 +1082,7 @@ namespace AudicaConverter
             }
         }
 
-        private static void RunChainResizePass(List<Cue> cues)
+        private static void RunChainEnlargePass(List<Cue> cues)
         {
             Cue chainHead = null;
             List<Cue> chainLinks = new List<Cue>();
@@ -1076,7 +1104,7 @@ namespace AudicaConverter
 
         private static void ResizeChain(Cue chainHead, List<Cue> chainLinks)
         {
-            float minChainSize = Config.parameters.minChainSize;
+            float minChainSize = Config.parameters.chainMinSize;
             float chainSize = 0f;
             foreach (Cue chainLink in chainLinks)
             {

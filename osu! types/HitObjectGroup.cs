@@ -81,6 +81,8 @@ namespace OsuTypes
             {
                 hitObject.x = scaleX(hitObject.x);
                 hitObject.y = scaleY(hitObject.y);
+                hitObject.endX = scaleX(hitObject.endX);
+                hitObject.endY = scaleY(hitObject.endY);
             }
         }
 
