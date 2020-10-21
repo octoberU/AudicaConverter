@@ -48,8 +48,9 @@ namespace osutoaudica
                 if (Program.version < newestVersionNumber)
                 {
                     Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine("There is a new version available! Launch AudicaConverter without any game files to update.");
+                    Console.WriteLine("There is a new version available! Launch AudicaConverter without any game files to update. [Press enter to continue]");
                     Console.ForegroundColor = ConsoleColor.Gray;
+                    Console.ReadLine();
                 }
             }
         }
