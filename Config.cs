@@ -105,7 +105,7 @@ namespace osutoaudica
     {
         public bool enabled = true;
         public float threshold = 10000f;
-        public float fadeTime = 5000f;
+        public float cutIntroTime = 5000f;
     }
 
     [Serializable]
