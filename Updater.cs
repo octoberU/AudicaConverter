@@ -1,6 +1,7 @@
 ﻿using AudicaConverter;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Text;
@@ -21,16 +22,26 @@ namespace osutoaudica
                     {
                         string currentExecutable = Program.workingDirectory + @"/AudicaConverter.exe";
                         File.Move(currentExecutable, currentExecutable + ".old");
+                        Console.Clear();
+                        Console.WriteLine("Updating...");
                         var data = web.DownloadData("https://github.com/octoberU/AudicaConverter/raw/main/Standalone%20Releases/AudicaConverter.exe");
                         File.WriteAllBytes(currentExecutable, data);
-                        File.Delete(currentExecutable + ".old");
-                        Console.WriteLine($"Successfully Updated!\nYou are currently running version {newestVersionNumber}");
-                        Console.ReadLine();
+                        Console.Clear();
+                        Console.WriteLine($"Update successful!");
+                        System.Threading.Thread.Sleep(2000); //Wait 2 seconds
+                        Process process = Process.Start(new ProcessStartInfo() //Start process to delete old executable in 1 second
+                        {
+                            Arguments = "/C choice /C Y /N /D Y /T 1 & Del \"AudicaConverter.exe.old\"",
+                            WindowStyle = ProcessWindowStyle.Hidden,
+                            CreateNoWindow = true,
+                            FileName = "cmd.exe"
+                        });
+                        Environment.Exit(0); //Terminate program
                     }
                 }
                 else if(VersionEquals(Program.version, newestVersionNumber))
                 {
-                    Console.WriteLine($"You are currently running the latest release of AudicaConverter\nVersion: {Program.version}");
+                    Console.WriteLine($"You are currently running the latest version of AudicaConverter\nVersion: {Program.version}");
                     Console.ReadLine();
                 }
             }
@@ -44,7 +55,8 @@ namespace osutoaudica
                 if (VersionLessThan(Program.version, newestVersionNumber))
                 {
                     Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine($"Currently using version {Program.version}. There is a newer version ({newestVersionNumber}) available! Launch AudicaConverter without any game files to update. [Press enter to continue]");
+                    Console.WriteLine($"Currently using an older version of the AudicaConverter ({Program.version}). " +
+                        $"There is a newer version ({newestVersionNumber}) available! Launch AudicaConverter without any game files to update. [Press enter to continue]");
                     Console.ForegroundColor = ConsoleColor.Gray;
                     Console.ReadLine();
                 }
