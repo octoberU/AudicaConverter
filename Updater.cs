@@ -30,7 +30,7 @@ namespace osutoaudica
                 }
                 else if(VersionEquals(Program.version, newestVersionNumber))
                 {
-                    Console.WriteLine($"You are currently running the latest release of AudicaConverter\nVersion:{Program.version}");
+                    Console.WriteLine($"You are currently running the latest release of AudicaConverter\nVersion: {Program.version}");
                     Console.ReadLine();
                 }
             }
