@@ -11,12 +11,10 @@ namespace osutoaudica
     {
         public static void UpdateClient()
         {
-            int newestVersionNumber;
-
             using (WebClient web = new WebClient())
             {
-                int.TryParse(web.DownloadString("https://raw.githubusercontent.com/octoberU/AudicaConverter/main/version.txt"), out newestVersionNumber);
-                if(Program.version < newestVersionNumber)
+                string newestVersionNumber = web.DownloadString("https://raw.githubusercontent.com/octoberU/AudicaConverter/main/version.txt");
+                if (VersionLessThan(Program.version, newestVersionNumber))
                 {
                     var shouldUpdate = ConsolePrompt($"There's a new update available!\nWould you like update from {Program.version} to {newestVersionNumber}\n");
                     if (shouldUpdate)
@@ -30,7 +28,7 @@ namespace osutoaudica
                         Console.ReadLine();
                     }
                 }
-                else if(Program.version == newestVersionNumber)
+                else if(VersionEquals(Program.version, newestVersionNumber))
                 {
                     Console.WriteLine($"You are currently running the latest release of AudicaConverter\nVersion:{Program.version}");
                     Console.ReadLine();
@@ -40,19 +38,48 @@ namespace osutoaudica
 
         public static void CheckVersion()
         {
-            int newestVersionNumber;
-
             using (WebClient web = new WebClient())
             {
-                int.TryParse(web.DownloadString("https://raw.githubusercontent.com/octoberU/AudicaConverter/main/version.txt"), out newestVersionNumber);
-                if (Program.version < newestVersionNumber)
+                string newestVersionNumber = web.DownloadString("https://raw.githubusercontent.com/octoberU/AudicaConverter/main/version.txt");
+                if (VersionLessThan(Program.version, newestVersionNumber))
                 {
                     Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine("There is a new version available! Launch AudicaConverter without any game files to update. [Press enter to continue]");
+                    Console.WriteLine($"Currently using version {Program.version}. There is a newer version ({newestVersionNumber}) available! Launch AudicaConverter without any game files to update. [Press enter to continue]");
                     Console.ForegroundColor = ConsoleColor.Gray;
                     Console.ReadLine();
                 }
             }
+        }
+
+        public static bool VersionLessThan(string v1, string v2)
+        {
+            string[] v1Nums = v1.Split(".");
+            string[] v2Nums = v2.Split(".");
+
+            for (int i = 0; i < v1Nums.Length; i++)
+            {
+                int v1Num = int.Parse(v1Nums[i]);
+                int v2Num = int.Parse(v2Nums[i]);
+
+                if (v1Num < v2Num) return true;
+                else if (v1Num > v2Num) return false;
+            }
+            return false;
+        }
+
+        public static bool VersionEquals(string v1, string v2)
+        {
+            string[] v1Nums = v1.Split(".");
+            string[] v2Nums = v2.Split(".");
+
+            for (int i = 0; i < v1Nums.Length; i++)
+            {
+                int v1Num = int.Parse(v1Nums[i]);
+                int v2Num = int.Parse(v2Nums[i]);
+
+                if (v1Num != v2Num) return false;
+            }
+            return true;
         }
 
         private static bool ConsolePrompt(string promptString)
