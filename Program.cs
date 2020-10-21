@@ -355,7 +355,7 @@ namespace AudicaConverter
                 ConvertTempos(osz, ref audica);
                 float pruneValue = (paddingTime / 1000f) * -1; //Convert ms to seconds and invert again
                 float fadeTime = Config.parameters.skipIntro.fadeTime / 1000f; //Convert ms to seconds
-                pruneString = $"-af \"afade=t=in:st=0:d={fadeTime.ToString("n1")}\" -ss {(0.025 + pruneValue).ToString("n3")}";
+                pruneString = $"-ss {(0.025 + pruneValue).ToString("n3")}";
             }
 
             if (Directory.Exists(tempDirectory)) Directory.Delete(tempDirectory, true);
@@ -385,6 +385,18 @@ namespace AudicaConverter
             ffmpeg.StartInfo.Arguments = $"-y -i \"{tempAudioPath}\" -hide_banner -loglevel panic -ab 256k {pruneString} {paddingString} -map 0:a \"{tempOggPath}\"";
             ffmpeg.Start();
             ffmpeg.WaitForExit();
+
+            if(paddingTime < 0f)
+            {
+                string noFadeOggName = tempDirectory + "noFade.ogg";
+                File.Move(tempOggPath, noFadeOggName); // Rename the ogg file so that we can process it again
+
+                //Reprocess the ogg file with fade, this might need "-ss 0.025"
+                float fadeTime = Config.parameters.skipIntro.fadeTime / 1000f;
+                ffmpeg.StartInfo.Arguments = $"-y -i \"{noFadeOggName}\" -hide_banner -loglevel panic -ab 256k -af \"afade=t=in:st=0:d={fadeTime.ToString("n1")}\" -map 0:a \"{tempOggPath}\"";
+                ffmpeg.Start();
+                ffmpeg.WaitForExit();
+            }
 
             ogg2mogg.Start();
             ogg2mogg.WaitForExit();
