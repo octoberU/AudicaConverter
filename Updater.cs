@@ -42,6 +42,7 @@ namespace osutoaudica
                 else if(VersionEquals(Program.version, newestVersionNumber))
                 {
                     Console.WriteLine($"You are currently running the latest version of AudicaConverter\nVersion: {Program.version}");
+                    Console.WriteLine("\nIn order to convert maps, drag-and-drop one or more .osz files, or folders of .osz files onto the AudicaConverter exe within file explorer.");
                     Console.ReadLine();
                 }
             }
