@@ -10,62 +10,60 @@ namespace AudicaConverter
 {
     internal class HandColorHandler
     {
-        private int exhaustiveSearchDepth => Config.parameters.exhaustiveSearchDepth;
+        private HandAssignmentAlgorithmParameters parameters => Config.parameters.handAssignmentAlgorithmParameters;
 
-        private int greedySimulationDepth => Config.parameters.greedySimulationDepth;
-
-        private float searchStrainExponent => Config.parameters.searchStrainExponent;
+        private int exhaustiveSearchDepth => parameters.searchParameters.exhaustiveSearchDepth;
+        private int greedySimulationDepth => parameters.searchParameters.greedySimulationDepth;
+        private float searchStrainExponent => parameters.searchParameters.searchStrainExponent;
 
         //The base for exponential decay of accumulated strain on each hand. e.g. a value of means accumulated strain on each hand is halved every second.
-        private float strainDecayBase => Config.parameters.strainDecayBase;
-
+        private float strainDecayBase => parameters.accumulatedStrain.strainDecayBase;
         // Weights the impact of accumulated historical strain compared to the immediate strain of the new target when choosing hand.
-        private float historicalStrainWeight => Config.parameters.historicalStrainWeight;
+        private float historicalStrainWeight => parameters.accumulatedStrain.historicalStrainWeight;
 
         //The exponent for which inversed time since last target will be power transformed by. Adjusting this allows adjusting relative strain of different time spacings.
-        private float timeStrainTransformExponent => Config.parameters.timeStrainTransformExponent;
-
-        //The hand streams are prefered to start on
-        private string streamStartHandPreference => Config.parameters.streamHandPreference;
-
-        //A limit on how small the time difference between notes for look ahead strain can be. Prevents overweighting in chain hand-overs.
-        private float lookAheadTimeLowerLimit => Config.parameters.lookAheadTimeLowerLimit;
-
-        //The fixed, distance-independent strain factor of look-ahead strain
-        private float lookAheadFixedStrain => Config.parameters.lookAheadFixedStrain;
-
-        //The time window after a hold where post-hold rest is encouraged
-        private float holdRestTime => Config.parameters.holdRestTime;
-
-        //The exponent of the power transform of the hold rest strain
-        private float holdRestTransformExponent => Config.parameters.holdRestTransformExponent;
-
+        private float timeStrainTransformExponent => parameters.timeStrain.transformExponent;
         //The weight for timing strains impact on total strain
-        private float timeStrainWeight => Config.parameters.timeStrainWeight;
+        private float timeStrainWeight => parameters.timeStrain.weight;
 
         //The weight for movement speed strain
-        private float movementStrainWeight => Config.parameters.movementStrainWeight;
+        private float movementStrainWeight => parameters.movementStrain.weight;
 
         //The weight for movement direction strain
-        private float directionStrainWeight => Config.parameters.directionStrainWeight;
+        private float directionStrainWeight => parameters.directionStrain.weight;
+
+        //A limit on how small the time difference between notes for look ahead strain can be. Prevents overweighting in chain hand-overs.
+        private float lookAheadTimeLowerLimit => parameters.lookAheadDirectionStrain.timeLowerLimit;
+
+        //The fixed, distance-independent strain factor of look-ahead strain
+        private float lookAheadFixedStrain => parameters.lookAheadDirectionStrain.fixedStrain;
 
         //The weight for look-ahead movement direction strain
-        private float lookAheadDirectionStrainWeight => Config.parameters.lookAheadDirectionStrainWeight;
+        private float lookAheadDirectionStrainWeight => parameters.lookAheadDirectionStrain.weight;
 
-        //The weight for crossover strain
-        private float crossoverStrainWeight => Config.parameters.crossoverStrainWeight;
+        //The time window after a hold where post-hold rest is encouraged
+        private float holdRestTime => parameters.holdRestStrain.time;
 
-        //The weight of playspace position strain, favouring left hand for left side of playspace and vice versa.
-        private float playspacePositionStrainWeight => Config.parameters.playspacePositionStrainWeight;
+        //The exponent of the power transform of the hold rest strain
+        private float holdRestTransformExponent => parameters.holdRestStrain.transformExponent;
 
         //The weight for post-hold refire strain
-        private float holdRestStrainWeight => Config.parameters.holdRestStrainWeight;
+        private float holdRestStrainWeight => parameters.holdRestStrain.weight;
+
+        //The weight for crossover strain
+        private float crossoverStrainWeight => parameters.crossoverStrain.weight;
+
+        //The weight of playspace position strain, favouring left hand for left side of playspace and vice versa.
+        private float playspacePositionStrainWeight => parameters.playspacePositionStran.weight;
+
+        //The hand streams are prefered to start on
+        private string streamStartHandPreference => parameters.streamStartStrain.startHandPreference;
 
         //The weight for starting streams on left hand
-        private float streamStartStrainWeight => Config.parameters.streamStartStrainWeight;
+        private float streamStartStrainWeight => parameters.streamStartStrain.weight;
 
         //The weight for alternating hands on streams
-        private float streamAlternationStrainWeight => Config.parameters.streamAlternationWeight;
+        private float streamAlternationStrainWeight => parameters.streamAlternationStrain.weight;
 
         public void AssignHandTypes(List<HitObject> hitObjects)
         {

@@ -1,4 +1,5 @@
 ﻿using AudicaConverter;
+using NAudio.CoreAudioApi;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -38,13 +39,31 @@ namespace osutoaudica
 
         public static void SaveConfig()
         {
+            parameters.metadata.version = Program.version;
             string configString = JsonConvert.SerializeObject(parameters, Formatting.Indented);
             File.WriteAllText(configDirectory, configString);
         }
     }
 
     [Serializable]
-    internal struct AutoOptions
+    internal class Metadata
+    {
+        public string version = Program.version;
+    }
+
+    [Serializable]
+    internal class ConverterOperationOptions
+    {
+        public string customExportDirectory = "";
+        public bool autoMode = false;
+        public AutoOptions expertAutoOptions = new AutoOptions(true, 6f, 3f);
+        public AutoOptions advancedAutoOptions = new AutoOptions(true, 4f, 2f);
+        public AutoOptions standardAutoOptions = new AutoOptions(true, 3f, 2f);
+        public AutoOptions beginnerAutoOptions = new AutoOptions(true, 2f, 2f);
+    }
+
+    [Serializable]
+    internal class AutoOptions
     {
         public bool useDifficultySlot;
         public float targetDifficultyRating;
@@ -59,12 +78,49 @@ namespace osutoaudica
     }
 
     [Serializable]
-    internal struct ScalingOptions
+    internal class GeneralOptions
+    {
+        public bool allowOtherGameModes = false;
+        public string customMapperName = "";
+        public float introPadding = 2000f;
+        public SkipIntroOptions skipIntroOptions = new SkipIntroOptions();
+        public bool snapNotes = false;
+        public bool useStandardSounds = true;
+    }
+
+    [Serializable]
+    internal class SkipIntroOptions
+    {
+        public bool enabled = true;
+        public float threshold = 10000f;
+        public float cutIntroTime = 5000f;
+    }
+
+    [Serializable]
+    internal class EndPitchKeyOptions
+    {
+        public bool scrapeKey = true;
+        public int scrapeLimit = 14;
+        public string defaultEndEvent = "event:/song_end/song_end_C";
+    }
+
+    [Serializable]
+    internal class ScalingOptions
+    {
+        public MapScaleOptions expertMapScaleOptions = new MapScaleOptions(1.2f, 1f);
+        public MapScaleOptions advancedMapScaleOptions = new MapScaleOptions(0.96f, 0.8f);
+        public MapScaleOptions standardMapScaleOptions = new MapScaleOptions(0.78f, 0.65f);
+        public MapScaleOptions beginnerMapScaleOptions = new MapScaleOptions(0.6f, 0.5f);
+        public AdaptiveScalingOptions adaptiveScalingOptions = new AdaptiveScalingOptions();
+    }
+
+    [Serializable]
+    internal class MapScaleOptions
     {
         public float xScale;
         public float yScale;
 
-        public ScalingOptions(float xScale, float yScale)
+        public MapScaleOptions(float xScale, float yScale)
         {
             this.xScale = xScale;
             this.yScale = yScale;
@@ -72,7 +128,65 @@ namespace osutoaudica
     }
 
     [Serializable]
-    internal struct MeleeOptions
+    internal class AdaptiveScalingOptions
+    {
+        public bool useAdaptiveScaling = true;
+        public float fovRecenterTime = 3000f;
+        public float scaleDistanceStartThres = 80f;
+        public float scaleLogBase = 1.02f;
+    }
+
+    [Serializable]
+    internal class StreamOptions
+    {
+        public float streamTimeThres = 200f;
+        public float streamDistanceThres = 80f;
+        public int streamMinNoteCount = 5;
+        public float streamMinAverageDistance = 25f;
+    }
+
+    [Serializable]
+    internal class SliderConversionOptions
+    {
+        public bool convertSliderEnds = false;
+    }
+
+    [Serializable]
+    internal class SustainConversionOptions
+    {
+        public bool convertSustains = true;
+        public float minSustainLength = 960f;
+        public float sustainExtension = 240f;
+    }
+
+    [Serializable]
+    internal class ChainConversionOptions
+    {
+        public bool convertChains = true;
+        public float timeThres = 120f;
+        public float switchFrequency = 480f;
+        public bool ignoreSlidersForChainConvert = false;
+        public bool ignoreSustainsForChainConvert = true;
+        public int minChainLinks = 2;
+        public float minSize = 1f;
+        public float maxAvgLinkDistance = 80f;
+        public bool reformChains = true;
+        public float sharpChainAngle = 75f;
+        public float maxSpeedRatio = 1.5f;
+        public float endMinDistanceFromHead = 20f;
+    }
+
+    [Serializable]
+    internal class MeleeOptions
+    {
+        public DifficultyMeleeOptions expertMeleeOptions = new DifficultyMeleeOptions(true, 1f, 2f, 2f, 1f, 400f, 400f, 800f, 0.5f, 3.5f);
+        public DifficultyMeleeOptions advancedMeleeOptions = new DifficultyMeleeOptions(true, 1f, 2f, 2f, 1f, 600f, 600f, 1000f, 0.5f, 3.5f);
+        public DifficultyMeleeOptions standardMeleeOptions = new DifficultyMeleeOptions(true, 0.5f, 4f, 1f, 2f, 800f, 800f, 1500f, 1f, 3f);
+        public DifficultyMeleeOptions beginnerMeleeOptions = new DifficultyMeleeOptions(false, 0f, 4f, 0.5f, 4f, 1000f, 1000f, 2000f, 1f, 2.5f);
+    }
+
+    [Serializable]
+    internal class DifficultyMeleeOptions
     {
         public bool convertMelees;
         public float normalAttemptFrequency;
@@ -85,7 +199,7 @@ namespace osutoaudica
         public float positionWindowMinDistance;
         public float positionWindowMaxDistance;
 
-        public MeleeOptions(bool convertMelees, float normalAttemptFrequency, float normalCooldown, float kiaiAttemptFrequency, float kiaiCooldown,
+        public DifficultyMeleeOptions(bool convertMelees, float normalAttemptFrequency, float normalCooldown, float kiaiAttemptFrequency, float kiaiCooldown,
             float preRestTime, float postRestTime, float prePositionTime, float positionWindowMinDistance, float positionWindowMaxDistance)
         {
             this.convertMelees = convertMelees;
@@ -100,115 +214,135 @@ namespace osutoaudica
             this.positionWindowMaxDistance = positionWindowMaxDistance;
         }
     }
+
     [Serializable]
-    internal class SkipIntro
+    internal class StackDistributionOptions
     {
-        public bool enabled = true;
-        public float threshold = 10000f;
-        public float cutIntroTime = 5000f;
+        public bool distributeStacks = true;
+        public float inclusionRange = 0.333f;
+        public float handSeparation = 0.75f;
+        public float itemDistance = 0.333f;
+        public float maxDistance = 1.5f;
+        public float resetTime = 1000f;
+    }
+    
+    [Serializable]
+    internal class HandAssignmentAlgorithmParameters
+    {
+        public searchParameters searchParameters = new searchParameters();
+        public AccumulatedStrain accumulatedStrain = new AccumulatedStrain();
+        public TimeStrain timeStrain = new TimeStrain();
+        public MovementStrain movementStrain = new MovementStrain();
+        public DirectionStrain directionStrain = new DirectionStrain();
+        public LookAheadDirectionStrain lookAheadDirectionStrain = new LookAheadDirectionStrain();
+        public CrossoverStrain crossoverStrain = new CrossoverStrain();
+        public PlayspacePositionStrain playspacePositionStran = new PlayspacePositionStrain();
+        public HoldRestStrain holdRestStrain = new HoldRestStrain();
+        public StreamStartStrain streamStartStrain = new StreamStartStrain();
+        public StreamAlternationStrain streamAlternationStrain = new StreamAlternationStrain();
+    }
+
+    [Serializable]
+    internal class searchParameters
+    {
+        public int exhaustiveSearchDepth = 8;
+        public int greedySimulationDepth = 30;
+        public float searchStrainExponent = 1.5f;
+    }
+
+    [Serializable]
+    internal class AccumulatedStrain
+    {
+        public float strainDecayBase = 0.4f;
+        public float historicalStrainWeight = 0.2f;
+    }
+
+    [Serializable]
+    internal class TimeStrain
+    {
+        public float transformExponent = 2.5f;
+        public float weight = 0.5f;
+    }
+
+    [Serializable]
+    internal class MovementStrain
+    {
+        public float weight = 7f;
+    }
+
+    [Serializable]
+    internal class DirectionStrain
+    {
+        public float weight = 3f;
+    }
+
+    [Serializable]
+    internal class LookAheadDirectionStrain
+    {
+        public float timeLowerLimit = 150f;
+        public float fixedStrain = 0.1f;
+        public float weight = 15f;
+    }
+
+    [Serializable]
+    internal class CrossoverStrain
+    {
+        public float weight = 10f;
+    }
+
+    [Serializable]
+    internal class PlayspacePositionStrain
+    {
+        public float weight = 5f;
+    }
+
+    [Serializable]
+    internal class HoldRestStrain
+    {
+        public float time = 400f;
+        public float transformExponent = 2.5f;
+        public float weight = 200f;
+    }
+
+    [Serializable]
+    internal class StreamStartStrain
+    {
+        public string startHandPreference = "right";
+        public float weight = 50f;
+    }
+
+    [Serializable]
+    internal class StreamAlternationStrain
+    {
+        public float weight = 50f;
     }
 
     [Serializable]
     internal class ConfigParameters
     {
-        public string customExportDirectory = "";
-        public bool autoMode = false;
-        public AutoOptions expertAutoOptions = new AutoOptions(true, 6f, 3f);
-        public AutoOptions advancedAutoOptions = new AutoOptions(true, 4f, 2f);
-        public AutoOptions standardAutoOptions = new AutoOptions(true, 3f, 2f);
-        public AutoOptions beginnerAutoOptions = new AutoOptions(true, 2f, 2f);
+        public Metadata metadata = new Metadata();
 
-        public bool allowOtherGameModes = false;
-        public string customMapperName = "";
-        public float introPadding = 2000f;
-        public SkipIntro skipIntro = new SkipIntro();
-        public bool snapNotes = false;
-        public bool useStandardSounds = true;
+        public ConverterOperationOptions converterOperationOptions = new ConverterOperationOptions();
 
-        public bool scrapeKey = true;
-        public int scrapeLimit = 14;
-        public string defaultEndEvent = "event:/song_end/song_end_C";
+        public GeneralOptions generalOptions = new GeneralOptions();
 
-        public ScalingOptions expertScalingOptions = new ScalingOptions(1.2f, 1f);
-        public ScalingOptions advancedScalingOptions = new ScalingOptions(0.96f, 0.8f);
-        public ScalingOptions standardScalingOptions = new ScalingOptions(0.78f, 0.65f);
-        public ScalingOptions beginnerScalingOptions = new ScalingOptions(0.6f, 0.5f);
+        public EndPitchKeyOptions endPitchKeyOptions = new EndPitchKeyOptions();
 
-        public bool adaptiveScaling = true;
-        public float fovRecenterTime = 2000f;
-        public float scaleDistanceStartThres = 80f;
-        public float scaleLogBase = 1.02f;
+        public ScalingOptions scalingOptions = new ScalingOptions();
 
-        public float streamTimeThres = 200f;
-        public float streamDistanceThres = 80f;
-        public int streamMinNoteCount = 5;
-        public float streamMinAverageDistance = 25f;
-        
-        public bool convertSliderEnds = false;
+        public StreamOptions streamOptions = new StreamOptions();
 
-        public bool convertSustains = true;
-        public float minSustainLength = 960f;
-        public float sustainExtension = 240f;
+        public SliderConversionOptions sliderConversionOptions = new SliderConversionOptions();
 
-        public bool convertChains = true;
-        public float chainTimeThres = 120f;
-        public float chainSwitchFrequency = 480f;
-        public bool ignoreSlidersForChainConvert = false;
-        public bool ignoreSustainsForChainConvert = true;
-        public int minChainLinks = 2;
-        public bool reformChains = true;
-        public float sharpChainAngle = 75f;
-        public float chainMaxSpeedRatio = 1.5f;
-        public float chainEndMinDistanceFromHead = 20f;
-        public float chainMaxAvgLinkDistance = 80f;
-        public float chainMinSize = 1f;
+        public SustainConversionOptions sustainConversionOptions = new SustainConversionOptions();
 
-        public MeleeOptions expertMeleeOptions = new MeleeOptions(true, 1f, 2f, 2f, 1f, 400f, 400f, 800f, 0.5f, 3.5f);
-        public MeleeOptions advancedMeleeOptions = new MeleeOptions(true, 1f, 2f, 2f, 1f, 600f, 600f, 1000f, 0.5f, 3.5f);
-        public MeleeOptions standardMeleeOptions = new MeleeOptions(true, 0.5f, 4f, 1f, 2f, 800f, 800f, 1500f,  1f, 3f);
-        public MeleeOptions beginnerMeleeOptions = new MeleeOptions(false, 0f, 4f, 0.5f, 4f, 1000f, 1000f, 2000f, 1f, 2.5f);
+        public ChainConversionOptions chainConversionOptions = new ChainConversionOptions();
 
-        public bool distributeStacks = true;
-        public float stackInclusionRange = 0.333f;
-        public float stackHandSeparation = 0.75f;
-        public float stackItemDistance = 0.333f;
-        public float stackMaxDistance = 1.5f;
-        public float stackResetTime = 1000f;
+        public MeleeOptions meleeOptions = new MeleeOptions();
 
+        public StackDistributionOptions stackDistributionOptions = new StackDistributionOptions();
 
-        //HandColorHandler params
-        public int exhaustiveSearchDepth = 8;
-        public int greedySimulationDepth = 30;
-        public float searchStrainExponent = 1.5f;
-
-        public float strainDecayBase = 0.4f;
-        public float historicalStrainWeight = 0.2f;
-
-        public float timeStrainTransformExponent = 2.5f;
-        public float timeStrainWeight = 0.5f;
-
-        public float movementStrainWeight = 7f;
-
-        public float directionStrainWeight = 3f;
-
-        public float lookAheadTimeLowerLimit = 150f;
-        public float lookAheadFixedStrain = 0.1f;
-        public float lookAheadDirectionStrainWeight = 15f;
-
-        public float crossoverStrainWeight = 10f;
-
-        public float playspacePositionStrainWeight = 5f;
-
-        public float holdRestTime = 400f;
-        public float holdRestTransformExponent = 2.5f;
-        public float holdRestStrainWeight = 200f;
-        
-        public string streamHandPreference = "right";
-        public float streamStartStrainWeight = 50f;
-
-        public float streamAlternationWeight = 50f;
+        public HandAssignmentAlgorithmParameters handAssignmentAlgorithmParameters = new HandAssignmentAlgorithmParameters();
     }
-
-   
 }
 

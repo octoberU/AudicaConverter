@@ -131,8 +131,8 @@ namespace OsuTypes
 
         private void DetectStreams()
         {
-            float streamTimeThres = Config.parameters.streamTimeThres;
-            float streamDistanceThres = Config.parameters.streamDistanceThres;
+            float streamTimeThres = Config.parameters.streamOptions.streamTimeThres;
+            float streamDistanceThres = Config.parameters.streamOptions.streamDistanceThres;
 
             List<HitObject> streamHitObjects = new List<HitObject>();
             streamHitObjects.Add(hitObjects[0]);
@@ -160,7 +160,7 @@ namespace OsuTypes
 
         private void ConsiderStream(List<HitObject> streamHitObjects)
         {
-            float streamMinNoteCount = Config.parameters.streamMinNoteCount;
+            float streamMinNoteCount = Config.parameters.streamOptions.streamMinNoteCount;
             if (streamHitObjects.Count < streamMinNoteCount) return;
 
             HitObjectGroup noteStream = new HitObjectGroup(streamHitObjects);

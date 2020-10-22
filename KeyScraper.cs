@@ -40,19 +40,19 @@ namespace osutoaudica
 
             string key = GetKey($@"{artist} {songName}");
 
-            if (key == "") return Config.parameters.defaultEndEvent;
+            if (key == "") return Config.parameters.endPitchKeyOptions.defaultEndEvent;
             else
             {
                 string pitch = key.Split(" ")[0];
 
                 if (pitchEventDict.ContainsKey(pitch)) return "event:/song_end/song_end_" + pitchEventDict[pitch];
-                else return Config.parameters.defaultEndEvent;
+                else return Config.parameters.endPitchKeyOptions.defaultEndEvent;
             }
         }
 
         public static string GetKey(string search)
         {
-            if (scrapeCount >= Config.parameters.scrapeLimit) return "";
+            if (scrapeCount >= Config.parameters.endPitchKeyOptions.scrapeLimit) return "";
             string content = "";
             try
             {

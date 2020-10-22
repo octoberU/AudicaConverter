@@ -55,12 +55,12 @@ namespace AudicaConverter
                 string oszFileName = oszFileNames[i];
                 string[] pathElements = oszFileName.Split("\\");
                 string oszName = pathElements[pathElements.Length-1];
-                if (Config.parameters.autoMode)
+                if (Config.parameters.converterOperationOptions.autoMode)
                 {
                     Console.Clear();
                     Console.WriteLine(@$"({i + 1}/{oszFileNames.Count}) Converting {oszName}...");
                 }
-                ConversionProcess.ConvertToAudica(oszFileName, Config.parameters.autoMode ? "auto" : "manual");
+                ConversionProcess.ConvertToAudica(oszFileName, Config.parameters.converterOperationOptions.autoMode ? "auto" : "manual");
             }
             //ConversionProcess.ConvertToAudica(@"C:\audica\Repos\AudicaConverter\bin\Release\netcoreapp3.1\809655 Camellia Feat. Nanahira - Can I Friend You On Bassbook  Lol.osz", "manual");
         }
@@ -92,7 +92,7 @@ namespace AudicaConverter
                 convertMode = int.Parse(Console.ReadLine());
             }
 
-            if (Config.parameters.scrapeKey)
+            if (Config.parameters.endPitchKeyOptions.scrapeKey)
             {
                 if (mode == "manual")
                 {
@@ -101,11 +101,11 @@ namespace AudicaConverter
                 }
                 audica.desc.songEndEvent = KeyScraper.GetSongEndEvent(osz.osufiles[0].metadata.artist, osz.osufiles[0].metadata.title);
             }
-            else audica.desc.songEndEvent = Config.parameters.defaultEndEvent;
+            else audica.desc.songEndEvent = Config.parameters.endPitchKeyOptions.defaultEndEvent;
 
             if (convertMode == 1)
             {
-                if (!Config.parameters.allowOtherGameModes && standardDiffCount == 0)
+                if (!Config.parameters.generalOptions.allowOtherGameModes && standardDiffCount == 0)
                 {
                     if (mode == "manual")
                     {
@@ -162,15 +162,15 @@ namespace AudicaConverter
 
         private static void ExportConvert(Audica audica, string audicaFileName)
         {
-            if (Config.parameters.customExportDirectory == "")
+            if (Config.parameters.converterOperationOptions.customExportDirectory == "")
             {
                 ExportToDefaultDirectory(audica, audicaFileName);
             }
             else
             {
-                if (Directory.Exists(Config.parameters.customExportDirectory))
+                if (Directory.Exists(Config.parameters.converterOperationOptions.customExportDirectory))
                 {
-                    audica.Export($"{Config.parameters.customExportDirectory}\\{audicaFileName}");
+                    audica.Export($"{Config.parameters.converterOperationOptions.customExportDirectory}\\{audicaFileName}");
                 }
                 else
                 {
@@ -204,7 +204,7 @@ namespace AudicaConverter
 
         private static void ConvertMetadata(OSZ osz, Audica audica)
         {
-            string mapperName = Config.parameters.customMapperName == "" ? RemoveSpecialCharacters(osz.osufiles[0].metadata.creator) : RemoveSpecialCharacters(Config.parameters.customMapperName);
+            string mapperName = Config.parameters.generalOptions.customMapperName == "" ? RemoveSpecialCharacters(osz.osufiles[0].metadata.creator) : RemoveSpecialCharacters(Config.parameters.generalOptions.customMapperName);
             audica.desc.title = osz.osufiles[0].metadata.title;
             audica.desc.artist = osz.osufiles[0].metadata.artist;
             audica.desc.author = mapperName;
@@ -215,25 +215,25 @@ namespace AudicaConverter
 
         private static Difficulty AskDifficulty(OSZ osz, Audica audica, string difficultyName, string mode)
         {
-            ScalingOptions scalingOptions = new ScalingOptions();
-            AutoOptions autoOptions = new AutoOptions();
+            MapScaleOptions scalingOptions = null;
+            AutoOptions autoOptions = null;
             switch (difficultyName.ToLower())
             {
                 case ("expert"):
-                    scalingOptions = Config.parameters.expertScalingOptions;
-                    autoOptions = Config.parameters.expertAutoOptions;
+                    scalingOptions = Config.parameters.scalingOptions.expertMapScaleOptions;
+                    autoOptions = Config.parameters.converterOperationOptions.expertAutoOptions;
                     break;
                 case ("advanced"):
-                    scalingOptions = Config.parameters.advancedScalingOptions;
-                    autoOptions = Config.parameters.advancedAutoOptions;
+                    scalingOptions = Config.parameters.scalingOptions.advancedMapScaleOptions;
+                    autoOptions = Config.parameters.converterOperationOptions.advancedAutoOptions;
                     break;
                 case ("standard"):
-                    scalingOptions = Config.parameters.standardScalingOptions;
-                    autoOptions = Config.parameters.standardAutoOptions;
+                    scalingOptions = Config.parameters.scalingOptions.standardMapScaleOptions;
+                    autoOptions = Config.parameters.converterOperationOptions.standardAutoOptions;
                     break;
                 case ("beginner"):
-                    scalingOptions = Config.parameters.beginnerScalingOptions;
-                    autoOptions = Config.parameters.beginnerAutoOptions;
+                    scalingOptions = Config.parameters.scalingOptions.beginnerMapScaleOptions;
+                    autoOptions = Config.parameters.converterOperationOptions.beginnerAutoOptions;
                     break;
             }
 
@@ -251,10 +251,10 @@ namespace AudicaConverter
             int count = 1;
             for (int i = 0; i < osz.osufiles.Count; i++)
             {
-                if (!Config.parameters.allowOtherGameModes && osz.osufiles[i].general.mode != 0) continue; //Don't allow full conversion of other modes than osu!standard
+                if (!Config.parameters.generalOptions.allowOtherGameModes && osz.osufiles[i].general.mode != 0) continue; //Don't allow full conversion of other modes than osu!standard
                 Difficulty scaledDifficulty = ScaleDifficulty(osz.osufiles[i].audicaDifficulty, scalingOptions.xScale, scalingOptions.yScale);
                 RunMeleePass(scaledDifficulty.cues, osz.osufiles[i].timingPoints, osz.osufiles[i].mergedTimingPoints, difficultyName);
-                if (Config.parameters.useStandardSounds) RunHitsoundPass(scaledDifficulty.cues);
+                if (Config.parameters.generalOptions.useStandardSounds) RunHitsoundPass(scaledDifficulty.cues);
                 float difficultyRating = audica.GetRatingForDifficulty(scaledDifficulty);
                 scaledDifficulties.Add((scaledDifficulty, osz.osufiles[i], difficultyRating));
 
@@ -292,7 +292,7 @@ namespace AudicaConverter
                 if (bestDifficultyRatingDeviation > autoOptions.acceptedDifficultyRatingDifference) return null; //No difficulty meets difficulty range requirement
             }
                 
-            if (Config.parameters.customMapperName == "")
+            if (Config.parameters.generalOptions.customMapperName == "")
             {
                 switch (difficultyName.ToLower())
                 {
@@ -331,14 +331,14 @@ namespace AudicaConverter
                 } 
             }
             float paddingTime = 0f;
-            if (firstHitObjectTime < Config.parameters.introPadding)
+            if (firstHitObjectTime < Config.parameters.generalOptions.introPadding)
             {
-                paddingTime = Config.parameters.introPadding - firstHitObjectTime;
+                paddingTime = Config.parameters.generalOptions.introPadding - firstHitObjectTime;
             }
-            else if (Config.parameters.skipIntro.enabled && firstHitObjectTime > Config.parameters.skipIntro.threshold)
+            else if (Config.parameters.generalOptions.skipIntroOptions.enabled && firstHitObjectTime > Config.parameters.generalOptions.skipIntroOptions.threshold)
             {
                 //Checks if the first hitobject is after the threshold, if it is, we cut it.
-                paddingTime = (firstHitObjectTime - Config.parameters.skipIntro.cutIntroTime) * -1; //We need a negative value to not mess wih padding
+                paddingTime = (firstHitObjectTime - Config.parameters.generalOptions.skipIntroOptions.cutIntroTime) * -1; //We need a negative value to not mess wih padding
                 
             }
 
@@ -354,7 +354,7 @@ namespace AudicaConverter
                 ShiftEverythingByMs(osz, paddingTime);
                 ConvertTempos(osz, ref audica);
                 float pruneValue = (paddingTime / 1000f) * -1; //Convert ms to seconds and invert again
-                float fadeTime = Config.parameters.skipIntro.cutIntroTime / 1000f; //Convert ms to seconds
+                float fadeTime = Config.parameters.generalOptions.skipIntroOptions.cutIntroTime / 1000f; //Convert ms to seconds
                 pruneString = $"-ss {(0.025 + pruneValue).ToString("n3")}";
             }
 
@@ -392,7 +392,7 @@ namespace AudicaConverter
                 File.Move(tempOggPath, noFadeOggName); // Rename the ogg file so that we can process it again
 
                 //Reprocess the ogg file with fade, this might need "-ss 0.025"
-                float fadeTime = Config.parameters.skipIntro.cutIntroTime / 1000f / 2;
+                float fadeTime = Config.parameters.generalOptions.skipIntroOptions.cutIntroTime / 1000f / 2;
                 ffmpeg.StartInfo.Arguments = $"-y -i \"{noFadeOggName}\" -hide_banner -loglevel panic -ab 256k -af \"afade=t=in:st=0:d={fadeTime.ToString("n1")}\" -map 0:a \"{tempOggPath}\"";
                 ffmpeg.Start();
                 ffmpeg.WaitForExit();
@@ -489,13 +489,13 @@ namespace AudicaConverter
             var handColorHandler = new HandColorHandler();
 
 
-            if (Config.parameters.convertSliderEnds) RunSliderSplitPass(osufile.hitObjects, osufile.timingPoints);
-            if (Config.parameters.streamMinAverageDistance > 0f) RunStreamScalePass(osufile.noteStreams);
-            if (Config.parameters.convertSustains) RunSustainPass(osufile.hitObjects, osufile.timingPoints);
-            if (Config.parameters.convertChains) RunChainPass(osufile.hitObjects, osufile.timingPoints);
+            if (Config.parameters.sliderConversionOptions.convertSliderEnds) RunSliderSplitPass(osufile.hitObjects, osufile.timingPoints);
+            if (Config.parameters.streamOptions.streamMinAverageDistance > 0f) RunStreamScalePass(osufile.noteStreams);
+            if (Config.parameters.sustainConversionOptions.convertSustains) RunSustainPass(osufile.hitObjects, osufile.timingPoints);
+            if (Config.parameters.chainConversionOptions.convertChains) RunChainPass(osufile.hitObjects, osufile.timingPoints);
             ResetEndTimesAndPos(osufile.hitObjects);
             RemoveUnusedHitObjects(osufile.hitObjects);
-            if (Config.parameters.adaptiveScaling) RunFovScalePass(osufile.hitObjects);
+            if (Config.parameters.scalingOptions.adaptiveScalingOptions.useAdaptiveScaling) RunFovScalePass(osufile.hitObjects);
 
             handColorHandler.AssignHandTypes(osufile.hitObjects);
 
@@ -528,9 +528,9 @@ namespace AudicaConverter
             }
 
 
-            if (Config.parameters.snapNotes) SnapNormalTargets(diff.cues);
-            if (Config.parameters.distributeStacks) RunStackDistributionPass(osufile.hitObjects, diff.cues);
-            if (Config.parameters.chainMinSize > 0f) RunChainEnlargePass(diff.cues);
+            if (Config.parameters.generalOptions.snapNotes) SnapNormalTargets(diff.cues);
+            if (Config.parameters.stackDistributionOptions.distributeStacks) RunStackDistributionPass(osufile.hitObjects, diff.cues);
+            if (Config.parameters.chainConversionOptions.minSize > 0f) RunChainEnlargePass(diff.cues);
 
             return diff;
         }
@@ -573,19 +573,19 @@ namespace AudicaConverter
             foreach (HitObjectGroup noteStream in noteStreams)
             {
                 float averageStreamDistance = noteStream.length / (noteStream.hitObjects.Count - 1);
-                if (averageStreamDistance > 0f && averageStreamDistance < Config.parameters.streamMinAverageDistance)
+                if (averageStreamDistance > 0f && averageStreamDistance < Config.parameters.streamOptions.streamMinAverageDistance)
                 {
-                    noteStream.BoundScale(Config.parameters.streamMinAverageDistance / averageStreamDistance);
+                    noteStream.BoundScale(Config.parameters.streamOptions.streamMinAverageDistance / averageStreamDistance);
                 }
             }
         }
 
         private static void RunFovScalePass(List<HitObject> hitObjects)
         {
-            float fovRecenterTime = Config.parameters.fovRecenterTime;
-            float scaleDistanceStartThres = Config.parameters.scaleDistanceStartThres;
-            float scaleLogBase = Config.parameters.scaleLogBase;
-            float scaleTimeThres = Config.parameters.convertChains ? Config.parameters.chainTimeThres : 0f;
+            float fovRecenterTime = Config.parameters.scalingOptions.adaptiveScalingOptions.fovRecenterTime;
+            float scaleDistanceStartThres = Config.parameters.scalingOptions.adaptiveScalingOptions.scaleDistanceStartThres;
+            float scaleLogBase = Config.parameters.scalingOptions.adaptiveScalingOptions.scaleLogBase;
+            float scaleTimeThres = Config.parameters.chainConversionOptions.convertChains ? Config.parameters.chainConversionOptions.timeThres : 0f;
 
             float fovX = 256f;
             float fovY = 192;
@@ -685,6 +685,8 @@ namespace AudicaConverter
 
         private static void RunChainPass(List<HitObject> hitObjects, List<TimingPoint> timingPoints)
         {
+            float chainTimeThres = Config.parameters.chainConversionOptions.timeThres;
+
             HitObject prevChainHeadHitObject = null;
 
             for (int i = 0; i < hitObjects.Count; i++)
@@ -694,24 +696,24 @@ namespace AudicaConverter
                 HitObject nextNextHitObject = i + 2 < hitObjects.Count ? hitObjects[i + 2] : null;
                 HitObject currentHitObject = hitObjects[i];
 
-                bool isIgnoredChainEnd = Config.parameters.ignoreSlidersForChainConvert && (currentHitObject.type == 2 || currentHitObject.type == 6) &&
-                    (nextHitObject == null || nextHitObject.time - currentHitObject.time > Config.parameters.chainTimeThres) || Config.parameters.ignoreSustainsForChainConvert && currentHitObject.audicaBehavior == 3;
-                bool nextIsIgnoredChainEnd = nextHitObject == null || Config.parameters.ignoreSlidersForChainConvert && (nextHitObject.type == 2 || nextHitObject.type == 6) &&
-                    (nextNextHitObject == null || nextNextHitObject.time - nextHitObject.time > Config.parameters.chainTimeThres) || Config.parameters.ignoreSustainsForChainConvert && nextHitObject.audicaBehavior == 3;
+                bool isIgnoredChainEnd = Config.parameters.chainConversionOptions.ignoreSlidersForChainConvert && (currentHitObject.type == 2 || currentHitObject.type == 6) &&
+                    (nextHitObject == null || nextHitObject.time - currentHitObject.time > chainTimeThres) || Config.parameters.chainConversionOptions.ignoreSustainsForChainConvert && currentHitObject.audicaBehavior == 3;
+                bool nextIsIgnoredChainEnd = nextHitObject == null || Config.parameters.chainConversionOptions.ignoreSlidersForChainConvert && (nextHitObject.type == 2 || nextHitObject.type == 6) &&
+                    (nextNextHitObject == null || nextNextHitObject.time - nextHitObject.time > chainTimeThres) || Config.parameters.chainConversionOptions.ignoreSustainsForChainConvert && nextHitObject.audicaBehavior == 3;
 
                 if (isIgnoredChainEnd)
                     continue;
 
-                if ((prevHitObject == null || currentHitObject.time - prevHitObject.time > Config.parameters.chainTimeThres) && nextHitObject != null &&
-                    nextHitObject.time - currentHitObject.time <= Config.parameters.chainTimeThres && !nextIsIgnoredChainEnd)
+                if ((prevHitObject == null || currentHitObject.time - prevHitObject.time > chainTimeThres) && nextHitObject != null &&
+                    nextHitObject.time - currentHitObject.time <= chainTimeThres && !nextIsIgnoredChainEnd)
                 {
                     currentHitObject.audicaBehavior = 4;
                     prevChainHeadHitObject = currentHitObject;
                 }
-                else if (prevHitObject != null && currentHitObject.time - prevHitObject.time <= Config.parameters.chainTimeThres)
+                else if (prevHitObject != null && currentHitObject.time - prevHitObject.time <= chainTimeThres)
                 {   
-                    if (currentHitObject.time - prevChainHeadHitObject.time > Config.parameters.chainTimeThres && currentHitObject.audicaTick - prevChainHeadHitObject.audicaTick >= Config.parameters.chainSwitchFrequency && nextHitObject != null &&
-                        nextHitObject.time - currentHitObject.time <= Config.parameters.chainTimeThres && OsuUtility.ticksSincePrevTimingPoint(currentHitObject.audicaTick, timingPoints) % Config.parameters.chainSwitchFrequency == 0 && !nextIsIgnoredChainEnd)
+                    if (currentHitObject.time - prevChainHeadHitObject.time > chainTimeThres && currentHitObject.audicaTick - prevChainHeadHitObject.audicaTick >= Config.parameters.chainConversionOptions.switchFrequency && nextHitObject != null &&
+                        nextHitObject.time - currentHitObject.time <= chainTimeThres && OsuUtility.ticksSincePrevTimingPoint(currentHitObject.audicaTick, timingPoints) % Config.parameters.chainConversionOptions.switchFrequency == 0 && !nextIsIgnoredChainEnd)
                     {
                         currentHitObject.audicaBehavior = 4;
                         prevChainHeadHitObject = currentHitObject;
@@ -744,7 +746,7 @@ namespace AudicaConverter
             }
             if (chainHitObjects.Count != 0) CheckAndPruneChain(chainHitObjects, timingPoints);
 
-            if (Config.parameters.reformChains)
+            if (Config.parameters.chainConversionOptions.reformChains)
             {
                 chainHitObjects = new List<HitObject>();
                 foreach (HitObject hitObject in hitObjects)
@@ -783,7 +785,7 @@ namespace AudicaConverter
 
         private static void CheckAndPruneChain(List<HitObject> chainHitObjects, List<TimingPoint> timingPoints)
         {
-            if (chainHitObjects.Count <= Config.parameters.minChainLinks)
+            if (chainHitObjects.Count <= Config.parameters.chainConversionOptions.minChainLinks)
             {
                 //Choose the chain hit object with highest GCD with a measure 
                 int bestGcd = 0;
@@ -822,7 +824,7 @@ namespace AudicaConverter
                 float angle = (float)Math.Acos((inVecX * outVecX + inVecY * outVecY) / (Math.Sqrt(inVecX * inVecX + inVecY * inVecY) * Math.Sqrt(outVecX * outVecX + outVecY * outVecY)));
                 angle *= 180f / (float)Math.PI;
 
-                if (angle > Config.parameters.sharpChainAngle)
+                if (angle > Config.parameters.chainConversionOptions.sharpChainAngle)
                 {
                     reformChain = true;
                     break;
@@ -840,12 +842,12 @@ namespace AudicaConverter
                 minSpeed = Math.Min(minSpeed, speed);
                 maxSpeed = Math.Max(maxSpeed, speed);
             }
-            if (maxSpeed / minSpeed > Config.parameters.chainMaxSpeedRatio) reformChain = true;
+            if (maxSpeed / minSpeed > Config.parameters.chainConversionOptions.maxSpeedRatio) reformChain = true;
 
             //Reform chains if the last link is too close to the chain head
             HitObject chainStart = chainHitObjects[0];
             HitObject chainEnd = chainHitObjects[chainHitObjects.Count - 1];
-            if (OsuUtility.EuclideanDistance(chainStart.x, chainStart.y, chainEnd.x, chainEnd.y) < Config.parameters.chainEndMinDistanceFromHead) reformChain = true;
+            if (OsuUtility.EuclideanDistance(chainStart.x, chainStart.y, chainEnd.x, chainEnd.y) < Config.parameters.chainConversionOptions.endMinDistanceFromHead) reformChain = true;
 
             if (reformChain)
             {
@@ -873,9 +875,9 @@ namespace AudicaConverter
             HitObjectGroup chainHitObjectGroup = new HitObjectGroup(chainHitObjects);
 
             float avgLinkDistance = chainHitObjectGroup.length / (chainHitObjects.Count - 1);
-            if (avgLinkDistance > Config.parameters.chainMaxAvgLinkDistance)
+            if (avgLinkDistance > Config.parameters.chainConversionOptions.maxAvgLinkDistance)
             {
-                chainHitObjectGroup.Scale(Config.parameters.chainMaxAvgLinkDistance / avgLinkDistance);
+                chainHitObjectGroup.Scale(Config.parameters.chainConversionOptions.maxAvgLinkDistance / avgLinkDistance);
             }
         }
 
@@ -890,7 +892,7 @@ namespace AudicaConverter
                 if (currentHitObject.audicaBehavior == 4) continue;
 
                 //Extend duration to next target if next target is on beat and within extension time
-                if (nextHitObject != null && nextHitObject.audicaTick - currentHitObject.audicaEndTick <= Config.parameters.sustainExtension)
+                if (nextHitObject != null && nextHitObject.audicaTick - currentHitObject.audicaEndTick <= Config.parameters.sustainConversionOptions.sustainExtension)
                 {
                     if (OsuUtility.ticksSincePrevTimingPoint(nextHitObject.audicaTick, timingPoints) % 480f == 0f)
                     {
@@ -900,13 +902,13 @@ namespace AudicaConverter
                 }
 
                 //Shorten duration if there are two targets within too short time after the sustain
-                if (nextNextHitObject != null && nextNextHitObject.time - currentHitObject.endTime < Config.parameters.holdRestTime)
+                if (nextNextHitObject != null && nextNextHitObject.time - currentHitObject.endTime < Config.parameters.handAssignmentAlgorithmParameters.holdRestStrain.time)
                 {
                     currentHitObject.audicaEndTick -= 240f;
                     currentHitObject.endTime = OsuUtility.TickToMs(currentHitObject.audicaEndTick, timingPoints);
                 }
 
-                if (currentHitObject.audicaEndTick - currentHitObject.audicaTick >= Config.parameters.minSustainLength)
+                if (currentHitObject.audicaEndTick - currentHitObject.audicaTick >= Config.parameters.sustainConversionOptions.minSustainLength)
                 {
                     currentHitObject.audicaBehavior = 3;
                 }
@@ -956,10 +958,10 @@ namespace AudicaConverter
 
         private static void RunStackDistributionPass(List<HitObject> hitObjects, List<Cue> cues)
         {
-            float stackInclusionRange = Config.parameters.stackInclusionRange;
-            float stackItemDistance = Config.parameters.stackItemDistance; //Offset for stack items. Time proportionate distancing is used through the stack based on getting this distance between first and second item in stack
-            float stackMaxDistance = Config.parameters.stackMaxDistance;
-            float stackResetTime = Config.parameters.stackResetTime;
+            float stackInclusionRange = Config.parameters.stackDistributionOptions.inclusionRange;
+            float stackItemDistance = Config.parameters.stackDistributionOptions.itemDistance; //Offset for stack items. Time proportionate distancing is used through the stack based on getting this distance between first and second item in stack
+            float stackMaxDistance = Config.parameters.stackDistributionOptions.maxDistance;
+            float stackResetTime = Config.parameters.stackDistributionOptions.resetTime;
 
             List<TargetStack> allStacks = new List<TargetStack>();
             List<TargetStack> activeStacks = new List<TargetStack>();
@@ -1078,8 +1080,8 @@ namespace AudicaConverter
                     float handSepY = 0f;
                     if (cue.behavior != Cue.Behavior.ChainStart && cue.behavior != Cue.Behavior.Chain)
                     {
-                        handSepX = (cue.handType == Cue.HandType.Right ? handSepDirectionX : -handSepDirectionX) * Config.parameters.stackHandSeparation / 2;
-                        handSepY = (cue.handType == Cue.HandType.Right ? handSepDirectionY : -handSepDirectionY) * Config.parameters.stackHandSeparation / 2;
+                        handSepX = (cue.handType == Cue.HandType.Right ? handSepDirectionX : -handSepDirectionX) * Config.parameters.stackDistributionOptions.handSeparation / 2;
+                        handSepY = (cue.handType == Cue.HandType.Right ? handSepDirectionY : -handSepDirectionY) * Config.parameters.stackDistributionOptions.handSeparation / 2;
                     }
 
                     OsuUtility.Coordinate2D newPos = new OsuUtility.Coordinate2D(stackHeadPos.x + distributionX + handSepX,
@@ -1129,7 +1131,7 @@ namespace AudicaConverter
 
         private static void ResizeChain(Cue chainHead, List<Cue> chainLinks)
         {
-            float minChainSize = Config.parameters.chainMinSize;
+            float minChainSize = Config.parameters.chainConversionOptions.minSize;
             float chainSize = 0f;
             foreach (Cue chainLink in chainLinks)
             {
@@ -1151,23 +1153,23 @@ namespace AudicaConverter
 
         private static void RunMeleePass(List<Cue> cues, List<TimingPoint> timingPoints, List<TimingPoint> mergedTimingPoints, string difficultyName)
         {
-            MeleeOptions meleeOptions = new MeleeOptions();
+            DifficultyMeleeOptions meleeOptions = null;
             switch (difficultyName.ToLower())
             {
                 case ("expert"):
-                    meleeOptions = Config.parameters.expertMeleeOptions;
+                    meleeOptions = Config.parameters.meleeOptions.expertMeleeOptions;
                     break;
                 case ("advanced"):
-                    meleeOptions = Config.parameters.advancedMeleeOptions;
+                    meleeOptions = Config.parameters.meleeOptions.advancedMeleeOptions;
                     break;
                 case ("standard"):
-                    meleeOptions = Config.parameters.standardMeleeOptions;
+                    meleeOptions = Config.parameters.meleeOptions.standardMeleeOptions;
                     break;
                 case ("beginner"):
-                    meleeOptions = Config.parameters.beginnerMeleeOptions;
+                    meleeOptions = Config.parameters.meleeOptions.beginnerMeleeOptions;
                     break;
             }
-            float fovRecenterTime = Config.parameters.fovRecenterTime;
+            float fovRecenterTime = Config.parameters.scalingOptions.adaptiveScalingOptions.fovRecenterTime;
 
             if (!meleeOptions.convertMelees) return;
 
