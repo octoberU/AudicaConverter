@@ -92,17 +92,6 @@ namespace AudicaConverter
                 convertMode = int.Parse(Console.ReadLine());
             }
 
-            if (Config.parameters.endPitchKeyOptions.scrapeKey)
-            {
-                if (mode == "manual")
-                {
-                    Console.Clear();
-                    Console.WriteLine("Scraping key");
-                }
-                audica.desc.songEndEvent = KeyScraper.GetSongEndEvent(osz.osufiles[0].metadata.artist, osz.osufiles[0].metadata.title);
-            }
-            else audica.desc.songEndEvent = Config.parameters.endPitchKeyOptions.defaultEndEvent;
-
             if (convertMode == 1)
             {
                 if (!Config.parameters.generalOptions.allowOtherGameModes && standardDiffCount == 0)
@@ -151,6 +140,17 @@ namespace AudicaConverter
                 audica.beginner = null;
                 ConvertSongToOGG(ref osz, audica);
             }
+
+            if (Config.parameters.endPitchKeyOptions.scrapeKey)
+            {
+                if (mode == "manual")
+                {
+                    Console.Clear();
+                    Console.WriteLine("Scraping key");
+                }
+                audica.desc.songEndEvent = KeyScraper.GetSongEndEvent(osz.osufiles[0].metadata.artist, osz.osufiles[0].metadata.title);
+            }
+            else audica.desc.songEndEvent = Config.parameters.endPitchKeyOptions.defaultEndEvent;
 
             ConvertMetadata(osz, audica);
 
