@@ -62,7 +62,7 @@ namespace AudicaConverter
                 }
                 ConversionProcess.ConvertToAudica(oszFileName, Config.parameters.converterOperationOptions.autoMode ? "auto" : "manual");
             }
-            //ConversionProcess.ConvertToAudica(@"C:\audica\Repos\AudicaConverter\bin\Release\netcoreapp3.1\809655 Camellia Feat. Nanahira - Can I Friend You On Bassbook  Lol.osz", "manual");
+            //ConversionProcess.ConvertToAudica(@"C:\audica\Repos\AudicaConverter\bin\Release\netcoreapp3.1\2092 Katy Perry - I Kissed A Girl.osz", "manual");
         }
     }
 
@@ -370,7 +370,7 @@ namespace AudicaConverter
             ffmpeg.StartInfo.FileName = Program.workingDirectory + Program.FFMPEGNAME;
             ffmpeg.StartInfo.WindowStyle = ProcessWindowStyle.Normal;
             ffmpeg.StartInfo.UseShellExecute = false;
-            ffmpeg.StartInfo.RedirectStandardOutput = true;
+            ffmpeg.StartInfo.RedirectStandardOutput = false;
 
             Process ogg2mogg = new Process();
             ogg2mogg.StartInfo.FileName = Program.workingDirectory + Program.OGG2MOGGNAME;
@@ -383,7 +383,7 @@ namespace AudicaConverter
             string paddingString = paddingTime > 0 ? $"-af \"adelay = {paddingTime} | {paddingTime}\"" : "";
 
             string outputPath = paddingTime < 0f ? tempAudioPath2 : tempOggPath;
-            ffmpeg.StartInfo.Arguments = $"-y -i \"{tempAudioPath}\" -hide_banner -loglevel panic -ab 256k {pruneString} {paddingString} -map 0:a \"{outputPath}\"";
+            ffmpeg.StartInfo.Arguments = $"-y -i \"{tempAudioPath}\" -hide_banner -loglevel panic -ar 44100 -ab 256k {pruneString} {paddingString} -map 0:a \"{outputPath}\"";
             ffmpeg.Start();
             ffmpeg.WaitForExit();
 
