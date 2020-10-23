@@ -1,9 +1,8 @@
 
 ![Banner](https://i.imgur.com/TLKSbJc.png "Banner")
 
-
 <p align="center">
-<b>A .NET Core based tool used for converting maps from other games into Audica maps.</b><br>
+<b>A highly customizable tool for converting maps from other rhythm games into Audica maps.</b><br>
 
 While Audica does have a decent selection of well made custom songs available, this selection pales in comparison to some of the bigger rhythm games in the world, such as osu!, which has a selection of more than **a million** custom songs. osu! features gameplay and mapping that are similar to Audica in nature, creating an excellent opportunity to convert osu maps into Audica maps. Doing so makes the entire library of osu! custom maps, which is likely to contain any more well known song you can think of, available to Audica players. There are however also many fundemental differences between osu! and Audica gameplay, that makes this conversion task far from trivial. This conversion tool enables conversion of osu! maps into Audica, performing a lot of processing of the map to ensure high quality, playable Audica maps.
 
@@ -35,9 +34,3 @@ The AudicaConverter will see continued development after initial release, in ord
 
 ## Internal Workings
 The converter contains a lot of different, carefully designed systems for modifying and adapting osu! maps into more playable Audica maps. The most important and advanced of these are the hand assignment algorithm, which combines search/simulation techniques with mathematical modelling of strain to decide what hand each target should be required to be shot with. A more in-depth, technical description of the hand assignment algorithm can be found on [this wiki page](https://github.com/octoberU/AudicaConverter/wiki/Hand-Selection-Algorithm:-How-It-Works).
-
-### Dependencies
-[NAudio](https://www.nuget.org/packages/NAudio/)  
-[NewtonsoftJson](https://www.nuget.org/packages/Newtonsoft.Json/)  
-[System.Configuration.ConfigurationManager](https://www.nuget.org/packages/System.Configuration.ConfigurationManager/)
-[Audica .NET Tools](https://github.com/octoberU/Audica-.NET-Tools)  
