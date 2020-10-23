@@ -13,7 +13,7 @@ The gratest innovation from the previous attempts at an osu! converter, is a hig
 ## Supported Games
 Currently only converting maps from osu! is supported. While maps from any of osu!'s four game modes can be converted, only osu!standard maps make for decent, playable Audica maps.
 
-## Usage
+## Instructions
 * Download the latest release from [here](https://github.com/octoberU/AudicaConverter/releases).
 * Drag-and-drop one or multiple `.osz` files onto the `AudicaConverter` exe. You can also drag-and-drop folders of `.osz` files.
 * Follow the directions in the console.
