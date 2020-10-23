@@ -308,7 +308,7 @@ namespace osutoaudica
     internal class StreamStartStrain
     {
         public string startHandPreference = "right";
-        public float weight = 50f;
+        public float weight = 100f;
     }
 
     [Serializable]

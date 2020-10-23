@@ -62,7 +62,7 @@ namespace AudicaConverter
                 }
                 ConversionProcess.ConvertToAudica(oszFileName, Config.parameters.converterOperationOptions.autoMode ? "auto" : "manual");
             }
-            //ConversionProcess.ConvertToAudica(@"C:\audica\Repos\AudicaConverter\bin\Release\netcoreapp3.1\2092 Katy Perry - I Kissed A Girl.osz", "manual");
+            //ConversionProcess.ConvertToAudica(@"C:\audica\Repos\AudicaConverter\bin\Release\netcoreapp3.1\393663 UNDEAD CORPORATION - Flowering Night Fever.osz", "manual");
         }
     }
 
@@ -492,7 +492,7 @@ namespace AudicaConverter
             if (Config.parameters.sustainConversionOptions.convertSustains) RunSustainPass(osufile.hitObjects, osufile.timingPoints);
             if (Config.parameters.chainConversionOptions.convertChains) RunChainPass(osufile.hitObjects, osufile.timingPoints);
             ResetEndTimesAndPos(osufile.hitObjects);
-            RemoveUnusedHitObjects(osufile.hitObjects);
+            RemoveUnusedHitObjects(osufile.hitObjects, osufile.noteStreams);
             if (Config.parameters.scalingOptions.adaptiveScalingOptions.useAdaptiveScaling) RunFovScalePass(osufile.hitObjects);
 
             handColorHandler.AssignHandTypes(osufile.hitObjects);
@@ -931,11 +931,16 @@ namespace AudicaConverter
             }
         }
 
-        private static void RemoveUnusedHitObjects(List<HitObject> hitObjects)
+        private static void RemoveUnusedHitObjects(List<HitObject> hitObjects, List<HitObjectGroup> noteStreams)
         {
             for (int i = hitObjects.Count-1; i >= 0; i--)
             {
                 if (hitObjects[i].audicaBehavior < 0) hitObjects.RemoveAt(i);
+            }
+
+            foreach (HitObjectGroup noteStream in noteStreams)
+            {
+                noteStream.FormGroup(noteStream.hitObjects.Where(ho => ho.audicaBehavior >= 0).ToList());
             }
         }
 

@@ -27,6 +27,11 @@ namespace OsuTypes
 
         public HitObjectGroup(List<HitObject> hitObjects)
         {
+            FormGroup(hitObjects);
+        }
+
+        public void FormGroup(List<HitObject> hitObjects)
+        {
             this.hitObjects = hitObjects;
             startX = hitObjects[0].x;
             startY = hitObjects[0].y;
