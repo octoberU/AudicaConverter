@@ -4,9 +4,9 @@
 <p align="center">
 <b>A highly customizable tool for converting maps from other rhythm games into Audica maps.</b><br>
 
-While Audica does have a decent selection of well made custom songs available, this selection pales in comparison to some of the bigger rhythm games in the world, such as osu!, which has a selection of more than **a million** custom songs. osu! features gameplay and mapping that are similar to Audica in nature, creating an excellent opportunity to convert osu maps into Audica maps. Doing so makes the entire library of osu! custom maps, which is likely to contain any more well known song you can think of, available to Audica players. There are however also many fundemental differences between osu! and Audica gameplay, that makes this conversion task far from trivial. This conversion tool enables conversion of osu! maps into Audica, performing a lot of processing of the map to ensure high quality, playable Audica maps.
+While Audica does have a decent selection of well made custom songs available, this selection pales in comparison to some of the bigger rhythm games in the world, such as osu!, which has a selection of more than **a million** custom songs. osu! features gameplay and mapping that are similar to Audica in nature, creating an excellent opportunity to convert osu maps into Audica maps. Doing so makes the entire library of osu! custom maps, which is likely to contain any more well known song you can think of, available to Audica players. There are however also many fundemental differences between osu! and Audica gameplay, which makes this conversion task far from trivial. This conversion tool enables conversion of osu! maps into Audica, performing a lot of processing of the map to ensure high quality, playable Audica maps.
 
-The gratest innovation from the previous attempts at an osu! converter, is a highly advanced hand assignment algorithm. Additionally, the converter features better scaling, including an adaptive scaling system, streams being converted to chains, long sliders converted to sustains, some targets being converted into melees, stacked notes being distributed for readability, and proper timing conversion with support for variable bpm.
+The gratest innovation from the previous attempts at an osu! converter, is a highly advanced hand assignment algorithm. Additionally, the converter features better scaling, including an adaptive scaling system, streams being converted to chains, long sliders converted to sustains, some targets being selectively converted into melees, stacked notes being distributed for readability, and proper timing conversion with support for variable bpm.
 </p>
 
 ## Supported Games
@@ -14,7 +14,7 @@ Currently only converting maps from osu! is supported. While maps from any of os
 
 ## Instructions
 * Download the latest release from [here](https://github.com/octoberU/AudicaConverter/releases).
-* Drag-and-drop one or multiple `.osz` files onto the `AudicaConverter` exe. You can also drag-and-drop folders of `.osz` files.
+* Drag-and-drop one or multiple `.osz` files onto the `AudicaConverter` exe within file explorer. You can also drag-and-drop folders of `.osz` files.
 * Follow the directions in the console.
 
 You can also associate the `.osz` file ending with the AudicaConverter exe, allowing you to convert maps by simply double-clicking the `.osz`file. To do so, right-click a `.osz` file -> "Open with...". Check the "Always use this app to open .osz files" checkbox, click "More apps" then "look for another app on this PC", navigate to and select the AudicaConverter exe.
