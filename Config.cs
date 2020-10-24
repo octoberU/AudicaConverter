@@ -171,7 +171,7 @@ namespace osutoaudica
         public float minSize = 1f;
         public float maxAvgLinkDistance = 80f;
         public bool reformChains = true;
-        public float sharpChainAngle = 75f;
+        public float sharpChainAngle = 60f;
         public float maxSpeedRatio = 1.5f;
         public float endMinDistanceFromHead = 20f;
     }
