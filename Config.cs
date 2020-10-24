@@ -107,10 +107,10 @@ namespace osutoaudica
     [Serializable]
     internal class ScalingOptions
     {
-        public MapScaleOptions expertMapScaleOptions = new MapScaleOptions(1.2f, 1f);
-        public MapScaleOptions advancedMapScaleOptions = new MapScaleOptions(0.96f, 0.8f);
-        public MapScaleOptions standardMapScaleOptions = new MapScaleOptions(0.78f, 0.65f);
-        public MapScaleOptions beginnerMapScaleOptions = new MapScaleOptions(0.6f, 0.5f);
+        public MapScaleOptions expertMapScaleOptions = new MapScaleOptions(1.2f, 1f, 0f);
+        public MapScaleOptions advancedMapScaleOptions = new MapScaleOptions(0.96f, 0.8f, 0f);
+        public MapScaleOptions standardMapScaleOptions = new MapScaleOptions(0.78f, 0.65f, 0f);
+        public MapScaleOptions beginnerMapScaleOptions = new MapScaleOptions(0.6f, 0.5f, 0f);
         public AdaptiveScalingOptions adaptiveScalingOptions = new AdaptiveScalingOptions();
     }
 
@@ -119,11 +119,13 @@ namespace osutoaudica
     {
         public float xScale;
         public float yScale;
+        public float zOffset;
 
-        public MapScaleOptions(float xScale, float yScale)
+        public MapScaleOptions(float xScale, float yScale, float zOffset)
         {
             this.xScale = xScale;
             this.yScale = yScale;
+            this.zOffset = zOffset;
         }
     }
 

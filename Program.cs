@@ -252,7 +252,7 @@ namespace AudicaConverter
             for (int i = 0; i < osz.osufiles.Count; i++)
             {
                 if (!Config.parameters.generalOptions.allowOtherGameModes && osz.osufiles[i].general.mode != 0) continue; //Don't allow full conversion of other modes than osu!standard
-                Difficulty scaledDifficulty = ScaleDifficulty(osz.osufiles[i].audicaDifficulty, scalingOptions.xScale, scalingOptions.yScale);
+                Difficulty scaledDifficulty = ScaleDifficulty(osz.osufiles[i].audicaDifficulty, scalingOptions.xScale, scalingOptions.yScale, scalingOptions.zOffset);
                 RunMeleePass(scaledDifficulty.cues, osz.osufiles[i].timingPoints, osz.osufiles[i].mergedTimingPoints, difficultyName);
                 if (Config.parameters.generalOptions.useStandardSounds) RunHitsoundPass(scaledDifficulty.cues);
                 float difficultyRating = audica.GetRatingForDifficulty(scaledDifficulty);
@@ -1274,6 +1274,7 @@ namespace AudicaConverter
                         currentCue.behavior = Cue.Behavior.Melee;
                         currentCue.pitch = rightMeleeOk ? 101 : 100;
                         currentCue.gridOffset = new Cue.GridOffset();
+                        currentCue.zOffset = 0f;
 
                         prevMeleeRight = rightMeleeOk;
                         prevMeleeTick = currentCue.tick;
@@ -1299,7 +1300,7 @@ namespace AudicaConverter
             return sb.ToString().Replace(".", "");
         }
 
-        public static Difficulty ScaleDifficulty(Difficulty unscaledDifficulty, float scaleX, float scaleY)
+        public static Difficulty ScaleDifficulty(Difficulty unscaledDifficulty, float scaleX, float scaleY, float zOffset)
         {
             Difficulty scaledDifficulty = OsuUtility.DeepClone(unscaledDifficulty);
             foreach (Cue cue in scaledDifficulty.cues)
@@ -1309,6 +1310,7 @@ namespace AudicaConverter
                 cuePos.x = (cuePos.x - 5.5f) * scaleX + 5.5f;
                 cuePos.y = (cuePos.y - 3f) * scaleY + 3f;
                 OsuUtility.SetCuePos(cue, cuePos);
+                if (cue.behavior != Cue.Behavior.Melee) cue.zOffset += zOffset;
             }
 
             return scaledDifficulty;
