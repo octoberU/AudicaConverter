@@ -56,10 +56,10 @@ namespace osutoaudica
     {
         public string customExportDirectory = "";
         public bool autoMode = false;
-        public AutoOptions expertAutoOptions = new AutoOptions(true, 6f, 3f);
-        public AutoOptions advancedAutoOptions = new AutoOptions(true, 4f, 2f);
-        public AutoOptions standardAutoOptions = new AutoOptions(true, 3f, 2f);
-        public AutoOptions beginnerAutoOptions = new AutoOptions(true, 2f, 2f);
+        public AutoOptions expertAutoOptions = new AutoOptions(true, 6f, 2f);
+        public AutoOptions advancedAutoOptions = new AutoOptions(true, 4f, 1f);
+        public AutoOptions standardAutoOptions = new AutoOptions(true, 3f, 1f);
+        public AutoOptions beginnerAutoOptions = new AutoOptions(true, 2f, 1f);
     }
 
     [Serializable]
