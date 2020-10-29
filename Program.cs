@@ -905,10 +905,24 @@ namespace AudicaConverter
                     currentHitObject.audicaEndTick -= 240f;
                     currentHitObject.endTime = OsuUtility.TickToMs(currentHitObject.audicaEndTick, timingPoints);
                 }
+            }
 
-                if (currentHitObject.audicaEndTick - currentHitObject.audicaTick >= Config.parameters.sustainConversionOptions.minSustainLength)
+
+            //Extend minSustainLength 1 beat at a time until less than maxSustainFraction is met
+            float minSustainLength = Config.parameters.sustainConversionOptions.minSustainLength - 480f;
+            float sustainFraction;
+            do
+            {
+                minSustainLength += 480f;
+                sustainFraction = (float)hitObjects.Count(ho => ho.audicaEndTick - ho.audicaTick >= minSustainLength) / hitObjects.Count();
+            }
+            while (sustainFraction > Config.parameters.sustainConversionOptions.maxSustainFraction);
+
+            foreach (HitObject hitObject in hitObjects)
+            {
+                if (hitObject.audicaEndTick - hitObject.audicaTick >= minSustainLength)
                 {
-                    currentHitObject.audicaBehavior = 3;
+                    hitObject.audicaBehavior = 3;
                 }
             }
         }

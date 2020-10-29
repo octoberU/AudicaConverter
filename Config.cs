@@ -158,6 +158,7 @@ namespace osutoaudica
     {
         public bool convertSustains = true;
         public float minSustainLength = 960f;
+        public float maxSustainFraction = 0.15f;
         public float sustainExtension = 240f;
     }
 
