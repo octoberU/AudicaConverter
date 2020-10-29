@@ -108,9 +108,9 @@ namespace osutoaudica
     internal class ScalingOptions
     {
         public MapScaleOptions expertMapScaleOptions = new MapScaleOptions(1.2f, 1f, 0f);
-        public MapScaleOptions advancedMapScaleOptions = new MapScaleOptions(0.96f, 0.8f, 0f);
-        public MapScaleOptions standardMapScaleOptions = new MapScaleOptions(0.78f, 0.65f, 0f);
-        public MapScaleOptions beginnerMapScaleOptions = new MapScaleOptions(0.6f, 0.5f, 0f);
+        public MapScaleOptions advancedMapScaleOptions = new MapScaleOptions(1.08f, 0.9f, 0f);
+        public MapScaleOptions standardMapScaleOptions = new MapScaleOptions(0.96f, 0.8f, 0f);
+        public MapScaleOptions beginnerMapScaleOptions = new MapScaleOptions(0.84f, 0.7f, 0f);
         public AdaptiveScalingOptions adaptiveScalingOptions = new AdaptiveScalingOptions();
     }
 
