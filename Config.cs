@@ -1,10 +1,7 @@
 ﻿using AudicaConverter;
-using NAudio.CoreAudioApi;
 using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Text;
 
 namespace osutoaudica
 {
@@ -183,10 +180,10 @@ namespace osutoaudica
     [Serializable]
     internal class MeleeOptions
     {
-        public DifficultyMeleeOptions expertMeleeOptions = new DifficultyMeleeOptions(true, 1f, 2f, 2f, 1f, 400f, 400f, 800f, 0.5f, 3.5f);
-        public DifficultyMeleeOptions advancedMeleeOptions = new DifficultyMeleeOptions(true, 1f, 2f, 2f, 1f, 600f, 600f, 1000f, 0.5f, 3.5f);
-        public DifficultyMeleeOptions standardMeleeOptions = new DifficultyMeleeOptions(true, 0.5f, 4f, 1f, 2f, 800f, 800f, 1500f, 1f, 3f);
-        public DifficultyMeleeOptions beginnerMeleeOptions = new DifficultyMeleeOptions(false, 0f, 4f, 0.5f, 4f, 1000f, 1000f, 2000f, 1f, 2.5f);
+        public DifficultyMeleeOptions expertMeleeOptions = new DifficultyMeleeOptions(true, 1f, 2f, 2f, 1f, 400f, 400f, 800f, 0.5f, 3.5f, 0f, 0f, false);
+        public DifficultyMeleeOptions advancedMeleeOptions = new DifficultyMeleeOptions(true, 1f, 2f, 2f, 1f, 600f, 600f, 1000f, 0.5f, 3.5f, 300f, 300f, false);
+        public DifficultyMeleeOptions standardMeleeOptions = new DifficultyMeleeOptions(true, 0.5f, 4f, 1f, 2f, 800f, 800f, 1500f, 1f, 3f, 800f, 800f, true);
+        public DifficultyMeleeOptions beginnerMeleeOptions = new DifficultyMeleeOptions(false, 0f, 4f, 0.5f, 4f, 1000f, 1000f, 2000f, 1f, 2.5f, 1000f, 1000f, true);
     }
 
     [Serializable]
@@ -202,9 +199,13 @@ namespace osutoaudica
         public float prePositionTime;
         public float positionWindowMinDistance;
         public float positionWindowMaxDistance;
+        public float preNoTargetTime;
+        public float postNoTargetTime;
+        public bool removeNoTargetWindowTargets;
 
         public DifficultyMeleeOptions(bool convertMelees, float normalAttemptFrequency, float normalCooldown, float kiaiAttemptFrequency, float kiaiCooldown,
-            float preRestTime, float postRestTime, float prePositionTime, float positionWindowMinDistance, float positionWindowMaxDistance)
+            float preRestTime, float postRestTime, float prePositionTime, float positionWindowMinDistance, float positionWindowMaxDistance, float preNoTargetTime,
+            float postNoTargetTime, bool removeNoTargetWindowTargets)
         {
             this.convertMelees = convertMelees;
             this.normalAttemptFrequency = normalAttemptFrequency;
@@ -216,6 +217,9 @@ namespace osutoaudica
             this.prePositionTime = prePositionTime;
             this.positionWindowMinDistance = positionWindowMinDistance;
             this.positionWindowMaxDistance = positionWindowMaxDistance;
+            this.preNoTargetTime = preNoTargetTime;
+            this.postNoTargetTime = postNoTargetTime;
+            this.removeNoTargetWindowTargets = removeNoTargetWindowTargets;
         }
     }
 

@@ -1212,13 +1212,38 @@ namespace AudicaConverter
 
             for (int i = 0; i < cues.Count; i++)
             {
-                Cue currentCue = cues[i];
-                Cue prevCue = i > 0 ? cues[i - 1] : null;
-                Cue nextCue = i + 1 < cues.Count ? cues[i + 1] : null;
+                Cue currentCue = cueTimes[i].cue;
                 float currentCueMsTime = cueTimes[i].time;
-                float prevCueMsTime = prevCue != null ? cueTimes[i - 1].time : 0f;
-                float nextCueMsTime = nextCue != null ? cueTimes[i + 1].time : 0f;
-                float prevCueMsEndTime = prevCue != null ? cueTimes[i - 1].endTime : 0f;
+
+                //Previous cue, excluding cues that would be removed from the no-target window if no-target window target removal is on
+                Cue prevCue = null;
+                float prevCueMsTime = 0f;
+                float prevCueMsEndTime = 0f;
+                for (int j = 1; j <= i && prevCue == null; j++)
+                {
+                    var cueTime = cueTimes[i - j];
+                    if (!meleeOptions.removeNoTargetWindowTargets || cueTime.time < currentCueMsTime - meleeOptions.preNoTargetTime)
+                    {
+                        prevCue = cueTime.cue;
+                        prevCueMsTime = cueTime.time;
+                        prevCueMsEndTime = cueTime.endTime;
+                    }
+                }
+
+                //Next cue, excluding the cues that would be removed from the no-target window if no-target window target removal is on
+                Cue nextCue = null;
+                float nextCueMsTime = 0f;
+                for (int j = 1; i + j < cueTimes.Count && nextCue == null; j++)
+                {
+                    var cueTime = cueTimes[i + j];
+                    if (!meleeOptions.removeNoTargetWindowTargets || cueTime.time > currentCueMsTime + meleeOptions.postNoTargetTime)
+                    {
+                        nextCue = cueTime.cue;
+                        nextCueMsTime = cueTime.time;
+                    }
+                }
+
+
                 TimingPoint prevNormalTimingPoint = OsuUtility.getPrevTimingPoint(currentCue.tick, timingPoints);
                 TimingPoint prevEitherTimingPoints = OsuUtility.getPrevTimingPoint(currentCue.tick, mergedTimingPoints);
 
@@ -1236,11 +1261,14 @@ namespace AudicaConverter
                     bool rightMeleeOk = true;
                     bool leftMeleeOk = true;
 
-                    foreach (var otherCueTime in cueTimes.Where(oct => oct.cue.behavior != Cue.Behavior.Melee && oct.time >= currentCueMsTime - meleeOptions.preRestTime && oct.time <= currentCueMsTime + meleeOptions.postRestTime))
+                    //Don't convert to melee if next or previous targets are within the no-target window.
+                    if (prevCue != null && prevCueMsTime >= currentCueMsTime - meleeOptions.preNoTargetTime || nextCue != null && nextCueMsTime <= currentCueMsTime + meleeOptions.postNoTargetTime) rightMeleeOk = leftMeleeOk = false;
+
+                    foreach (var otherCueTime in cueTimes.Where(oct => oct.cue.behavior != Cue.Behavior.Melee && oct.time >= currentCueMsTime - meleeOptions.preRestTime && oct.time <= currentCueMsTime + meleeOptions.postRestTime &&
+                    (!meleeOptions.removeNoTargetWindowTargets || oct.time < currentCueMsTime - meleeOptions.preNoTargetTime || oct.time > currentCueMsTime + meleeOptions.postNoTargetTime)))
                     {
                         Cue otherCue = otherCueTime.cue;
                         if (otherCue == currentCue) continue;
-
 
                         //Don't convert to melee if other targets for the same hand are within rest window
                         if (otherCue.handType == Cue.HandType.Right) rightMeleeOk = false;
@@ -1252,7 +1280,8 @@ namespace AudicaConverter
                         if (otherCuePos.x < 3.5f + meleeOptions.positionWindowMinDistance || otherCuePos.x > 3.5f + meleeOptions.positionWindowMaxDistance) leftMeleeOk = false;
                     }
 
-                    foreach (var otherCueTime in cueTimes.Where(oct => oct.cue.behavior != Cue.Behavior.Melee && oct.time >= currentCueMsTime - meleeOptions.prePositionTime && oct.time <= currentCueMsTime))
+                    foreach (var otherCueTime in cueTimes.Where(oct => oct.cue.behavior != Cue.Behavior.Melee && oct.time >= currentCueMsTime - meleeOptions.prePositionTime && oct.time <= currentCueMsTime &&
+                    (!meleeOptions.removeNoTargetWindowTargets || oct.time < currentCueMsTime - meleeOptions.preNoTargetTime)))
                     {
                         if (otherCueTime.cue == currentCue) continue;
                         //Require all targets between the position time window start and melee to be on the inside of the edge of the position window opposite of the melee.
@@ -1301,6 +1330,39 @@ namespace AudicaConverter
 
                         prevMeleeRight = rightMeleeOk;
                         prevMeleeTick = currentCue.tick;
+                    }
+                }
+            }
+
+            //Remove any cues within the no-target window of a melee
+            if (meleeOptions.removeNoTargetWindowTargets)
+            {
+                for (int i = cueTimes.Count - 1; i >= 0; i--)
+                {
+                    bool inMeleeNoTargetWindow = false;
+                    var cueTime = cueTimes[i];
+
+                    //Check for melees before current cue
+                    for (int j = 1; j <= i; j++)
+                    {
+                        var otherCueTime = cueTimes[i - j];
+                        if (otherCueTime.time < cueTime.time - meleeOptions.preNoTargetTime) break;
+                        if (otherCueTime.cue.behavior == Cue.Behavior.Melee) inMeleeNoTargetWindow = true;
+                    }
+
+                    //Check for melees after current cue
+                    for (int j = 1; i + j < cueTimes.Count; j++)
+                    {
+                        var otherCueTime = cueTimes[i + j];
+                        if (otherCueTime.time > cueTime.time + meleeOptions.postNoTargetTime) break;
+                        if (otherCueTime.cue.behavior == Cue.Behavior.Melee) inMeleeNoTargetWindow = true;
+                    }
+
+                    //Remove current target if in melee no target window
+                    if (inMeleeNoTargetWindow)
+                    {
+                        cueTimes.RemoveAt(i);
+                        cues.RemoveAt(i);
                     }
                 }
             }
