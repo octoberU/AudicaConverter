@@ -180,8 +180,8 @@ namespace osutoaudica
     [Serializable]
     internal class MeleeOptions
     {
-        public DifficultyMeleeOptions expertMeleeOptions = new DifficultyMeleeOptions(true, 1f, 2f, 2f, 1f, 400f, 400f, 800f, 0.5f, 3.5f, 0f, 0f, false);
-        public DifficultyMeleeOptions advancedMeleeOptions = new DifficultyMeleeOptions(true, 1f, 2f, 2f, 1f, 600f, 600f, 1000f, 0.5f, 3.5f, 300f, 300f, false);
+        public DifficultyMeleeOptions expertMeleeOptions = new DifficultyMeleeOptions(true, 1f, 2f, 2f, 1f, 400f, 400f, 800f, 0.5f, 3.5f, 0f, 0f, true);
+        public DifficultyMeleeOptions advancedMeleeOptions = new DifficultyMeleeOptions(true, 1f, 2f, 2f, 1f, 600f, 600f, 1000f, 0.5f, 3.5f, 300f, 300f, true);
         public DifficultyMeleeOptions standardMeleeOptions = new DifficultyMeleeOptions(true, 0.5f, 4f, 1f, 2f, 800f, 800f, 1500f, 1f, 3f, 800f, 800f, true);
         public DifficultyMeleeOptions beginnerMeleeOptions = new DifficultyMeleeOptions(false, 0f, 4f, 0.5f, 4f, 1000f, 1000f, 2000f, 1f, 2.5f, 1000f, 1000f, true);
     }
