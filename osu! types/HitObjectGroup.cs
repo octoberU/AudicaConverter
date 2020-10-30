@@ -7,10 +7,10 @@ namespace OsuTypes
     public class HitObjectGroup
     {
         //Bounds for how far outside the standard osu playing field notes are allowed to go on transformations
-        public static float xLowerBound = -51.2f;
-        public static float xUpperBound = 563.2f;
-        public static float yLowerBound = -38.4f;
-        public static float yUpperBound = 422.4f;
+        public static float xLowerBound = -25.6f;
+        public static float xUpperBound = 537.6f;
+        public static float yLowerBound = -19.2f;
+        public static float yUpperBound = 403.2f;
 
         public List<HitObject> hitObjects;
         public float startX;
