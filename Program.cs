@@ -17,7 +17,7 @@ namespace AudicaConverter
 {
     class Program
     {
-        public static string version = "1.0.1"; //https://github.com/octoberU/AudicaConverter/wiki/Creating-a-new-release-for-the-updater
+        public static string version = "1.0.2"; //https://github.com/octoberU/AudicaConverter/wiki/Creating-a-new-release-for-the-updater
         public static string FFMPEGNAME = @"\ffmpeg.exe";
         public static string OGG2MOGGNAME = @"\ogg2mogg.exe";
         public static string workingDirectory = Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
