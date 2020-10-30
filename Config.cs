@@ -133,6 +133,7 @@ namespace osutoaudica
     internal class AdaptiveScalingOptions
     {
         public bool useAdaptiveScaling = true;
+        public float fovMotionFactor = 10f;
         public float fovRecenterTime = 3000f;
         public float scaleDistanceStartThres = 80f;
         public float scaleLogBase = 1.02f;

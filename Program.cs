@@ -580,6 +580,7 @@ namespace AudicaConverter
 
         private static void RunFovScalePass(List<HitObject> hitObjects)
         {
+            float fovMotionFactor = Config.parameters.scalingOptions.adaptiveScalingOptions.fovMotionFactor;
             float fovRecenterTime = Config.parameters.scalingOptions.adaptiveScalingOptions.fovRecenterTime;
             float scaleDistanceStartThres = Config.parameters.scalingOptions.adaptiveScalingOptions.scaleDistanceStartThres;
             float scaleLogBase = Config.parameters.scalingOptions.adaptiveScalingOptions.scaleLogBase;
@@ -587,6 +588,7 @@ namespace AudicaConverter
 
             float fovX = 256f;
             float fovY = 192;
+            float prevFovUpdateTime = 0f;
 
             for (int i = 0; i < hitObjects.Count; i++)
             {
@@ -643,8 +645,15 @@ namespace AudicaConverter
                 hitObjectGroup.Translate(translationX, translationY);
                 hitObjectGroup.BoundScale(1f);
 
-                fovX = hitObjectGroup.endX;
-                fovY = hitObjectGroup.endY;
+                //Iterate over hitObjects and update FOV position, simulating FOV lag
+
+                foreach (HitObject hitObject in hitObjectGroup.hitObjects)
+                {
+                    float fovMovementFraction = 1f - 1f / (fovMotionFactor * (hitObject.time - prevFovUpdateTime) / 1000f + 1f);
+                    fovX += fovMovementFraction * (hitObject.x - fovX);
+                    fovY += fovMovementFraction * (hitObject.y - fovY);
+                    prevFovUpdateTime = hitObject.time;
+                }
             }
         }
 
