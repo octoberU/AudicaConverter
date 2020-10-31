@@ -10,6 +10,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 
@@ -18,9 +19,31 @@ namespace AudicaConverter
     class Program
     {
         public static string version = "1.0.2"; //https://github.com/octoberU/AudicaConverter/wiki/Creating-a-new-release-for-the-updater
-        public static string FFMPEGNAME = @"\ffmpeg.exe";
-        public static string OGG2MOGGNAME = @"\ogg2mogg.exe";
         public static string workingDirectory = Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
+
+        public static string FfmpegName {
+            get 
+            {
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+                {
+                    return "ffmpegOSX";
+                }
+                else return "ffmpeg.exe";
+            }
+            private set { } 
+        }
+        public static string Ogg2moggName
+        {
+            get
+            {
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+                {
+                    return "ogg2moggOSX";
+                }
+                else return "ogg2mogg.exe";
+            }
+            private set { }
+        }
 
         static void Main(string[] args)
         {
@@ -49,6 +72,18 @@ namespace AudicaConverter
                 else if (item.Contains(".osz"))
                     oszFileNames.Add(item);
             }
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            {
+                string osxInputDirectory = Path.Join(Program.workingDirectory, "Input");
+                if (Directory.Exists(osxInputDirectory))
+                {
+                    foreach (var fileName in Directory.GetFiles(osxInputDirectory))
+                    {
+                        if (fileName.Contains(".osz")) oszFileNames.Add(fileName);
+                    }
+                }
+                else Directory.CreateDirectory(osxInputDirectory);
+            }
 
             for (int i = 0; i < oszFileNames.Count; i++)
             {
@@ -73,7 +108,7 @@ namespace AudicaConverter
         {
             var osz = new OSZ(filePath);
 
-            var audica = new Audica(@$"{Program.workingDirectory}\template.audica");
+            var audica = new Audica(Path.Join(Program.workingDirectory, "template.audica"));
 
             ConvertTempos(osz, ref audica);
 
@@ -170,7 +205,7 @@ namespace AudicaConverter
             {
                 if (Directory.Exists(Config.parameters.converterOperationOptions.customExportDirectory))
                 {
-                    audica.Export($"{Config.parameters.converterOperationOptions.customExportDirectory}\\{audicaFileName}");
+                    audica.Export(Path.Join(Config.parameters.converterOperationOptions.customExportDirectory, audicaFileName));
                 }
                 else
                 {
@@ -181,8 +216,9 @@ namespace AudicaConverter
 
             static void ExportToDefaultDirectory(Audica audica, string audicaFileName)
             {
-                if (!Directory.Exists(@$"{Program.workingDirectory}\audicaFiles")) Directory.CreateDirectory(@$"{Program.workingDirectory}\audicaFiles");
-                audica.Export(@$"{Program.workingDirectory}\audicaFiles\{audicaFileName}");
+                string audicaExportPath = Path.Join(Program.workingDirectory, "audicaFiles");
+                if (!Directory.Exists(audicaExportPath)) Directory.CreateDirectory(audicaExportPath);
+                audica.Export(Path.Join(audicaExportPath, audicaFileName));
             }
         }
 
@@ -317,11 +353,11 @@ namespace AudicaConverter
         private static void ConvertSongToOGG(ref OSZ osz, Audica audica)
         {
             string audioFileName = osz.osufiles[0].general.audioFileName;
-            string tempDirectory = Program.workingDirectory + @"\AudicaConverterTemp\";
-            string tempAudioPath = tempDirectory + @"audio.mp3";
-            string tempAudioPath2 = tempDirectory + @"audio2.mp3";
-            string tempOggPath = tempDirectory + @"tempogg.ogg";
-            string tempMoggPath = tempDirectory + @"tempMogg.mogg";
+            string tempDirectory = Path.Join(Program.workingDirectory, "AudicaConverterTemp");
+            string tempAudioPath = Path.Join(tempDirectory, "audio.mp3");
+            string tempAudioPath2 = Path.Join(tempDirectory, "audio2.mp3");
+            string tempOggPath = Path.Join(tempDirectory, "tempogg.ogg");
+            string tempMoggPath = Path.Join(tempDirectory, "tempMogg.mogg");
 
             float firstHitObjectTime = float.PositiveInfinity;
             foreach (var osufile in osz.osufiles)
@@ -367,13 +403,13 @@ namespace AudicaConverter
             zip.GetEntry(audioFileName).ExtractToFile(tempAudioPath);
 
             Process ffmpeg = new Process();
-            ffmpeg.StartInfo.FileName = Program.workingDirectory + Program.FFMPEGNAME;
+            ffmpeg.StartInfo.FileName = Path.Join(Program.workingDirectory, Program.FfmpegName);
             ffmpeg.StartInfo.WindowStyle = ProcessWindowStyle.Normal;
             ffmpeg.StartInfo.UseShellExecute = false;
             ffmpeg.StartInfo.RedirectStandardOutput = false;
 
             Process ogg2mogg = new Process();
-            ogg2mogg.StartInfo.FileName = Program.workingDirectory + Program.OGG2MOGGNAME;
+            ogg2mogg.StartInfo.FileName = Path.Join(Program.workingDirectory, Program.Ogg2moggName);
             ogg2mogg.StartInfo.WindowStyle = ProcessWindowStyle.Normal;
             ogg2mogg.StartInfo.UseShellExecute = false;
             ogg2mogg.StartInfo.RedirectStandardOutput = true;

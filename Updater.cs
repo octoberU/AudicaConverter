@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Net;
+using System.Runtime.InteropServices;
 using System.Text;
 
 namespace osutoaudica
@@ -12,6 +13,7 @@ namespace osutoaudica
     {
         public static void UpdateClient()
         {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX)) return;
             using (WebClient web = new WebClient())
             {
                 string newestVersionNumber = web.DownloadString("https://raw.githubusercontent.com/octoberU/AudicaConverter/main/version.txt");
@@ -50,6 +52,7 @@ namespace osutoaudica
 
         public static void CheckVersion()
         {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX)) return;
             using (WebClient web = new WebClient())
             {
                 string newestVersionNumber = web.DownloadString("https://raw.githubusercontent.com/octoberU/AudicaConverter/main/version.txt");
