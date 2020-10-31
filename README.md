@@ -16,6 +16,7 @@ Currently only converting maps from osu! is supported. While maps from any of os
 * Download the latest release from [here](https://github.com/octoberU/AudicaConverter/releases).
 * Drag-and-drop one or multiple `.osz` files onto the `AudicaConverter` exe within file explorer. You can also drag-and-drop folders of `.osz` files.
 * Follow the directions in the console.
+* After conversion, move the resulting `.audica` file found in the automatically created `audicaFiles` folder to the games song folder. The location depends on what store/system you use, see [this page](http://www.audica.wiki/audicawiki/index.php/How_To_Get_Custom_Songs) for instructions for where to put the .audica file for your setup.
 
 You can also associate the `.osz` file ending with the AudicaConverter exe, allowing you to convert maps by simply double-clicking the `.osz`file. To do so, right-click a `.osz` file -> "Open with...". Check the "Always use this app to open .osz files" checkbox, click "More apps" then "look for another app on this PC", navigate to and select the AudicaConverter exe.
 
