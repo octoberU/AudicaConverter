@@ -21,6 +21,8 @@ You can also associate the `.osz` file ending with the AudicaConverter exe, allo
 
 osu! beatmaps can be downloaded as `.osz` files from the [official osu! website](https://osu.ppy.sh/beatmapsets?m=0) (requires login), or from the alternative, community hosted service [bloodcat](https://bloodcat.com/osu/).
 
+**Note!** The difficulty of the resulting Audica map mainly depends on the difficulty of the osu! map you choose to convert, and can vary from very easy to inhumanly difficult. The converter allows you to choose between the different difficulties available for each osu! map, and will give you a numeric estimate of the difficulty of the resulting Audica map on conversion. For a point of reference with the Audica OST's, beginner ≈ 2, standard ≈ 3, advanced ≈ 4, expert ≈ 5 Audica difficulty rating+. You can help finding osu! maps that will convert to appopriate difficulties by filtering on osu! star difficulty rating. For example by adding "star>3 star<4" to your search on either the osu! official website or Bloodcat, you will only get maps that have a least one difficulty with a star rating between 3 and 4. Keep in mind that osu! star difficulty does not translate one-to-one to Audica difficulty rating, so it might take some trial and error to figure out what difficulties suit your preferences and skill level.
+
 For efficient mass conversion of a large number of maps, the converter can be put into an auto conversion mode. See [this wiki page](https://github.com/octoberU/AudicaConverter/wiki/Auto-Conversion-Mode-Configuration-and-Operation) for details on setting up and running auto mode.
 
 ## Customization
