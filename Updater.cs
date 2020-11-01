@@ -101,6 +101,7 @@ namespace osutoaudica
             Console.WriteLine(promptString);
             Console.ForegroundColor = ConsoleColor.Yellow;
             Console.WriteLine("[Y,N]");
+            Console.ForegroundColor = ConsoleColor.Gray;
             var keyInfo = Console.ReadKey();
             Console.Clear();
             if (keyInfo.Key == ConsoleKey.Y) return true;
