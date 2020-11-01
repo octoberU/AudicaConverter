@@ -59,8 +59,17 @@ namespace AudicaConverter
                 Console.WriteLine("Updater has failed, make sure you're connected to the internet or update manually.\nhttps://github.com/octoberU/AudicaConverter/releases");
             }
 
+            var argsList = args.ToList();
+            if (argsList.Count == 0 && !RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            {
+                Console.WriteLine("\nIn order to convert maps, drag-and-drop one or more .osz files, or folders of .osz files onto the AudicaConverter exe within file explorer, or onto this window and press enter.");
+                string input = Console.ReadLine();
+                input = input.Replace("\"", "");
+                argsList.Add(input);
+            }
+
             List<string> oszFileNames = new List<string>();
-            foreach (var item in args)
+            foreach (var item in argsList)
             {
                 if (Directory.Exists(item))
                 {
@@ -118,6 +127,7 @@ namespace AudicaConverter
             int convertMode = 1;
             if (mode == "manual")
             {
+                Console.Clear();
                 Console.WriteLine($"{osz.osufiles[0].metadata.artist} - {osz.osufiles[0].metadata.title}" +
                 $"\nMapped by {osz.osufiles[0].metadata.creator}" +
                 $"\nFound {standardDiffCount} osu!standard difficulties ({osz.osufiles.Count} difficulties across all modes)");
