@@ -135,7 +135,7 @@ namespace OsuTypes
             float streamDistanceThres = Config.parameters.streamOptions.streamDistanceThres;
 
             List<HitObject> streamHitObjects = new List<HitObject>();
-            streamHitObjects.Add(hitObjects[0]);
+            if (hitObjects.Count > 0) streamHitObjects.Add(hitObjects[0]);
 
             for (int i = 1; i < hitObjects.Count; i++)
             {

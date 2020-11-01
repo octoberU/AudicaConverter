@@ -139,12 +139,33 @@ namespace AudicaConverter
 
             if (convertMode == 1)
             {
+                //Remove difficulties without any hitobjects
+                for (int i = osz.osufiles.Count - 1; i >= 0; i--)
+                {
+                    if (osz.osufiles[i].hitObjects.Count == 0)
+                    {
+                        if (osz.osufiles[i].general.mode != 0) standardDiffCount--;
+                        osz.osufiles.RemoveAt(i);
+                    }
+                }
+
                 if (!Config.parameters.generalOptions.allowOtherGameModes && standardDiffCount == 0)
                 {
                     if (mode == "manual")
                     {
                         Console.WriteLine("\nThis song has no osu!standard difficulties. While full map conversion of other modes are possible, they generally make for unplayable maps and " +
                             "are disabled by default. You can enable conversion of other modes in the config.json, but this is not recommended if you intend to play the maps unedited. " +
+                            "[Press enter to continue]");
+                        Console.ReadLine();
+                    }
+                    return;
+                }
+
+                if (osz.osufiles.Count == 0)
+                {
+                    if (mode == "manual")
+                    {
+                        Console.WriteLine("\nThis song has no non-empty difficulties, and can therefor not be converted. " +
                             "[Press enter to continue]");
                         Console.ReadLine();
                     }
