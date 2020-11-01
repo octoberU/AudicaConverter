@@ -431,7 +431,12 @@ namespace AudicaConverter
             Directory.CreateDirectory(tempDirectory);
 
             ZipArchive zip = ZipFile.OpenRead(osz.oszFilePath);
-            zip.GetEntry(audioFileName).ExtractToFile(tempAudioPath);
+            foreach (ZipArchiveEntry entry in zip.Entries) {
+                // Check for the name while ignoring case, as osu ignores case as well.
+                if (entry.FullName.Equals(audioFileName, StringComparison.OrdinalIgnoreCase)) {
+                    zip.GetEntry(entry.FullName).ExtractToFile(tempAudioPath);
+                }
+            }
 
             Process ffmpeg = new Process();
             ffmpeg.StartInfo.FileName = Path.Join(Program.workingDirectory, Program.FfmpegName);
