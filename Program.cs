@@ -656,7 +656,6 @@ namespace AudicaConverter
             float fovRecenterTime = Config.parameters.scalingOptions.adaptiveScalingOptions.fovRecenterTime;
             float scaleDistanceStartThres = Config.parameters.scalingOptions.adaptiveScalingOptions.scaleDistanceStartThres;
             float scaleLogBase = Config.parameters.scalingOptions.adaptiveScalingOptions.scaleLogBase;
-            float scaleTimeThres = Config.parameters.chainConversionOptions.convertChains ? Config.parameters.chainConversionOptions.timeThres : 0f;
 
             float fovX = 256f;
             float fovY = 192;
@@ -706,8 +705,8 @@ namespace AudicaConverter
                         i++;
                     }
                 }
-                //Add more objects to the group as long as the time difference is less than scaleTimeThres
-                while (i + 1 < hitObjects.Count && hitObjects[i+1].time - hitObjects[i].time < scaleTimeThres)
+                //Extend the group to include the rest of any started chains
+                while (i + 1 < hitObjects.Count && hitObjects[i+1].audicaBehavior == 5)
                 {
                     syncTranslateHitObjects.Add(hitObjects[i + 1]);
                     i++;
