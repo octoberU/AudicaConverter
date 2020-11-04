@@ -13,6 +13,8 @@ The gratest innovation from the previous attempts at an osu! converter, is a hig
 Currently only converting maps from osu! is supported. While maps from any of osu!'s four game modes can be converted, only osu!standard maps make for decent, playable Audica maps.
 
 ## Instructions
+**Note to new players:** The converter is able to make very easy and accessible levels out of low difficulty osu! levels, allowing the converter to be used without much experience playing the game. Audica is however a very difficult rhythm game with a steep learning curve compared to most rhythm games, and is fundementally a lot harder to learn than osu! itself. The Audica-specific hand-crafted mapping of the lowest difficulty levels of the official songs are designed to be very easy and accessible to new players, in a way that the converter isn't able to. It is highly recommended to at least get comfortable with playing the official levels on standard difficulty before diving into converts, particularly if you find playing converts difficult or frustrating.
+
 * Download the latest release from [here](https://github.com/octoberU/AudicaConverter/releases).
 * Drag-and-drop one or multiple `.osz` files onto the `AudicaConverter` exe within file explorer. You can also drag-and-drop folders of `.osz` files.
 * Follow the directions in the console.
