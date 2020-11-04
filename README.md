@@ -9,6 +9,11 @@ While Audica does have a decent selection of well made custom songs available, t
 The gratest innovation from the previous attempts at an osu! converter, is a highly advanced hand assignment algorithm. Additionally, the converter features better scaling, including an adaptive scaling system, streams being converted to chains, long sliders converted to sustains, some targets being selectively converted into melees, stacked notes being distributed for readability, and proper timing conversion with support for variable bpm.
 </p>
 
+## osu! Convert Example Video
+
+<a href="https://www.youtube.com/watch?v=VQHix2SwjBE" target="_blank">![Convert Example Youtube Video](https://img.youtube.com/vi/VQHix2SwjBE/0.jpg)</a>
+
+
 ## Supported Games
 Currently only converting maps from osu! is supported. While maps from any of osu!'s four game modes can be converted, only osu!standard maps make for decent, playable Audica maps.
 
@@ -29,7 +34,7 @@ You can also associate the `.osz` file ending with the AudicaConverter exe, allo
 ## Customization
 The converter is highly customizable, with **a lot** of options that can be configured to adjust the converted maps to your preference. While the default configurations are optimized to provoide good conversions across a wide range of map styles, difficulties and player skill levels, a one-size-fits-all configuration isn't feasible. It is recommended to adjust settings such as the map size scaling and at what speed targets should be converted to chains based on your own preferences and experiences with the converter. See the [Converter Customization and Config Options](https://github.com/octoberU/AudicaConverter/wiki/Converter-Customization-and-Config-Options) wiki page for details on each option in the `config.json`.
 
-## Help and Support
+## Help and Technical Support
 If you need help setting up and running the converter, or run into technical issues, you can get help in the #converter-help channel in the Audica Modding Group [Discord Server](https://discord.gg/cakQUt5).
 
 ## Sharing Converts
@@ -40,3 +45,6 @@ The AudicaConverter will see continued development after initial release, in ord
 
 ## Internal Workings
 The converter contains a lot of different, carefully designed systems for modifying and adapting osu! maps into more playable Audica maps. The most important and advanced of these are the hand assignment algorithm, which combines search/simulation techniques with mathematical modelling of strain to decide what hand each target should be required to be shot with. A more in-depth, technical description of the hand assignment algorithm can be found on [this wiki page](https://github.com/octoberU/AudicaConverter/wiki/Hand-Selection-Algorithm:-How-It-Works).
+
+# Other Custom Songs and Mods
+In addition to the converter, Audica has a selection of custom songs mapped specifically for Audica, allowing for tailored mapping and gameplay concepts such as simultaneous hand usage not utilized in converts. There is also a multitude of mods available for the game, providing significant QOL feature additions to the base game, and visual customization options such as custom arenas, guns and avatars. The go-to place to find all of these things is the Audica Modding Group [Discord Server](https://discord.gg/cakQUt5). Also see [this guide](https://bsaber.com/audica-custom-songs-mods-guide/) for an overview of available Audica mods.
