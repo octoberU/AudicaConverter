@@ -879,6 +879,7 @@ namespace AudicaConverter
                     }
                 }
                 bestGcdHitObject.audicaBehavior = 0;
+                bestGcdHitObject.ResetEndVals();
             }
         }
 

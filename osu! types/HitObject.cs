@@ -40,5 +40,13 @@ namespace OsuTypes
             endY = y;
             audicaBehavior = 0;
         }
+
+        public void ResetEndVals()
+        {
+            this.endTime = this.time;
+            this.audicaEndTick = this.audicaTick;
+            this.endX = this.x;
+            this.endY = this.y;
+        }
     }
 }
