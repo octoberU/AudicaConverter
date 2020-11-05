@@ -104,7 +104,30 @@ namespace AudicaConverter
                     Console.Clear();
                     Console.WriteLine(@$"({i + 1}/{oszFileNames.Count}) Converting {oszName}...");
                 }
-                ConversionProcess.ConvertToAudica(oszFileName, Config.parameters.converterOperationOptions.autoMode ? "auto" : "manual");
+
+                try
+                {
+                    ConversionProcess.ConvertToAudica(oszFileName, Config.parameters.converterOperationOptions.autoMode ? "auto" : "manual");
+                }
+                catch (Exception e)
+                {
+                    Console.Clear();
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine(@$"({i + 1}/{oszFileNames.Count}) {oszName} Failed to convert with the following error:");
+                    Console.WriteLine();
+                    Console.WriteLine(e.ToString());
+                    Console.ForegroundColor = ConsoleColor.Gray;
+
+                    if (Config.parameters.converterOperationOptions.autoMode)
+                    {
+                        Thread.Sleep(5000);
+                    }
+                    else
+                    {
+                        Console.WriteLine("[Press enter to continue]");
+                        Console.ReadLine();
+                    }
+                }
             }
             //ConversionProcess.ConvertToAudica(@"C:\audica\Repos\AudicaConverter\bin\Release\netcoreapp3.1\393663 UNDEAD CORPORATION - Flowering Night Fever.osz", "manual");
         }
