@@ -48,3 +48,9 @@ The converter contains a lot of different, carefully designed systems for modify
 
 # Other Custom Songs and Mods
 In addition to the converter, Audica has a selection of custom songs mapped specifically for Audica, allowing for tailored mapping and gameplay concepts such as simultaneous hand usage not utilized in converts. There is also a multitude of mods available for the game, providing significant QOL feature additions to the base game, and visual customization options such as custom arenas, guns and avatars. The go-to place to find all of these things is the Audica Modding Group [Discord Server](https://discord.gg/cakQUt5). Also see [this guide](https://bsaber.com/audica-custom-songs-mods-guide/) for an overview of available Audica mods.
+
+# Featured articles
+* https://www.windowscentral.com/add-over-one-million-songs-audica-brilliant-osu-converter  
+* https://vrscout.com/news/rhythm-game-osu-vr-converter-audica/  
+* https://www.androidcentral.com/add-over-one-million-songs-audica-brilliant-osu-converter  
+* https://www.vrtuoluo.cn/521250.html  
