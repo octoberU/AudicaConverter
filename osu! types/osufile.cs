@@ -232,14 +232,14 @@ namespace OsuTypes
         private void ParseTimingPoint(string line)
         {
             var split = line.Split(",");
-            if (split.Length > 2)
+            if (split.Length >= 2)
             {
                 int effects = split.Length > 7 ? int.Parse(split[7]) : 0;
                 bool kiai = effects == 1 || effects == 5;
                 var timingPoint = new TimingPoint((int)float.Parse(split[0]), float.Parse(split[1]), kiai, split.Length > 6 ? !Convert.ToBoolean(int.Parse(split[6])): false);
                 if (!timingPoint.inherited)
                 {
-                    timingPoint.meter = int.Parse(split[2]);
+                    timingPoint.meter = split.Length > 2 ? int.Parse(split[2]) : 4;
                     timingPoints.Add(timingPoint);
                 }
                 else inheritedTimingPoints.Add(timingPoint);
