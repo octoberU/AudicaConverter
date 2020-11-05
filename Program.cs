@@ -18,7 +18,7 @@ namespace AudicaConverter
 {
     class Program
     {
-        public static string version = "1.0.2"; //https://github.com/octoberU/AudicaConverter/wiki/Creating-a-new-release-for-the-updater
+        public static string version = "1.0.3"; //https://github.com/octoberU/AudicaConverter/wiki/Creating-a-new-release-for-the-updater
         public static string workingDirectory = Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
 
         public static string FfmpegName {
