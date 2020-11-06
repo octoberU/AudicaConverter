@@ -148,7 +148,11 @@ namespace osutoaudica
     [Serializable]
     internal class SliderConversionOptions
     {
-        public bool convertSliderEnds = false;
+        public bool sliderEndStreamStartConvert = true;
+        public bool slowRepeatEndsConvert = true;
+        public bool fastRepeatStackConvert = true;
+        public float fastRepeatTimeThres = 150f;
+        public float targetMinTime = 300;
     }
 
     [Serializable]
