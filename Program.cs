@@ -445,7 +445,6 @@ namespace AudicaConverter
                 ShiftEverythingByMs(osz, paddingTime);
                 ConvertTempos(osz, ref audica);
                 float pruneValue = (paddingTime / 1000f) * -1; //Convert ms to seconds and invert again
-                float fadeTime = Config.parameters.generalOptions.skipIntroOptions.cutIntroTime / 1000f; //Convert ms to seconds
                 pruneString = $"-ss {(0.025 + pruneValue).ToString("n3")}";
             }
 
@@ -478,7 +477,7 @@ namespace AudicaConverter
             string paddingString = paddingTime > 0 ? $"-af \"adelay = {paddingTime} | {paddingTime}\"" : "";
 
             string outputPath = paddingTime < 0f ? tempAudioPath2 : tempOggPath;
-            ffmpeg.StartInfo.Arguments = $"-y -i \"{tempAudioPath}\" -hide_banner -loglevel panic -ar 44100 -ab 256k {pruneString} {paddingString} -map 0:a \"{outputPath}\"";
+            ffmpeg.StartInfo.Arguments = $"-y -i \"{tempAudioPath}\" -hide_banner -loglevel panic -ac 2 -ar 44100 -ab 256k {pruneString} {paddingString} -map 0:a \"{outputPath}\"";
             ffmpeg.Start();
             ffmpeg.WaitForExit();
 
@@ -486,7 +485,7 @@ namespace AudicaConverter
             {
                 //Reprocess the ogg file with fade, this might need "-ss 0.025"
                 float fadeTime = Config.parameters.generalOptions.skipIntroOptions.cutIntroTime / 1000f / 2;
-                ffmpeg.StartInfo.Arguments = $"-y -i \"{tempAudioPath2}\" -hide_banner -loglevel panic -ab 256k -af \"afade=t=in:st=0:d={fadeTime.ToString("n1")}\" -map 0:a \"{tempOggPath}\"";
+                ffmpeg.StartInfo.Arguments = $"-y -i \"{tempAudioPath2}\" -hide_banner -loglevel panic -ac 2 -ab 256k -af \"afade=t=in:st=0:d={fadeTime.ToString("n1")}\" -map 0:a \"{tempOggPath}\"";
                 ffmpeg.Start();
                 ffmpeg.WaitForExit();
             }
