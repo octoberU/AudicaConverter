@@ -68,7 +68,7 @@ namespace OsuTypes
                 else if (line.Length < 0) mode = ParseMode.None;
             }
 
-            TimingPoint initialTimingPoint = new TimingPoint(0f, timingPoints[0].beatTime, false, false);
+            TimingPoint initialTimingPoint = new TimingPoint(0f, timingPoints[0].beatTime, timingPoints[0].vol, false, false);
             initialTimingPoint.meter = timingPoints[0].meter;
             timingPoints.Insert(0, initialTimingPoint);
 
@@ -94,6 +94,7 @@ namespace OsuTypes
                 else if (timingPoint.ms == prevUninheritedTimingPoint.ms)
                 {
                     prevUninheritedTimingPoint.sliderVelocity = timingPoint.sliderVelocity;
+                    prevUninheritedTimingPoint.vol = timingPoint.vol;
                     prevUninheritedTimingPoint.kiai = prevUninheritedTimingPoint.kiai || timingPoint.kiai; //No clue if this is necessary...
                     mergedTimingPoints.RemoveAt(i--);
                 }
@@ -236,7 +237,7 @@ namespace OsuTypes
             {
                 int effects = split.Length > 7 ? int.Parse(split[7]) : 0;
                 bool kiai = effects == 1 || effects == 5;
-                var timingPoint = new TimingPoint((int)float.Parse(split[0]), float.Parse(split[1]), kiai, split.Length > 6 ? !Convert.ToBoolean(int.Parse(split[6])): false);
+                var timingPoint = new TimingPoint((int)float.Parse(split[0]), float.Parse(split[1]), split.Length > 5 ? int.Parse(split[5]) : 100, kiai, split.Length > 6 ? !Convert.ToBoolean(int.Parse(split[6])): false);
                 if (!timingPoint.inherited)
                 {
                     timingPoint.meter = split.Length > 2 ? int.Parse(split[2]) : 4;

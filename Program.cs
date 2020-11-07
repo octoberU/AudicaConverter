@@ -581,7 +581,7 @@ namespace AudicaConverter
             var handColorHandler = new HandColorHandler();
 
 
-            if (Config.parameters.sliderConversionOptions.sliderEndStreamStartConvert) RunSliderSplitPass(osufile.hitObjects, osufile.timingPoints);
+            RunSliderSplitPass(osufile.hitObjects, osufile.timingPoints, osufile.mergedTimingPoints);
             if (Config.parameters.streamOptions.streamMinAverageDistance > 0f) RunStreamScalePass(osufile.noteStreams);
             if (Config.parameters.sustainConversionOptions.convertSustains) RunSustainPass(osufile.hitObjects, osufile.timingPoints);
             if (Config.parameters.chainConversionOptions.convertChains) RunChainPass(osufile.hitObjects, osufile.timingPoints);
@@ -627,10 +627,12 @@ namespace AudicaConverter
             return diff;
         }
 
-        private static void RunSliderSplitPass(List<HitObject> hitObjects, List<TimingPoint> timingPoints)
+        private static void RunSliderSplitPass(List<HitObject> hitObjects, List<TimingPoint> timingPoints, List<TimingPoint> mergedTimingPoints)
         {
             SliderConversionOptions sliderConversionOptions = Config.parameters.sliderConversionOptions;
 
+
+            //Handle conversion of repeating sliders
             int hitObjectsOrgCount = hitObjects.Count;
             for (int i = 0; i < hitObjectsOrgCount; i++)
             {
@@ -692,38 +694,47 @@ namespace AudicaConverter
             }
             hitObjects.Sort((ho1, ho2) => ho1.time.CompareTo(ho2.time));
 
-            if (sliderConversionOptions.sliderEndStreamStartConvert)
+
+            //Handle final slider end conversion
+            hitObjectsOrgCount = hitObjects.Count;
+            for (int i = 0; i < hitObjectsOrgCount - 1; i++)
             {
-                hitObjectsOrgCount = hitObjects.Count;
-                for (int i = 0; i < hitObjectsOrgCount - 1; i++)
+                HitObject hitObject = hitObjects[i];
+                HitObject nextHitObject = hitObjects[i + 1];
+
+                //Skip if not slider
+                if (!(hitObject.type == 2 || hitObject.type == 6)) continue;
+
+                //Convert slider end if hitsounded and on-beat
+                bool endOnBeat = sliderConversionOptions.onBeatSliderEndConvert && OsuUtility.ticksSincePrevTimingPoint(hitObject.audicaEndTick, timingPoints) % 480 == 0 &&
+                    OsuUtility.getPrevTimingPoint(hitObject.audicaEndTick, mergedTimingPoints).vol > 5;
+
+                //Convert slider end if the end is on half-beat and the next target is within 1/12th of the slider end.
+                bool endStreamStart = sliderConversionOptions.sliderEndStreamStartConvert && OsuUtility.ticksSincePrevTimingPoint(hitObject.audicaEndTick, timingPoints) % 240f == 0f &&
+                    nextHitObject.audicaTick - hitObject.audicaEndTick <= 160f;
+
+
+                if ((endOnBeat || endStreamStart) && hitObject.audicaEndTick != nextHitObject.audicaTick)
                 {
-                    HitObject hitObject = hitObjects[i];
-                    HitObject nextHitObject = hitObjects[i + 1];
+                    HitObject newHitObject = new HitObject
+                    (
+                        hitObject.repeats % 2 == 1 ? hitObject.endX : hitObject.x,
+                        hitObject.repeats % 2 == 1 ? hitObject.endY : hitObject.y,
+                        hitObject.endTime,
+                        1,
+                        hitObject.endHitsound,
+                        0f,
+                        0
+                    );
 
-                    //Add a hitObject for sliders if the end is on half-beat and the next target is within 1/12th of the slider end.
-                    if ((hitObject.type == 2 || hitObject.type == 6) && OsuUtility.ticksSincePrevTimingPoint(hitObject.audicaEndTick, timingPoints) % 240f == 0f &&
-                        nextHitObject.audicaTick - hitObject.audicaEndTick <= 160f && !hitObjects.Any(ho => ho.time == hitObject.endTime))
-                    {
-                        HitObject newHitObject = new HitObject
-                        (
-                            hitObject.repeats % 2 == 1 ? hitObject.endX : hitObject.x,
-                            hitObject.repeats % 2 == 1 ? hitObject.endY : hitObject.y,
-                            hitObject.endTime,
-                            1,
-                            hitObject.endHitsound,
-                            0f,
-                            0
-                        );
-
-                        newHitObject.endTime = newHitObject.time;
-                        newHitObject.endX = newHitObject.x;
-                        newHitObject.endY = newHitObject.y;
-                        newHitObject.audicaTick = newHitObject.audicaEndTick = hitObject.audicaEndTick;
-                        hitObjects.Add(newHitObject);
-                    }
+                    newHitObject.endTime = newHitObject.time;
+                    newHitObject.endX = newHitObject.x;
+                    newHitObject.endY = newHitObject.y;
+                    newHitObject.audicaTick = newHitObject.audicaEndTick = hitObject.audicaEndTick;
+                    hitObjects.Add(newHitObject);
                 }
-                hitObjects.Sort((ho1, ho2) => ho1.time.CompareTo(ho2.time));
             }
+            hitObjects.Sort((ho1, ho2) => ho1.time.CompareTo(ho2.time));
         }
 
         private static void RunStreamScalePass(List<HitObjectGroup> noteStreams)

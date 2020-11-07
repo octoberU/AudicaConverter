@@ -4,15 +4,11 @@ using System.Text;
 
 namespace OsuTypes
 {
-    class OsuTypes
-    {
-
-    }
-
     public class TimingPoint
     {
-        public double beatTime;
         public float ms;
+        public double beatTime;
+        public int vol;
         public bool inherited;
         public float sliderVelocity;
         public int meter;
@@ -20,10 +16,11 @@ namespace OsuTypes
 
         public float audicaTick;
 
-        public TimingPoint(float ms, double beatTime, bool kiai, bool inherited)
+        public TimingPoint(float ms, double beatTime, int vol, bool kiai, bool inherited)
         {
-            this.beatTime = beatTime;
             this.ms = ms;
+            this.beatTime = beatTime;
+            this.vol = vol;
             this.kiai = kiai;
             this.inherited = inherited;
 
