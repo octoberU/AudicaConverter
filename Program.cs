@@ -646,7 +646,7 @@ namespace AudicaConverter
                     bool fastRepeat = repeatTime < sliderConversionOptions.fastRepeatTimeThres;
 
                     //Find slider to target conversion step frequency.
-                    int meter = OsuUtility.getPrevTimingPoint(hitObject.audicaTick, timingPoints).meter;
+                    int meter = OsuUtility.GetPrevTimingPointFromTick(hitObject.audicaTick, timingPoints).meter;
                     int meterSmallestFactor = meter;
                     for (int j = 2; j <= 100; j++)
                     {
@@ -674,7 +674,7 @@ namespace AudicaConverter
                                 hitObject.time + j * repeatTime,
                                 finalEnd ? 0 : 2,
                                 hitObject.endHitsound,
-                                finalEnd ? 0 : hitObject.pixelLength / (hitObject.repeats),
+                                finalEnd ? 0 : hitObject.pixelLength,
                                 0
                             );
                             newHitObject.audicaTick = (float)Math.Round(hitObject.audicaTick + j * repeatTicks);
@@ -707,7 +707,7 @@ namespace AudicaConverter
 
                 //Convert slider end if hitsounded and on-beat
                 bool endOnBeat = sliderConversionOptions.onBeatSliderEndConvert && OsuUtility.ticksSincePrevTimingPoint(hitObject.audicaEndTick, timingPoints) % 480 == 0 &&
-                    OsuUtility.getPrevTimingPoint(hitObject.audicaEndTick, mergedTimingPoints).vol > 5;
+                    OsuUtility.GetPrevTimingPointFromTick(hitObject.audicaEndTick, mergedTimingPoints).vol > 5;
 
                 //Convert slider end if the end is on half-beat and the next target is within 1/12th of the slider end.
                 bool endStreamStart = sliderConversionOptions.sliderEndStreamStartConvert && OsuUtility.ticksSincePrevTimingPoint(hitObject.audicaEndTick, timingPoints) % 240f == 0f &&
@@ -1415,8 +1415,8 @@ namespace AudicaConverter
                 }
 
 
-                TimingPoint prevNormalTimingPoint = OsuUtility.getPrevTimingPoint(currentCue.tick, timingPoints);
-                TimingPoint prevEitherTimingPoints = OsuUtility.getPrevTimingPoint(currentCue.tick, mergedTimingPoints);
+                TimingPoint prevNormalTimingPoint = OsuUtility.GetPrevTimingPointFromTick(currentCue.tick, timingPoints);
+                TimingPoint prevEitherTimingPoints = OsuUtility.GetPrevTimingPointFromTick(currentCue.tick, mergedTimingPoints);
 
                 float timeSinceTimingPoint = currentCue.tick - prevNormalTimingPoint.audicaTick;
                 float frequency = prevEitherTimingPoints.kiai ? meleeOptions.kiaiAttemptFrequency : meleeOptions.normalAttemptFrequency;

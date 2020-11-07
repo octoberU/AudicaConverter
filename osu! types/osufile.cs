@@ -111,7 +111,8 @@ namespace OsuTypes
             {
                 if (hitObject.type == 2 || hitObject.type == 6)
                 {
-                    hitObject.endTime = hitObject.time + OsuUtility.CalculateSliderDuration(hitObject, difficulty.sliderMultiplier, mergedTimingPoints);
+                    TimingPoint prevTimingPoint = OsuUtility.GetPrevTimingPointFromMs(hitObject.time, mergedTimingPoints);
+                    hitObject.endTime = hitObject.time + hitObject.pixelLength * hitObject.repeats / (100 * difficulty.sliderMultiplier * prevTimingPoint.sliderVelocity) * (float)prevTimingPoint.beatTime;
                 }
             }
         }
