@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Net;
+using System.Net.NetworkInformation;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -13,6 +14,16 @@ namespace osutoaudica
     {
         public static void UpdateClient()
         {
+            if (Program.beta)
+            {
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.WriteLine("This is a beta version of the AudicaConverter, and cannot be updated through the auto-updater. Please visit the GitHub release page for newer stable and/or beta releases" +
+                    "(https://github.com/octoberU/AudicaConverter/releases).");
+                Console.WriteLine($"Current beta version: {Program.version}");
+                Console.ForegroundColor = ConsoleColor.Gray;
+                return;
+            }
+
             if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX)) return;
             using (WebClient web = new WebClient())
             {
@@ -50,6 +61,18 @@ namespace osutoaudica
 
         public static void CheckVersion()
         {
+            if (Program.beta)
+            {
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.WriteLine($"NB! This is a beta version of the AudicaConverter ({Program.version}). This version might have experimental features or incomplete balancing that can result in poorly " +
+                    $"converted maps. See the GitHub release page for stable versions of the converter (https://github.com/octoberU/AudicaConverter/releases)." +
+                    $"\nPlease report any technical issues or problems with convert quality in the #converter-feedback channel in the Audica Modding Group Discord or through creating an issue " +
+                    $"on the AudicaConverter GitHub. Thank you for testing!");
+                Console.ForegroundColor = ConsoleColor.Gray;
+                Console.WriteLine("[Press enter to continue]");
+                Console.ReadLine();
+            }
+
             if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX)) return;
             using (WebClient web = new WebClient())
             {

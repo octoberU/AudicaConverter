@@ -7,7 +7,7 @@ namespace osutoaudica
 {
     internal static class Config
     {
-        public static string configDirectory = Path.Join(Program.workingDirectory, "config.json");
+        public static string configDirectory = Path.Join(Program.workingDirectory, Program.beta ? "config_beta.json" : "config.json");
 
         public static ConfigParameters parameters;
 
