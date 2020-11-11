@@ -198,9 +198,13 @@ namespace AudicaConverter
                 $"\nMapped by {osz.osufiles[0].metadata.creator}" +
                 $"\nFound {standardDiffCount} osu!standard difficulties ({osz.osufiles.Count} difficulties across all modes)");
                 Console.ForegroundColor = ConsoleColor.Yellow;
-                Console.WriteLine("\n\nSelect Conversion Mode: \n[1] Convert whole map.\n[2] Convert audio/timing only.");
+                Console.WriteLine("\n\nSelect Conversion Mode: \n[1] Convert whole map.\n[2] Convert audio/timing only. (Intended for mappers)");
                 Console.ForegroundColor = ConsoleColor.Gray;
-                convertMode = int.Parse(Console.ReadLine());
+                do
+                {
+                    int.TryParse(Console.ReadLine(), out convertMode);
+                }
+                while (convertMode < 1 || convertMode > 2);
             }
 
             if (convertMode == 1)
@@ -270,6 +274,12 @@ namespace AudicaConverter
                 audica.advanced = null;
                 audica.moderate = null;
                 audica.beginner = null;
+
+                if (mode == "manual")
+                {
+                    Console.Clear();
+                    Console.WriteLine("Converting song to OGG");
+                }
                 ConvertSongToOGG(ref osz, audica);
             }
 
@@ -391,7 +401,7 @@ namespace AudicaConverter
                 float difficultyRating = audica.GetRatingForDifficulty(scaledDifficulty);
                 scaledDifficulties.Add((scaledDifficulty, osz.osufiles[i], difficultyRating));
 
-                if (mode == "manual") Console.WriteLine($"\n[{count}]{osz.osufiles[i].metadata.version} [{difficultyRating.ToString("n2")} Audica difficulty]");
+                if (mode == "manual") Console.WriteLine($"\n[{count}] {osz.osufiles[i].metadata.version} [{difficultyRating.ToString("n2")} Audica difficulty]");
                 count++;
             }
 
@@ -404,10 +414,17 @@ namespace AudicaConverter
             if (mode == "manual")
             {
                 Console.ForegroundColor = ConsoleColor.Gray;
-                string userInput = Console.ReadLine();
+                string userInput;
+                int userInputInt;
+                do
+                {
+                    userInput = Console.ReadLine();
+                    int.TryParse(userInput, out userInputInt);
+                }
+                while (userInput != "" && (userInputInt < 1 || userInputInt > scaledDifficulties.Count));
                 Console.Clear();
                 if (userInput == "") return null;// User hasn't picked a difficulty
-                else difficultyIdx = int.Parse(userInput)-1;
+                else difficultyIdx = userInputInt-1;
             }
             else
             {
