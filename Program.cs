@@ -338,10 +338,10 @@ namespace AudicaConverter
         private static void ConvertMetadata(OsuSongFile osz, Audica audica)
         {
             string mapperName = Config.parameters.generalOptions.customMapperName == "" ? RemoveSpecialCharacters(osz.osufiles[0].metadata.creator) : RemoveSpecialCharacters(Config.parameters.generalOptions.customMapperName);
-            audica.desc.title = osz.osufiles[0].metadata.title;
+            audica.desc.title = "[osu!] " + osz.osufiles[0].metadata.title;
             audica.desc.artist = osz.osufiles[0].metadata.artist;
             audica.desc.author = mapperName;
-            audica.desc.songID = RemoveSpecialCharacters(osz.osufiles[0].metadata.title) + "-" + mapperName;
+            audica.desc.songID = "osu" + RemoveSpecialCharacters(osz.osufiles[0].metadata.title) + "-" + mapperName;
             audica.desc.previewStartSeconds = (float)osz.osufiles[0].general.previewTime / 1000f;
             audica.desc.fxSong = "";
         }
