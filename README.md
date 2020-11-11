@@ -21,7 +21,7 @@ Currently only converting maps from osu! is supported. While maps from any of os
 > **Note to new players:** The converter is able to make very easy and accessible levels out of low difficulty osu! levels, allowing the converter to be used without much experience playing the game. Audica is however a very difficult rhythm game with a steep learning curve compared to most rhythm games, and is fundementally a lot harder to learn than osu! itself. The Audica-specific hand-crafted mapping of the lowest difficulty levels of the official songs are designed to be very easy and accessible to new players, in a way that the converter isn't able to. It is highly recommended to at least get comfortable with playing the official levels on standard difficulty before diving into converts, particularly if you find playing converts difficult or frustrating.
 
 * Download the latest release from [here](https://github.com/octoberU/AudicaConverter/releases).
-* Drag-and-drop one or multiple `.osz` files onto the `AudicaConverter` exe within file explorer. You can also drag-and-drop folders of `.osz` files.
+* Drag-and-drop one or multiple osu! songs either as `.osz` files or unpackaged songs, onto the `AudicaConverter` exe within file explorer. You can also drag-and-drop folders of osu! songs onto the converter.
 * Follow the directions in the console.
 * After conversion, move the resulting `.audica` file found in the automatically created `audicaFiles` folder to the games song folder. The location depends on what store/system you use, see [this page](http://www.audica.wiki/audicawiki/index.php/How_To_Get_Custom_Songs) for instructions for where to put the .audica file for your setup.
 
