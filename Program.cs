@@ -51,6 +51,8 @@ namespace AudicaConverter
         {
             Thread.CurrentThread.CurrentCulture = System.Globalization.CultureInfo.InvariantCulture; //Ensures locale independent parsing.
             Config.Init();
+
+            //Run/Check for updates
             try
             {
                 if (args.Length < 1) Updater.UpdateClient();
@@ -100,6 +102,32 @@ namespace AudicaConverter
                     }
                 }
                 else Directory.CreateDirectory(osxInputDirectory);
+            }
+
+
+            //Print messages to user depending on number of songs being converted
+            if (osuSongFileNames.Count >= 250)
+            {
+                Console.Clear();
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine($"Warning! You are about to convert a very large number of osu! songs ({osuSongFileNames.Count} songs). " +
+                    $"Please note that Audica encounters problems when trying to load more than ~500 custom songs. " +
+                    "If your total number custom songs/converts is greater than this limit, consider splitting your songs into separate folders " +
+                    "and swapping them into the games songs folder in separate groups.");
+                Console.ForegroundColor = ConsoleColor.Gray;
+                Console.WriteLine("[Press enter to continue]");
+                Console.ReadLine();
+            }
+            if (!Config.parameters.converterOperationOptions.autoMode && osuSongFileNames.Count >= 25)
+            {
+                Console.Clear();
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.WriteLine($"You are about to manually convert a lot of songs ({osuSongFileNames.Count} songs). " +
+                    $"You might want to consider using auto conversion mode. See this wiki page for more information: " +
+                    "https://github.com/octoberU/AudicaConverter/wiki/Auto-Conversion-Mode-Configuration-and-Operation");
+                Console.ForegroundColor = ConsoleColor.Gray;
+                Console.WriteLine("[Press enter to continue]");
+                Console.ReadLine();
             }
 
 
