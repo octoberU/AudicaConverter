@@ -30,7 +30,7 @@ namespace osutoaudica
                 string newestVersionNumber = web.DownloadString("https://raw.githubusercontent.com/octoberU/AudicaConverter/main/version.txt");
                 if (VersionLessThan(Program.version, newestVersionNumber))
                 {
-                    var shouldUpdate = ConsolePrompt($"There's a new update available!\nWould you like update from {Program.version} to {newestVersionNumber}\n");
+                    var shouldUpdate = ConsolePrompt($"There is a new update available! See the GitHub release page for changelog: https://github.com/octoberU/AudicaConverter/releases \nWould you like update from {Program.version} to {newestVersionNumber}?\n");
                     if (shouldUpdate)
                     {
                         string currentExecutable = Program.workingDirectory + @"/AudicaConverter.exe";
