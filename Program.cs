@@ -12,6 +12,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 
 namespace AudicaConverter
@@ -63,24 +64,30 @@ namespace AudicaConverter
             var argsList = args.ToList();
             if (argsList.Count == 0 && !RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
-                Console.WriteLine("\nIn order to convert maps, drag-and-drop one or more .osz files, or folders of .osz files onto the AudicaConverter exe within file explorer, or onto this window and press enter.");
+                Console.WriteLine("\nIn order to convert maps, drag-and-drop one or multiple .osz files, or folders of .osz files onto the AudicaConverter exe within file explorer." +
+                    " Alternatively, you can drag-and-drop a single .osz file or folder of .osz files onto this window and hit enter.");
                 string input = Console.ReadLine();
                 input = input.Replace("\"", "");
                 argsList.Add(input);
             }
 
-            List<string> oszFileNames = new List<string>();
+
+            //Get list of all songs to convert
+            List<string> osuSongFileNames = new List<string>();
             foreach (var item in argsList)
             {
-                if (Directory.Exists(item))
+                if (item.Contains(".osz") || IsUnpackagedOsuSong(item))
                 {
-                    foreach (string dirItem in Directory.GetFiles(item))
+                    osuSongFileNames.Add(item);
+                }
+                else if (Directory.Exists(item))
+                {
+                    foreach (string dirItem in Directory.GetFiles(item, "*.osz")) osuSongFileNames.Add(dirItem);
+                    foreach (string dirItem in Directory.GetDirectories(item))
                     {
-                        if (dirItem.Contains(".osz")) oszFileNames.Add(dirItem);
+                        if (IsUnpackagedOsuSong(dirItem)) osuSongFileNames.Add(dirItem);
                     }
                 }
-                else if (item.Contains(".osz"))
-                    oszFileNames.Add(item);
             }
             if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
@@ -89,21 +96,23 @@ namespace AudicaConverter
                 {
                     foreach (var fileName in Directory.GetFiles(osxInputDirectory))
                     {
-                        if (fileName.Contains(".osz")) oszFileNames.Add(fileName);
+                        if (fileName.Contains(".osz") || IsUnpackagedOsuSong(fileName)) osuSongFileNames.Add(fileName);
                     }
                 }
                 else Directory.CreateDirectory(osxInputDirectory);
             }
 
-            for (int i = 0; i < oszFileNames.Count; i++)
+
+            //Convert songs
+            for (int i = 0; i < osuSongFileNames.Count; i++)
             {
-                string oszFileName = oszFileNames[i];
+                string oszFileName = osuSongFileNames[i];
                 string[] pathElements = oszFileName.Split("\\");
                 string oszName = pathElements[pathElements.Length-1];
                 if (Config.parameters.converterOperationOptions.autoMode)
                 {
                     Console.Clear();
-                    Console.WriteLine(@$"({i + 1}/{oszFileNames.Count}) Converting {oszName}...");
+                    Console.WriteLine(@$"({i + 1}/{osuSongFileNames.Count}) Converting {oszName}...");
                 }
 
                 try
@@ -114,7 +123,7 @@ namespace AudicaConverter
                 {
                     Console.Clear();
                     Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine(@$"({i + 1}/{oszFileNames.Count}) {oszName} Failed to convert with the following error:");
+                    Console.WriteLine(@$"({i + 1}/{osuSongFileNames.Count}) {oszName} Failed to convert with the following error:");
                     Console.WriteLine();
                     Console.WriteLine(e.ToString());
                     Console.ForegroundColor = ConsoleColor.Gray;
@@ -132,6 +141,11 @@ namespace AudicaConverter
             }
             //ConversionProcess.ConvertToAudica(@"C:\audica\Repos\AudicaConverter\bin\Release\netcoreapp3.1\393663 UNDEAD CORPORATION - Flowering Night Fever.osz", "manual");
         }
+
+        public static bool IsUnpackagedOsuSong(String path)
+        {
+            return Directory.Exists(path) && Directory.GetFiles(path, "*.osu").Length > 0;
+        }
     }
 
     public class ConversionProcess
@@ -139,7 +153,7 @@ namespace AudicaConverter
         public static bool snapNotes = false;
         public static void ConvertToAudica(string filePath, string mode)
         {
-            var osz = new OSZ(filePath);
+            var osz = new OsuSongFile(filePath);
 
             var audica = new Audica(Path.Join(Program.workingDirectory, "template.audica"));
 
@@ -277,7 +291,7 @@ namespace AudicaConverter
             }
         }
 
-        private static void ConvertTempos(OSZ osz, ref Audica audica)
+        private static void ConvertTempos(OsuSongFile osz, ref Audica audica)
         {
             var tempList = new List<TempoData>();
             foreach (var timingPoint in osz.osufiles[0].timingPoints)
@@ -287,13 +301,13 @@ namespace AudicaConverter
             audica.tempoData = tempList;
         }
 
-        private static void SortOSZ(OSZ osz)
+        private static void SortOSZ(OsuSongFile osz)
         {
             var templist = osz.osufiles.OrderByDescending(o => o.audicaDifficultyRating).ToList();
             osz.osufiles = templist;
         }
 
-        private static void ConvertMetadata(OSZ osz, Audica audica)
+        private static void ConvertMetadata(OsuSongFile osz, Audica audica)
         {
             string mapperName = Config.parameters.generalOptions.customMapperName == "" ? RemoveSpecialCharacters(osz.osufiles[0].metadata.creator) : RemoveSpecialCharacters(Config.parameters.generalOptions.customMapperName);
             audica.desc.title = osz.osufiles[0].metadata.title;
@@ -304,7 +318,7 @@ namespace AudicaConverter
             audica.desc.fxSong = "";
         }
 
-        private static Difficulty AskDifficulty(OSZ osz, Audica audica, string difficultyName, string mode)
+        private static Difficulty AskDifficulty(OsuSongFile osz, Audica audica, string difficultyName, string mode)
         {
             MapScaleOptions scalingOptions = null;
             AutoOptions autoOptions = null;
@@ -405,7 +419,7 @@ namespace AudicaConverter
             return scaledDifficulties[difficultyIdx].difficulty;
         }
 
-        private static void ConvertSongToOGG(ref OSZ osz, Audica audica)
+        private static void ConvertSongToOGG(ref OsuSongFile osz, Audica audica)
         {
             string audioFileName = osz.osufiles[0].general.audioFileName;
             string tempDirectory = Path.Join(Program.workingDirectory, "AudicaConverterTemp");
@@ -452,12 +466,25 @@ namespace AudicaConverter
             if (Directory.Exists(tempDirectory)) Directory.Delete(tempDirectory, true);
 
             Directory.CreateDirectory(tempDirectory);
-
-            ZipArchive zip = ZipFile.OpenRead(osz.oszFilePath);
-            foreach (ZipArchiveEntry entry in zip.Entries) {
-                // Check for the name while ignoring case, as osu ignores case as well.
-                if (entry.FullName.Equals(audioFileName, StringComparison.OrdinalIgnoreCase)) {
-                    zip.GetEntry(entry.FullName).ExtractToFile(tempAudioPath);
+            
+            if (osz.filePath.Contains(".osz"))
+            {
+                ZipArchive zip = ZipFile.OpenRead(osz.filePath);
+                foreach (ZipArchiveEntry entry in zip.Entries) {
+                    // Check for the name while ignoring case, as osu ignores case as well.
+                    if (entry.FullName.Equals(audioFileName, StringComparison.OrdinalIgnoreCase)) {
+                        zip.GetEntry(entry.FullName).ExtractToFile(tempAudioPath);
+                    }
+                }
+            }
+            else
+            {
+                foreach (string entry in Directory.GetFiles(osz.filePath, "*", SearchOption.AllDirectories))
+                {
+                    if (entry.Contains(audioFileName, StringComparison.OrdinalIgnoreCase))
+                    {
+                        File.Copy(entry, tempAudioPath);
+                    }
                 }
             }
 
@@ -500,7 +527,7 @@ namespace AudicaConverter
             Directory.Delete(tempDirectory, true);
         }
 
-        private static void ShiftEverythingByMs(OSZ osz, float paddingTime)
+        private static void ShiftEverythingByMs(OsuSongFile osz, float paddingTime)
         {
             foreach (var osuDifficulty in osz.osufiles)
             {
@@ -1574,20 +1601,32 @@ namespace AudicaConverter
         }
     }
 
-    public class OSZ
+    public class OsuSongFile
     {
-        public string oszFilePath;
+        //Rerpresents a osu song file. Can be either a .osz file or an unpackaged osu song folder. Previously called OSZ.
+
+        public string filePath;
         
         public List<Osufile> osufiles = new List<Osufile>();
-        public OSZ(string filePath)
+        public OsuSongFile(string filePath)
         {
-            oszFilePath = filePath;
-            ZipArchive zip = ZipFile.OpenRead(filePath);
-            foreach (var entry in zip.Entries)
+            this.filePath = filePath;
+            if (filePath.Contains(".osz"))
             {
-                if (entry.Name.Contains(".osu"))
+                ZipArchive zip = ZipFile.OpenRead(filePath);
+                foreach (var entry in zip.Entries)
                 {
-                    osufiles.Add(new Osufile(entry.Open()));   
+                    if (entry.Name.Contains(".osu"))
+                    {
+                        osufiles.Add(new Osufile(entry.Open()));   
+                    }
+                }
+            }
+            else
+            {
+                foreach(string entry in Directory.GetFiles(filePath, "*.osu"))
+                {
+                    osufiles.Add(new Osufile(File.OpenRead(entry)));
                 }
             }
         }
